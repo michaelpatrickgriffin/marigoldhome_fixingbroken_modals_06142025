@@ -1,0 +1,140 @@
+/* src/styles/CardStyles.css */
+/* Essential card styling for menus and badges only */
+
+/* ===== QUICK ACTIONS MENU ===== */
+.quick-actions-menu {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.card:hover .quick-actions-menu,
+.program-card:hover .quick-actions-menu {
+  opacity: 1;
+}
+
+.quick-actions-menu button {
+  background: transparent;
+  border: none;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.quick-actions-menu button:hover {
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.quick-actions-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 0.5rem;
+  min-width: 140px;
+  z-index: 1000;
+  margin-top: 0.5rem;
+}
+
+.quick-actions-dropdown button {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  text-align: right;
+  cursor: pointer;
+  display: block;
+  font-size: 0.875rem;
+  color: #333;
+}
+
+/* ===== BADGE STYLES ===== */
+.card-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid transparent;
+}
+
+.badge-active {
+  background-color: rgba(76, 175, 80, 0.1);
+  color: #4CAF50;
+  border-color: rgba(76, 175, 80, 0.2);
+}
+
+.badge-scheduled, .badge-ongoing {
+  background-color: rgba(33, 150, 243, 0.1);
+  color: #2196F3;
+  border-color: rgba(33, 150, 243, 0.2);
+}
+
+.badge-draft, .badge-inactive {
+  background-color: rgba(201, 202, 203, 0.2);
+  color: #666666;
+  border-color: rgba(201, 202, 203, 0.3);
+}
+
+.badge-attention {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* ===== ANIMATIONS ===== */
+.slide-in {
+  animation: slideInUp 0.3s ease-out;
+}
+
+.slide-down {
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (hover: none) {
+  .quick-actions-menu {
+    opacity: 1;
+  }
+}
+
+/* ===== REDUCED MOTION SUPPORT ===== */
+@media (prefers-reduced-motion: reduce) {
+  .slide-in,
+  .slide-down {
+    animation: none;
+  }
+}

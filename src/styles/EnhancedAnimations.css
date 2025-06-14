@@ -1,0 +1,385 @@
+/* Enhanced Animations and Additional Styles for AI Recommendations */
+
+/* Spinning animation for loading states */
+@keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+  
+  /* Pulse animation for notification badges */
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+  
+  .animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  /* Fade in animation for recommendations */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  /* Slide down animation for expanded content */
+  @keyframes slideDown {
+    from {
+      max-height: 0;
+      opacity: 0;
+    }
+    to {
+      max-height: 500px;
+      opacity: 1;
+    }
+  }
+  
+  .slide-down {
+    animation: slideDown 0.3s ease-out;
+    overflow: hidden;
+  }
+  
+  /* Confidence score animation */
+  @keyframes fillBar {
+    from {
+      width: 0;
+    }
+    to {
+      width: var(--target-width);
+    }
+  }
+  
+  .confidence-bar {
+    animation: fillBar 1s ease-out 0.5s both;
+  }
+  
+  /* Recommendation card hover effects */
+  .recommendation-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .recommendation-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  }
+  
+  /* Button hover animations */
+  .ai-button {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  
+  .ai-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+  }
+  
+  .ai-button:hover::before {
+    left: 100%;
+  }
+  
+  /* Sparkle animation for AI indicators */
+  @keyframes sparkle {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+    }
+    50% {
+      opacity: 0.7;
+      transform: scale(1.1) rotate(180deg);
+    }
+  }
+  
+  .sparkle {
+    animation: sparkle 2s ease-in-out infinite;
+  }
+  
+  /* Status indicator animations */
+  @keyframes statusGlow {
+    0%, 100% {
+      box-shadow: 0 0 5px currentColor;
+    }
+    50% {
+      box-shadow: 0 0 20px currentColor, 0 0 30px currentColor;
+    }
+  }
+  
+  .status-indicator-active {
+    animation: statusGlow 2s ease-in-out infinite;
+  }
+  
+  /* Progress bar animation */
+  @keyframes progressFill {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+  
+  .progress-fill {
+    transform-origin: left;
+    animation: progressFill 1s ease-out;
+  }
+  
+  /* Typing indicator animation */
+  @keyframes typing {
+    0%, 60%, 100% {
+      transform: translateY(0);
+    }
+    30% {
+      transform: translateY(-10px);
+    }
+  }
+  
+  .typing-indicator span {
+    display: inline-block;
+    animation: typing 1.4s infinite;
+  }
+  
+  .typing-indicator span:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+  
+  .typing-indicator span:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+  
+  /* Smooth transitions for all interactive elements */
+  .transition-all {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .transition-colors {
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+  }
+  
+  .transition-transform {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* Recommendation tag animations */
+  .recommendation-tag {
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .recommendation-tag::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.6s;
+  }
+  
+  .recommendation-tag:hover::after {
+    left: 100%;
+  }
+  
+  /* AI brain icon animation */
+  @keyframes brainPulse {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.05);
+    }
+  }
+  
+  .brain-pulse {
+    animation: brainPulse 2s ease-in-out infinite;
+  }
+  
+  /* Card stack animation for bulk actions */
+  @keyframes cardStack {
+    0% {
+      transform: translateY(0) scale(1);
+    }
+    50% {
+      transform: translateY(-5px) scale(1.02);
+    }
+    100% {
+      transform: translateY(0) scale(1);
+    }
+  }
+  
+  .card-stack-animation {
+    animation: cardStack 0.6s ease-in-out;
+  }
+  
+  /* Success/Error state animations */
+  @keyframes successBounce {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.1);
+    }
+  }
+  
+  .success-bounce {
+    animation: successBounce 0.5s ease-in-out;
+  }
+  
+  @keyframes errorShake {
+    0%, 100% {
+      transform: translateX(0);
+    }
+    25% {
+      transform: translateX(-5px);
+    }
+    75% {
+      transform: translateX(5px);
+    }
+  }
+  
+  .error-shake {
+    animation: errorShake 0.5s ease-in-out;
+  }
+  
+  /* Loading state for recommendation cards */
+  .recommendation-loading {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+  }
+  
+  @keyframes loading {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+  
+  /* Hover effects for interactive elements */
+  .interactive-hover {
+    transition: all 0.2s ease;
+  }
+  
+  .interactive-hover:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  /* Gradient text animation for AI labels */
+  @keyframes gradientShift {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+  
+  .gradient-text {
+    background: linear-gradient(45deg, #1A4C49, #4D9892, #1A4C49);
+    background-size: 200% 200%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradientShift 3s ease infinite;
+  }
+  
+  /* Micro-interactions for better UX */
+  .micro-interaction {
+    position: relative;
+    transition: all 0.2s ease;
+  }
+  
+  .micro-interaction:active {
+    transform: scale(0.98);
+  }
+  
+  .micro-interaction:focus {
+    outline: 2px solid #1A4C49;
+    outline-offset: 2px;
+  }
+  
+  /* Accessibility improvements */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+  
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    .recommendation-card {
+      border: 2px solid;
+    }
+    
+    .ai-button {
+      border: 2px solid;
+    }
+    
+    .recommendation-tag {
+      border: 1px solid;
+    }
+  }
+  
+  /* Dark mode support */
+  @media (prefers-color-scheme: dark) {
+    .recommendation-card {
+      background-color: #1e1e1e;
+      border-color: #333;
+      color: #fff;
+    }
+    
+    .ai-button {
+      background-color: #2d2d2d;
+      color: #fff;
+    }
+    
+    .gradient-text {
+      background: linear-gradient(45deg, #4D9892, #81C784, #4D9892);
+      background-size: 200% 200%;
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  }

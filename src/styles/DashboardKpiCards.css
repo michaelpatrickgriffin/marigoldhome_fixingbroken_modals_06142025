@@ -1,0 +1,146 @@
+/* KPI Card CSS to be added to src/styles/DashboardKpiCards.css */
+
+/* Grid layout for KPI cards */
+.kpi-card-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 1200px) {
+  .kpi-card-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .kpi-card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.kpi-card-wrapper {
+  width: 100%;
+}
+
+/* Card base styling to match RFM dashboard */
+.kpi-card {
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  border: none;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Content layout */
+.kpi-card-content {
+  display: flex;
+  align-items: flex-start; /* Align icon to top of content like in RFM */
+}
+
+/* Icon container styling */
+.kpi-icon-container {
+  height: 3rem;
+  width: 3rem;
+  border-radius: 12px; /* More square-like as in RFM dashboard */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.kpi-card:hover .kpi-icon-container {
+  transform: scale(1.05);
+}
+
+/* Text container styling */
+.kpi-text-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%; /* Ensure the text container takes full width */
+}
+
+.kpi-title {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.6);
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.kpi-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.87);
+  line-height: 1.2;
+  margin-bottom: 0; /* Remove bottom margin to align with change indicator */
+}
+
+.kpi-change-container {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.kpi-change {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.kpi-change-positive {
+  color: #4CAF50;
+  background-color: rgba(76, 175, 80, 0.1);
+}
+
+.kpi-change-negative {
+  color: #F44336;
+  background-color: rgba(244, 67, 54, 0.1);
+}
+
+.kpi-secondary-text {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.54);
+  margin-top: 0.25rem;
+}
+
+/* Icon background colors */
+.kpi-icon-bg-revenue {
+  background-color: rgba(76, 175, 80, 0.12);
+  color: #4CAF50;
+}
+
+.kpi-icon-bg-customers {
+  background-color: rgba(33, 150, 243, 0.12);
+  color: #2196F3;
+}
+
+.kpi-icon-bg-engagement {
+  background-color: rgba(255, 193, 7, 0.12);
+  color: #FFC107;
+}
+
+.kpi-icon-bg-conversion {
+  background-color: rgba(156, 39, 176, 0.12);
+  color: #9c27b0;
+}
+
+.kpi-icon-bg-audience {
+  background-color: rgba(244, 67, 54, 0.12);
+  color: #F44336;
+}

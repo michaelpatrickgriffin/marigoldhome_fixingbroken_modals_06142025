@@ -1,0 +1,571 @@
+/* src/styles/FlyoutSidebarStyles.css */
+
+/* Base flyout panel styling with improved performance */
+.flyout-panel {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.06);
+  border-radius: 0.75rem;
+  transform-origin: left center;
+  will-change: transform, opacity;
+  min-width: 200px;
+  width: max-content;
+  max-width: min(90vw, 400px);
+  height: auto;
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Primary flyout (from sidebar) */
+.primary-flyout {
+  z-index: 60;
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.1),
+    0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* Secondary flyout (from primary flyout) */
+.secondary-flyout {
+  z-index: 61;
+  box-shadow: 
+    0 6px 16px rgba(0, 0, 0, 0.12),
+    0 3px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* Arrow pointing to sidebar (primary flyout) */
+.primary-flyout::before {
+  content: '';
+  position: absolute;
+  left: -9px;
+  top: 20px;
+  width: 0;
+  height: 0;
+  border-top: 9px solid transparent;
+  border-bottom: 9px solid transparent;
+  border-right: 9px solid rgba(0, 0, 0, 0.08);
+  z-index: -1;
+}
+
+.primary-flyout::after {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 20px;
+  width: 0;
+  height: 0;
+  border-top: 9px solid transparent;
+  border-bottom: 9px solid transparent;
+  border-right: 9px solid white;
+  z-index: 1;
+}
+
+/* Arrow pointing to primary flyout (secondary flyout) */
+.secondary-flyout::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 15px;
+  width: 0;
+  height: 0;
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  border-right: 7px solid rgba(0, 0, 0, 0.1);
+  z-index: -1;
+}
+
+.secondary-flyout::after {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 15px;
+  width: 0;
+  height: 0;
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  border-right: 7px solid white;
+  z-index: 1;
+}
+
+/* Enhanced flyout item styling with consistent layout */
+.flyout-item {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  border-radius: 0.375rem;
+  color: #1f2937;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  /* Ensure text doesn't wrap */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.flyout-item:hover {
+  background: #e2e8f0;
+  transform: translateX(4px);
+  color: #0f172a;
+}
+
+/* Active flyout items */
+.flyout-item.active {
+  background: #cbd5e1;
+  color: #1e293b;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(203, 213, 225, 0.4);
+  transform: translateX(2px);
+}
+
+/* Enhanced sidebar menu items with fixed layout */
+.sidebar-menu-item {
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #374151;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  /* Prevent text overflow issues */
+  overflow: hidden;
+  /* Ensure consistent height */
+  box-sizing: border-box;
+}
+
+.sidebar-menu-item:hover {
+  background: #e2e8f0;
+  transform: translateX(4px);
+  color: #0f172a;
+}
+
+.sidebar-menu-item:active {
+  transform: translateX(2px);
+}
+
+/* Active sidebar items - FULL WIDTH with dark text */
+.sidebar-menu-item.active {
+  background: #cbd5e1;
+  color: #1e293b;
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+  border-radius: 0;
+  box-shadow: 0 1px 3px rgba(203, 213, 225, 0.4);
+}
+
+/* Non-active items keep right border radius */
+.sidebar-menu-item:not(.active) {
+  border-radius: 0 0.5rem 0.5rem 0;
+  margin: 0 0.5rem 0.25rem 0;
+}
+
+/* Enhanced favorite star styling with consistent positioning */
+.favorite-star {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 50%;
+  position: relative;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  /* Ensure star is always clickable */
+  z-index: 2;
+}
+
+.favorite-star svg {
+  width: 14px;
+  height: 14px;
+  /* Prevent icon from shrinking */
+  flex-shrink: 0;
+}
+
+.favorite-star:hover {
+  transform: scale(1.15) rotate(12deg);
+  background: rgba(255, 193, 7, 0.15);
+  box-shadow: 0 2px 8px rgba(255, 193, 7, 0.2);
+}
+
+.favorite-star.favorited {
+  background: rgba(255, 193, 7, 0.12);
+}
+
+.favorite-star:active {
+  transform: scale(0.95) rotate(0deg);
+}
+
+/* Star pulse animation when adding to favorites */
+@keyframes starPulse {
+  0% { 
+    transform: scale(1); 
+    box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+  }
+  50% { 
+    transform: scale(1.3) rotate(18deg); 
+    box-shadow: 0 0 0 10px rgba(255, 193, 7, 0.2);
+  }
+  100% { 
+    transform: scale(1); 
+    box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+  }
+}
+
+.favorite-star.adding {
+  animation: starPulse 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Enhanced favorites section */
+.favorites-section {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.favorites-header {
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.12) 0%, rgba(255, 193, 7, 0.04) 100%);
+  border: 1px solid rgba(255, 193, 7, 0.2);
+  box-shadow: 0 1px 3px rgba(255, 193, 7, 0.1);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+/* Improved scrollbar for flyouts */
+.flyout-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.flyout-panel::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 3px;
+  margin: 8px 0;
+}
+
+.flyout-panel::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, rgba(203, 213, 225, 0.6) 0%, rgba(203, 213, 225, 0.4) 100%);
+  border-radius: 3px;
+  transition: background 0.2s;
+}
+
+.flyout-panel::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, rgba(203, 213, 225, 0.8) 0%, rgba(203, 213, 225, 0.6) 100%);
+}
+
+/* Chevron rotation animation */
+.sidebar-menu-item svg {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+/* Enhanced gradient separator */
+.favorites-section::after {
+  content: '';
+  position: absolute;
+  bottom: -0.5rem;
+  left: 1.5rem;
+  right: 1.5rem;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(203, 213, 225, 0.5) 50%, transparent 100%);
+}
+
+/* Cascading animation for secondary flyout */
+.secondary-flyout {
+  animation: cascadeIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes cascadeIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-15px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* Enhanced mobile responsive design with better breakpoints */
+@media (max-width: 768px), (max-height: 600px) {
+  .flyout-panel {
+    display: none !important;
+  }
+  
+  .sidebar-menu-item {
+    padding: 1rem 3rem 1rem 1.5rem;
+    margin-right: 0;
+    /* Ensure proper touch targets */
+    min-height: 3rem;
+  }
+  
+  .sidebar-menu-item:hover {
+    transform: none;
+    background: rgba(203, 213, 225, 0.3);
+  }
+  
+  /* Show expand indicators on mobile */
+  .sidebar-menu-item[data-expandable="true"]::after {
+    content: '';
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: translateY(-50%) rotate(45deg);
+    opacity: 0.6;
+  }
+  
+  /* Ensure favorite stars are still accessible on mobile */
+  .favorite-star {
+    opacity: 1 !important;
+  }
+}
+
+/* Very small screens - Even more compact layout */
+@media (max-width: 480px) {
+  .sidebar-menu-item {
+    padding: 0.875rem 2.5rem 0.875rem 1.25rem;
+    font-size: 0.8rem;
+    min-height: 2.75rem;
+  }
+  
+  .favorites-header {
+    padding: 0.375rem 1.25rem;
+    font-size: 0.7rem;
+  }
+  
+  .favorite-star {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .favorite-star svg {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+/* Improved tooltip positioning */
+.tooltip {
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+  max-width: 250px;
+  word-wrap: break-word;
+  white-space: normal;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .flyout-item:hover,
+  .sidebar-menu-item:hover {
+    background: rgba(203, 213, 225, 0.5);
+    border: 2px solid rgba(203, 213, 225, 0.8);
+  }
+  
+  .flyout-item.active,
+  .sidebar-menu-item.active {
+    background: #cbd5e1;
+    border: 3px solid #94a3b8;
+  }
+  
+  .favorite-star {
+    border: 1px solid currentColor;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .flyout-panel {
+    background: #1f2937;
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #f9fafb;
+    box-shadow: 
+      0 4px 12px rgba(0, 0, 0, 0.2),
+      0 2px 4px rgba(0, 0, 0, 0.12);
+  }
+  
+  .secondary-flyout {
+    box-shadow: 
+      0 6px 16px rgba(0, 0, 0, 0.24),
+      0 3px 6px rgba(0, 0, 0, 0.16);
+  }
+  
+  .flyout-item {
+    color: #d1d5db;
+  }
+  
+  .flyout-item:hover {
+    background: rgba(148, 163, 184, 0.2);
+    color: #f3f4f6;
+  }
+  
+  .sidebar-menu-item {
+    color: #9ca3af;
+  }
+  
+  .sidebar-menu-item:hover {
+    background: rgba(148, 163, 184, 0.15);
+    color: #f3f4f6;
+  }
+  
+  .flyout-item.active,
+  .sidebar-menu-item.active {
+    background: #475569;
+    color: #f1f5f9;
+  }
+  
+  .favorites-header {
+    color: #9ca3af;
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.2) 0%, rgba(255, 193, 7, 0.08) 100%);
+  }
+  
+  .tooltip {
+    background: #374151;
+    color: #f9fafb;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .flyout-panel,
+  .sidebar-menu-item,
+  .flyout-item,
+  .favorite-star {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+  }
+  
+  .sidebar-menu-item:hover,
+  .flyout-item:hover {
+    transform: none !important;
+  }
+  
+  .favorite-star:hover {
+    transform: none !important;
+  }
+}
+
+/* Enhanced focus states for accessibility */
+.sidebar-menu-item:focus-visible,
+.flyout-item:focus-visible {
+  outline: 3px solid #cbd5e1;
+  outline-offset: 2px;
+  z-index: 1;
+}
+
+.favorite-star:focus-visible {
+  outline: 3px solid #FFC107;
+  outline-offset: 2px;
+  border-radius: 50%;
+}
+
+/* Performance optimizations */
+.flyout-panel,
+.sidebar-menu-item,
+.flyout-item,
+.favorite-star {
+  will-change: transform;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Prevent layout shifts */
+.sidebar-menu-item,
+.flyout-item {
+  contain: layout style;
+}
+
+/* Content-based width constraints with better overflow handling */
+.flyout-panel {
+  min-width: 200px;
+  max-width: min(400px, 90vw);
+  width: max-content;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.secondary-flyout {
+  min-width: 180px;
+  max-width: min(350px, 80vw);
+}
+
+/* Text truncation styles for consistent layout */
+.menu-item-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Ensure fixed positioning works correctly */
+.menu-item-controls {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+  z-index: 2;
+}
+
+/* Clean active state transitions */
+.sidebar-menu-item.active,
+.flyout-item.active {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Ensure full width active items have no gaps */
+.sidebar-menu-item.active {
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 1.5rem;
+  padding-right: 3rem;
+}
+
+/* Improve resize behavior */
+@media (min-width: 769px) {
+  .flyout-panel {
+    /* Only show flyouts on larger screens */
+    display: block;
+  }
+}
+
+/* Handle extremely narrow viewports */
+@media (max-width: 320px) {
+  .sidebar-menu-item {
+    padding: 0.75rem 2rem 0.75rem 1rem;
+    font-size: 0.75rem;
+  }
+  
+  .menu-item-text {
+    max-width: 140px;
+  }
+}
+
+/* Prevent horizontal scrolling issues */
+* {
+  box-sizing: border-box;
+}
+
+/* Ensure sidebar doesn't cause horizontal overflow */
+.sidebar-container {
+  overflow: hidden;
+}
+
+/* Better error handling for missing elements */
+.flyout-item:empty {
+  display: none;
+}
+
+.sidebar-menu-item:empty {
+  display: none;
+}

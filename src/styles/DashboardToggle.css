@@ -1,0 +1,166 @@
+/* src/styles/DashboardToggle.css */
+
+/* Dashboard toggle container */
+.dashboard-toggle-container {
+  display: flex;
+  background-color: #f3f4f6;
+  border-radius: 0.5rem;
+  padding: 0.25rem;
+  margin-right: 1rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* Individual toggle button */
+.dashboard-toggle-button {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  border: none;
+  background: transparent;
+  color: #666666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Active toggle button */
+.dashboard-toggle-button.active {
+  background-color: white;
+  color: #1a4c49;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Hover state for inactive button */
+.dashboard-toggle-button:not(.active):hover {
+  color: #333333;
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Dashboard view transitions */
+.dashboard-view-container {
+  position: relative;
+  min-height: 300px; /* Adjust based on your content size */
+}
+
+.dashboard-view {
+  transition: all 0.5s ease;
+  width: 100%;
+}
+
+/* Standard view animations - also used for Overview */
+.standard-view-enter {
+  opacity: 0;
+  transform: translateX(-15px);
+  position: absolute;
+  width: 100%;
+}
+
+.standard-view-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 0.5s, transform 0.5s;
+}
+
+.standard-view-exit {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.standard-view-exit-active {
+  opacity: 0;
+  transform: translateX(15px);
+  transition: opacity 0.5s, transform 0.5s;
+}
+
+/* Marketing view animations */
+.marketing-view-enter {
+  opacity: 0;
+  transform: translateX(-15px);
+  position: absolute;
+  width: 100%;
+}
+
+.marketing-view-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 0.5s, transform 0.5s;
+}
+
+.marketing-view-exit {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.marketing-view-exit-active {
+  opacity: 0;
+  transform: translateX(15px);
+  transition: opacity 0.5s, transform 0.5s;
+}
+
+/* RFM view animations */
+.rfm-view-enter {
+  opacity: 0;
+  transform: translateX(15px);
+  position: absolute;
+  width: 100%;
+}
+
+.rfm-view-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 0.5s, transform 0.5s;
+}
+
+.rfm-view-exit {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.rfm-view-exit-active {
+  opacity: 0;
+  transform: translateX(-15px);
+  transition: opacity 0.5s, transform 0.5s;
+}
+
+/* Add nice pulse animation to RFM button when first seeing dashboard */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(26, 76, 73, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(26, 76, 73, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(26, 76, 73, 0);
+  }
+}
+
+.dashboard-toggle-button.pulse {
+  animation: pulse 1.5s infinite;
+}
+
+/* Overview specific animations if needed */
+.overview-view-enter {
+  opacity: 0;
+  transform: translateY(-15px);
+  position: absolute;
+  width: 100%;
+}
+
+.overview-view-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.5s, transform 0.5s;
+}
+
+.overview-view-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.overview-view-exit-active {
+  opacity: 0;
+  transform: translateY(15px);
+  transition: opacity 0.5s, transform 0.5s;
+}
