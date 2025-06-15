@@ -1,4 +1,4 @@
-/* index.css with scrollbar removed from insights cards */
+/* index.css with restored card styles and modal fixes */
 
 /* Essential slide animations */
 @keyframes slideInLeft {
@@ -107,7 +107,7 @@
   }
 }
 
-/* KPI Modal Animation Styles */
+/* KPI Modal Animation Styles - ✅ FIXED: Updated z-index for proper layering */
 .kpi-modal-overlay {
   position: fixed;
   top: 0;
@@ -118,7 +118,7 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  z-index: 1000;
+  z-index: 100002; /* ✅ FIXED: Updated from 1000 to 100002 (matches KpiAnalyticsModal) */
   animation: overlayFadeIn 0.3s ease-out forwards;
 }
 
@@ -133,6 +133,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  z-index: 100003; /* ✅ FIXED: Container above overlay */
 }
 
 @keyframes slideUpModal {
@@ -267,618 +268,7 @@
 
 .program-card:hover, .campaign-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
-}
-
-.program-card-attention, .campaign-card-attention, .card-needs-attention {
-  background: linear-gradient(145deg, rgba(255, 193, 7, 0.08) 0%, rgba(244, 67, 54, 0.08) 100%) !important;
-  border: 2px solid #FFC107 !important;
-  box-shadow: 0 4px 20px rgba(255, 193, 7, 0.2), 0 0 0 1px rgba(255, 193, 7, 0.3) !important;
-  animation: attentionPulse 3s ease-in-out infinite;
-  position: relative;
-}
-
-.card-needs-attention::before {
-  content: '';
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  background: linear-gradient(45deg, #FFC107, #FF9800, #FFC107);
-  border-radius: inherit;
-  z-index: -1;
-  animation: borderShimmer 2s linear infinite;
-}
-
-@keyframes borderShimmer {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-.program-card-warning {
-  background: rgba(255, 193, 7, 0.04);
-  border-left: 3px solid #FFC107;
-}
-
-/* Quick Actions Menu Styles */
-.quick-actions-menu {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  z-index: 10;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.program-card:hover .quick-actions-menu,
-.campaign-card:hover .quick-actions-menu {
-  opacity: 1;
-}
-
-.quick-actions-menu button {
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 50%;
-  width: 2rem;
-  height: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  color: rgba(0, 0, 0, 0.6);
-}
-
-.quick-actions-menu button:hover {
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  color: rgba(0, 0, 0, 0.8);
-}
-
-.quick-actions-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  padding: 0.5rem;
-  min-width: 140px;
-  z-index: 1000;
-  margin-top: 0.5rem;
-}
-
-.quick-actions-dropdown button {
-  width: 100%;
-  background: none;
-  border: none;
-  padding: 0.5rem;
-  text-align: left;
-  cursor: pointer;
-  border-radius: 0.25rem;
-  display: flex;
-  align-items: center;
-  font-size: 0.875rem;
-  color: #333;
-  transition: background 0.2s;
-}
-
-.quick-actions-dropdown button:hover {
-  background: rgba(0, 0, 0, 0.05);
-}
-
-.quick-actions-dropdown button svg {
-  margin-right: 0.5rem;
-  width: 14px;
-  height: 14px;
-}
-
-/* Always show on mobile/touch devices */
-@media (hover: none) {
-  .quick-actions-menu {
-    opacity: 1;
-  }
-}
-
-.card-header {
-  padding: 1.5rem;
-}
-
-.card-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem 0.625rem;
-  border-radius: 16px;
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.badge-active {
-  background-color: rgba(76, 175, 80, 0.1);
-  color: #4CAF50;
-  border: 1px solid rgba(76, 175, 80, 0.2);
-}
-
-.badge-scheduled, .badge-ongoing {
-  background-color: rgba(33, 150, 243, 0.1);
-  color: #2196F3;
-  border: 1px solid rgba(33, 150, 243, 0.2);
-}
-
-.badge-draft, .badge-inactive {
-  background-color: rgba(201, 202, 203, 0.2);
-  color: #666666;
-  border: 1px solid rgba(201, 202, 203, 0.3);
-}
-
-.badge-attention {
-  background-color: rgba(244, 67, 54, 0.1);
-  color: #F44336;
-  display: flex;
-  align-items: center;
-  padding: 0.25rem 0.625rem;
-  border-radius: 16px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  border: 1px solid rgba(244, 67, 54, 0.2);
-}
-
-.card-title {
-  margin-top: 0.75rem;
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: rgba(0, 0, 0, 0.87);
-}
-
-.card-subtitle {
-  font-size: 0.75rem;
-  color: rgba(0, 0, 0, 0.6);
-  margin-top: 0.25rem;
-}
-
-.card-alert {
-  margin-top: 0.875rem;
-  padding: 0.875rem;
-  background-color: rgba(244, 67, 54, 0.05);
-  border-radius: 0.375rem;
-  color: rgba(0, 0, 0, 0.7);
-  font-size: 0.875rem;
-  font-weight: 500;
-  border-left: 3px solid #F44336;
-}
-
-.card-attention-alert {
-  margin-top: 0.875rem;
-  padding: 0.875rem;
-  background-color: rgba(255, 193, 7, 0.05);
-  border-radius: 0.375rem;
-  color: rgba(0, 0, 0, 0.7);
-  font-size: 0.875rem;
-  font-weight: 500;
-  border-left: 3px solid #FFC107;
-}
-
-.card-metrics {
-  margin-top: 1rem;
-  padding: 1rem 1.5rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-.metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.metrics-grid-2col {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.metric-label {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: rgba(0, 0, 0, 0.6);
-  margin-bottom: 0.25rem;
-}
-
-.metric-value {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: rgba(0, 0, 0, 0.87);
-}
-
-.metric-percent {
-  font-size: 0.75rem;
-  font-weight: 400;
-  color: rgba(0, 0, 0, 0.6);
-  margin-left: 0.25rem;
-}
-
-/* No data message styling */
-.no-data-message {
-  text-align: center;
-  padding: 1.5rem;
-  background-color: rgba(0, 0, 0, 0.02);
-  border-radius: 0.5rem;
-  border: 1px dashed rgba(0, 0, 0, 0.1);
-}
-
-.no-data-message-enhanced {
-  text-align: center;
-  padding: 2rem 1rem;
-  background: linear-gradient(135deg, rgba(26, 76, 73, 0.03) 0%, rgba(77, 152, 146, 0.05) 100%);
-  border-radius: 0.75rem;
-  border: 1px dashed rgba(26, 76, 73, 0.2);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  transition: all 0.3s ease;
-}
-
-.no-data-message-enhanced:hover {
-  background: linear-gradient(135deg, rgba(26, 76, 73, 0.05) 0%, rgba(77, 152, 146, 0.08) 100%);
-  border-color: rgba(26, 76, 73, 0.3);
-  transform: translateY(-1px);
-}
-
-.no-data-message p {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: rgba(0, 0, 0, 0.6);
-  margin-bottom: 0.25rem;
-}
-
-.no-data-message span {
-  font-size: 0.75rem;
-  color: rgba(0, 0, 0, 0.5);
-}
-
-/* Text color utilities */
-.text-green {
-  color: #4CAF50;
-}
-
-.text-red {
-  color: #F44336;
-}
-
-.text-blue {
-  color: #2196F3;
-}
-
-.text-yellow {
-  color: #FFC107;
-}
-
-.progress-container {
-  position: relative;
-  margin-top: 0.5rem;
-}
-
-.progress-bg {
-  height: 0.375rem;
-  border-radius: 9999px;
-  background-color: rgba(0, 0, 0, 0.06);
-}
-
-.progress-bar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 0.375rem;
-  border-radius: 9999px;
-  transition: width 0.3s;
-}
-
-.progress-bar-green {
-  background-color: #4CAF50;
-  opacity: 0.8;
-}
-
-.progress-bar-red {
-  background-color: #F44336;
-  opacity: 0.8;
-}
-
-/* Card Footer Styles - Material UI */
-.card-footer {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.625rem 1.5rem;
-  background-color: rgba(0, 0, 0, 0.02);
-  align-items: center;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-  min-height: 3.125rem; /* Fixed height for consistency */
-}
-
-.footer-info {
-  font-size: 0.75rem;
-  color: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  line-height: 1.2;
-}
-
-.footer-info svg {
-  margin-left: 0.25rem;
-}
-
-.material-button {
-  font-size: 0.75rem;
-  font-weight: 500;
-  padding: 0.375rem 0.75rem;
-  border-radius: 4px;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1.2;
-}
-
-.button-text {
-  background: transparent;
-  color: #1A4C49;
-  padding: 0.375rem 0.75rem;
-}
-
-.button-text:hover {
-  background: rgba(26, 76, 73, 0.05);
-  transform: translateX(2px);
-}
-
-.button-contained {
-  background-color: #1A4C49;
-  color: white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-}
-
-.button-contained:hover {
-  background-color: #143c39;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16), 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.button-warning {
-  background-color: white;
-  color: #D32F2F;
-  border: 1px solid #D32F2F;
-  box-shadow: none;
-}
-
-.button-warning:hover {
-  background-color: rgba(211, 47, 47, 0.08);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  transform: translateY(-1px);
-}
-
-.engagement-indicator {
-  margin-top: 0.75rem;
-  display: flex;
-  align-items: center;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.375rem;
-  background-color: white;
-}
-
-.engagement-indicator-high {
-  background-color: white;
-  border-left: 3px solid #4CAF50;
-}
-
-.engagement-indicator-medium {
-  background-color: white;
-  border-left: 3px solid #FFC107;
-}
-
-.engagement-icon {
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 0.5rem;
-}
-
-.engagement-icon-high {
-  background-color: rgba(76, 175, 80, 0.15);
-}
-
-.engagement-icon-medium {
-  background-color: rgba(255, 193, 7, 0.15);
-}
-
-.engagement-text {
-  font-size: 0.75rem;
-  color: rgba(0, 0, 0, 0.7);
-  font-weight: 500;
-}  
-
-/* Dashboard Chart and Insight Cards - Material UI Theme */
-.dashboard-card {
-  background: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-  border: none;
-  padding: 1.5rem;
-  position: relative;
-  height: 320px;
-  display: flex;
-  flex-direction: column;
-}
-
-.dashboard-card:hover {
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.dashboard-card-header {
-  font-size: 1rem;
-  font-weight: 600;
-  color: rgba(0, 0, 0, 0.87);
-  margin-bottom: 1.25rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.dashboard-card-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Insights Card Specific Styles - UPDATED TO REMOVE SCROLLBAR */
-.insights-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  /* Removed overflow-y: auto */
-  padding-right: 0.5rem;
-  margin-right: -0.5rem;
-  height: auto;
-  max-height: none;
-}
-
-/* Remove scrollbar styling */
-.insights-container::-webkit-scrollbar {
-  display: none;
-}
-
-.insights-container::-webkit-scrollbar-track {
-  display: none;
-}
-
-.insights-container::-webkit-scrollbar-thumb {
-  display: none;
-}
-
-.insights-section-title {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: rgba(0, 0, 0, 0.6);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 0.75rem;
-}
-
-.insight-item {
-  display: flex;
-  align-items: center;
-  margin-bottom: 0.5rem;
-}
-
-.insight-icon {
-  height: 1.25rem;
-  width: 1.25rem;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 0.75rem;
-  flex-shrink: 0;
-  font-size: 0.625rem;
-  position: relative;
-  top: 1px;
-}
-
-.insight-text {
-  font-size: 0.875rem;
-  color: rgba(0, 0, 0, 0.7);
-  line-height: 1.5;
-}
-
-.insight-icon-positive {
-  background-color: rgba(76, 175, 80, 0.15);
-  color: #4CAF50;
-}
-
-.insight-icon-negative {
-  background-color: rgba(244, 67, 54, 0.15);
-  color: #F44336;
-}
-
-.insight-icon-action {
-  background-color: rgba(33, 150, 243, 0.15);
-  color: #2196F3;
-}
-
-.insight-divider {
-  height: 1px;
-  background-color: rgba(0, 0, 0, 0.08);
-  margin: 0.5rem 0;
-}
-
-/* Chart Styles */
-.chart-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 1;
-  margin-top: 0.5rem;
-}
-
-/* Enhanced chart text visibility */
-.recharts-cartesian-axis-tick-value {
-  fill: rgba(0, 0, 0, 0.87) !important; /* Darker text for axis values */
-  font-weight: 500 !important;
-}
-
-.recharts-text.recharts-label {
-  fill: rgba(0, 0, 0, 0.87) !important; /* Darker text for labels */
-  font-weight: 500 !important;
-}
-
-.recharts-legend-item-text {
-  color: rgba(0, 0, 0, 0.87) !important; /* Darker text for legend */
-  font-weight: 500 !important;
-}
-
-.recharts-tooltip-label, 
-.recharts-tooltip-item-name, 
-.recharts-tooltip-item-value {
-  color: rgba(0, 0, 0, 0.87) !important; /* Darker text for tooltips */
-}
-
-.recharts-pie-label-text {
-  fill: rgba(0, 0, 0, 0.87) !important; /* Darker text for pie chart labels */
-  font-weight: 600 !important;
-  font-size: 12px !important;
-}
-
-.recharts-sector {
-  stroke: #ffffff !important; /* White stroke around pie sections for better separation */
-  stroke-width: 2px !important;
-}
-
-/* Improve pie chart label visibility */
-.recharts-pie-label-line {
-  stroke: rgba(0, 0, 0, 0.6) !important; /* Darker lines connecting to labels */
-  stroke-width: 1.5px !important;
-}
-
-/* Add background to pie labels for better visibility */
-.recharts-pie-labels g {
-  background-color: rgba(255, 255, 255, 0.7);
-}
-
-/* Fix positioning of pie chart and its labels */
-.recharts-wrapper {
-  overflow: visible !important;
-}
-
-.recharts-surface {
-  overflow: visible !important;
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.08);
 }
 
 /* src/index.css */
@@ -1054,6 +444,7 @@ body {
   margin-left: 1rem;
 }
 
+/* ===== RESTORED KPI CARD STYLES ===== */
 /* UPDATED KPI Card Styles - Matching RFM Dashboard */
 .kpi-card-grid {
   display: grid;
@@ -1077,7 +468,7 @@ body {
   width: 100%;
 }
 
-/* Card base styling to match RFM dashboard */
+/* ✅ RESTORED: Card base styling to match RFM dashboard */
 .kpi-card {
   background: white;
   border-radius: 0.75rem;
@@ -1096,13 +487,13 @@ body {
   box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
 }
 
-/* Content layout */
+/* ✅ RESTORED: Content layout */
 .kpi-card-content {
   display: flex;
   align-items: flex-start; /* Align icon to top of content like in RFM */
 }
 
-/* Icon container styling */
+/* ✅ RESTORED: Icon container styling */
 .kpi-icon-container {
   height: 3rem;
   width: 3rem;
@@ -1119,7 +510,7 @@ body {
   transform: scale(1.05);
 }
 
-/* Text container styling */
+/* ✅ RESTORED: Text container styling */
 .kpi-text-container {
   display: flex;
   flex-direction: column;
@@ -1173,7 +564,7 @@ body {
   margin-top: 0.25rem;
 }
 
-/* Icon background colors */
+/* ✅ RESTORED: Icon background colors */
 .kpi-icon-bg-revenue {
   background-color: rgba(76, 175, 80, 0.12);
   color: #4CAF50;
@@ -1198,3 +589,208 @@ body {
   background-color: rgba(244, 67, 54, 0.12);
   color: #F44336;
 }
+
+/* ===== MODAL INTERACTION IMPROVEMENTS ===== */
+/* Backdrop click area should cover full screen */
+.modal-overlay,
+.ai-response-modal-overlay,
+.profile-switch-overlay,
+.kpi-modal-overlay {
+  width: 100vw;
+  height: 100vh;
+  top: 0;
+  left: 0;
+  pointer-events: auto;
+}
+
+/* Modal content should not trigger backdrop close */
+.modal-content,
+.ai-response-modal-container,
+.profile-switch-modal,
+.kpi-modal-container {
+  pointer-events: auto;
+}
+
+/* Ensure modal containers are above their overlays */
+.modal-container {
+  position: relative;
+  z-index: 1;
+}
+
+/* Prevent body scroll when any modal is open */
+body.modal-open {
+  overflow: hidden !important;
+}
+
+/* ===== ACCESSIBILITY IMPROVEMENTS ===== */
+/* Focus trap for modals */
+.modal-container:focus-within {
+  outline: none;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .modal-overlay,
+  .ai-response-modal-overlay,
+  .profile-switch-overlay,
+  .kpi-modal-overlay {
+    background-color: rgba(0, 0, 0, 0.8);
+  }
+}
+
+/* Add this to your index.css or create a new CSS file */
+/* Modal Breakout Fix - Ensures modals escape parent container constraints */
+
+/* ===== CRITICAL MODAL CONTAINER FIXES ===== */
+/* Override parent container constraints for full-screen modals */
+
+/* Ensure main containers don't constrain modals */
+main, .max-w-7xl, .dashboard-view-container, .dashboard-view {
+  /* Remove contain constraint that prevents modals from breaking out */
+  contain: none !important;
+}
+
+/* Ensure modals can break out of any parent overflow constraints */
+.full-modal-slide-in,
+[style*="position: fixed"][style*="z-index: 100001"],
+[style*="position: fixed"][style*="z-index: 100002"],
+[style*="position: fixed"][style*="z-index: 100005"] {
+  /* Force modals to render at viewport level */
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  /* Create new stacking context */
+  isolation: isolate !important;
+  /* Force GPU acceleration for better rendering */
+  transform: translateZ(0) !important;
+  /* Ensure it renders above everything */
+  z-index: 100001 !important;
+}
+
+/* Specifically target RFM modal */
+div[style*="z-index: 100001"]:has(h2:contains("Segment Analysis")),
+div[style*="backgroundColor: #f5f7f8"][style*="position: fixed"] {
+  /* Ensure full viewport coverage */
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: none !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  /* Override any parent transforms */
+  transform: none !important;
+  /* Ensure proper z-index */
+  z-index: 100001 !important;
+}
+
+/* Prevent any parent from clipping modals */
+body, html {
+  /* Ensure no overflow issues */
+  overflow-x: hidden;
+}
+
+/* When modal is open, prevent main content scroll */
+body.modal-open,
+body:has(.full-modal-slide-in) {
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+/* Ensure modal backdrop covers entire viewport */
+.full-modal-slide-in::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* ===== PARENT CONTAINER OVERRIDES ===== */
+/* Remove constraints that might clip modals */
+
+/* Remove max-width constraints when modal is open */
+body:has(.full-modal-slide-in) .max-w-7xl {
+  max-width: none !important;
+}
+
+/* Remove any padding/margin that might affect modal positioning */
+body:has(.full-modal-slide-in) main {
+  padding: 0 !important;
+  margin: 0 !important;
+  max-width: none !important;
+}
+
+/* Ensure sidebar doesn't affect modal positioning */
+body:has(.full-modal-slide-in) .flex.justify-center {
+  margin-left: 0 !important;
+}
+
+/* ===== MODAL CONTENT FIXES ===== */
+/* Ensure modal content renders properly */
+
+/* Modal header should span full width */
+.full-modal-slide-in .modal-header,
+.full-modal-slide-in > div > div:first-child {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+/* Modal content should be properly contained */
+.full-modal-slide-in > div {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+}
+
+/* ===== ACCESSIBILITY FIXES ===== */
+/* Ensure focus remains within modal */
+body:has(.full-modal-slide-in) *:not(.full-modal-slide-in *) {
+  /* Prevent focus on background elements */
+  pointer-events: none !important;
+}
+
+.full-modal-slide-in * {
+  /* Restore pointer events within modal */
+  pointer-events: auto !important;
+}
+
+/* ===== RESPONSIVE FIXES ===== */
+/* Ensure modals work on all screen sizes */
+@media (max-width: 768px) {
+  .full-modal-slide-in {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: none !important;
+    max-height: none !important;
+  }
+}
+
+/* ===== DEBUG HELPERS (remove in production) ===== */
+/* Uncomment for debugging modal positioning issues */
+/*
+.full-modal-slide-in {
+  border: 3px solid red !important;
+  box-shadow: inset 0 0 0 3px blue !important;
+}
+
+.full-modal-slide-in > div {
+  border: 2px solid green !important;
+}
+*/

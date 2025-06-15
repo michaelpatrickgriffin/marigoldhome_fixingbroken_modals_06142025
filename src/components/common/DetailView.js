@@ -1,62 +1,8 @@
 // src/components/common/DetailView.js
-// Enhanced with unified recommendation display using EnhancedRecommendationCard
-
 import React, { useState, useEffect } from 'react';
-import { 
-  ArrowRight, AlertTriangle, Check, X, Edit,
-  BarChart2, TrendingUp, Users, Award, Target, Zap, ChevronRight, ChevronDown, DollarSign,
-  Brain, Clock, Lightbulb, CheckCircle, XCircle, AlertCircle, Settings,
-  Sparkles, TrendingDown, Activity, RefreshCw, Gift, Percent, UserCheck, CreditCard, Mail, Archive
-} from 'lucide-react';
-import { COLORS, getImpactColor, getDifficultyColor } from '../../styles/ColorStyles';
-import { 
-  modalOverlayStyle, 
-  modalHeaderStyle, 
-  modalHeaderContentStyle, 
-  closeButtonStyle,
-  tabContainerStyle,
-  tabContentStyle,
-  tabButtonStyle,
-  contentAreaStyle,
-  contentWrapperStyle,
-  cardStyle,
-  alertCardStyle,
-  programMetricCardStyle,
-  programMetricHeaderStyle,
-  programMetricIconStyle,
-  programMetricLabelStyle,
-  programMetricValueStyle,
-  programMetricSubtextStyle,
-  quickActionButtonStyle,
-  statusBadgeStyle,
-  recommendationCardStyle,
-  recommendationHeaderStyle,
-  tagStyle,
-  actionButtonStyle,
-  PROGRAM_CHART_COLORS,
-  progressBarContainerStyle,
-  progressBarStyle,
-  insightBoxStyle,
-  insightTitleStyle,
-  insightTextStyle,
-  programEnhancedCardStyle,
-  programMetricEnhancedCardStyle,
-  programMetricIconContainerStyle,
-  programFinancialSectionStyle,
-  programFinancialCardStyle,
-  programFinancialIconStyle
-} from '../../styles/ProgramDetailStyles';
-import {
-  generateProgramEngagementData,
-  generateProgramTierData,
-  generateProgramTimeData,
-  generateProgramRetentionData,
-  generateProgramPerformanceMetrics,
-  generateProgramRedemptionCategories,
-  generateProgramDeviceData,
-  generateProgramCohortData
-} from '../../utils/ProgramDetailData';
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
+import { X, Download, Share2, ArrowLeft, ArrowRight, Clock, Users, TrendingUp, AlertTriangle, CheckCircle, ExternalLink, Star } from 'lucide-react';
+import { COLORS } from '../../styles/ColorStyles';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 import RecommendationImplementationModal from '../loyalty/RecommendationImplementationModal';
 import EnhancedRecommendationCard from './EnhancedRecommendationCard';
 import { 
@@ -90,13 +36,25 @@ const DetailView = ({
   const [selectedRecommendation, setSelectedRecommendation] = useState(null);
   const [recommendationProgramData, setRecommendationProgramData] = useState(null);
   
-  // Prevent body scroll when modal is open
+  // ✅ FIXED: Proper modal behavior with body scroll prevention and escape key
   useEffect(() => {
+    // Prevent body scroll when modal is open
     document.body.style.overflow = 'hidden';
+    
+    // Handle escape key
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    
+    document.addEventListener('keydown', handleEscape);
+    
     return () => {
       document.body.style.overflow = 'unset';
+      document.removeEventListener('keydown', handleEscape);
     };
-  }, []);
+  }, [onClose]);
   
   // Sync internal activeTab with prop
   useEffect(() => {
@@ -201,379 +159,503 @@ const DetailView = ({
       console.log('Program data set:', !!program);
     }, 100);
   };
-  
-  const handleModifyAction = (recommendation) => {
-    console.log('%c MODIFY ACTION TRIGGERED', 'background: orange; color: white; font-size: 12px;');
-    console.log('Recommendation to modify:', recommendation);
-    if (onModify) {
-      onModify(program, recommendation);
-    }
-  };
-  
-  const handleRejectAction = (recommendation) => {
-    console.log('%c REJECT ACTION TRIGGERED', 'background: red; color: white; font-size: 12px;');
-    console.log('Recommendation to reject:', recommendation);
-    
-    // ✅ FIXED: Update session state only (no localStorage)
-    const newRejected = new Set([...rejectedRecommendations, recommendation.id]);
-    setRejectedRecommendations(newRejected);
-    
-    if (onReject) {
-      onReject(program, recommendation);
+
+  // Handle backdrop click
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onClose();
     }
   };
 
-  // ✅ NEW: Handle archive action
-  const handleArchiveAction = (recommendation) => {
-    console.log('Archive recommendation:', recommendation.id);
-    const newArchived = new Set([...archivedRecommendations, recommendation.id]);
-    setArchivedRecommendations(newArchived);
+  // Mock data for charts (in real app, this would come from program data)
+  const mockPerformanceData = [
+    { month: 'Jan', participants: 400, revenue: 2400 },
+    { month: 'Feb', participants: 300, revenue: 1398 },
+    { month: 'Mar', participants: 200, revenue: 9800 },
+    { month: 'Apr', participants: 278, revenue: 3908 },
+    { month: 'May', participants: 189, revenue: 4800 },
+    { month: 'Jun', participants: 239, revenue: 3800 },
+  ];
+
+  const mockSegmentData = [
+    { name: 'New', value: 400, fill: COLORS.evergreen },
+    { name: 'Active', value: 300, fill: COLORS.sage },
+    { name: 'At Risk', value: 200, fill: COLORS.mint },
+    { name: 'Lost', value: 100, fill: COLORS.seafoam },
+  ];
+
+  // Render tab content
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'performance':
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            {/* Performance Overview */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: '1rem'
+            }}>
+              <div style={{
+                padding: '1.5rem',
+                backgroundColor: 'white',
+                borderRadius: '0.75rem',
+                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.08)',
+                border: '1px solid rgba(0, 0, 0, 0.08)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <Users size={20} style={{ color: COLORS.evergreen, marginRight: '0.5rem' }} />
+                  <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>Total Participants</span>
+                </div>
+                <div style={{ fontSize: '2rem', fontWeight: 600, color: COLORS.onyx }}>
+                  {program.participants?.toLocaleString() || '0'}
+                </div>
+              </div>
+
+              <div style={{
+                padding: '1.5rem',
+                backgroundColor: 'white',
+                borderRadius: '0.75rem',
+                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.08)',
+                border: '1px solid rgba(0, 0, 0, 0.08)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <TrendingUp size={20} style={{ color: COLORS.sage, marginRight: '0.5rem' }} />
+                  <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>ROI</span>
+                </div>
+                <div style={{ 
+                  fontSize: '2rem', 
+                  fontWeight: 600, 
+                  color: (program.roi || 0) >= 0 ? COLORS.evergreen : '#ef4444' 
+                }}>
+                  {program.roi ? `${program.roi}%` : '0%'}
+                </div>
+              </div>
+            </div>
+
+            {/* Performance Chart */}
+            <div style={{
+              padding: '2rem',
+              backgroundColor: 'white',
+              borderRadius: '0.75rem',
+              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.08)',
+              border: '1px solid rgba(0, 0, 0, 0.08)'
+            }}>
+              <h3 style={{ 
+                fontSize: '1.25rem', 
+                fontWeight: 600, 
+                color: COLORS.onyx, 
+                marginBottom: '2rem' 
+              }}>
+                Performance Trends
+              </h3>
+              <div style={{ height: '300px' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={mockPerformanceData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
+                    <XAxis dataKey="month" stroke={COLORS.onyxMedium} />
+                    <YAxis stroke={COLORS.onyxMedium} />
+                    <Tooltip />
+                    <Legend />
+                    <Line 
+                      type="monotone" 
+                      dataKey="participants" 
+                      stroke={COLORS.evergreen} 
+                      strokeWidth={3}
+                      name="Participants"
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="revenue" 
+                      stroke={COLORS.sage} 
+                      strokeWidth={3}
+                      name="Revenue"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'audience':
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            {/* Audience Breakdown */}
+            <div style={{
+              padding: '2rem',
+              backgroundColor: 'white',
+              borderRadius: '0.75rem',
+              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.08)',
+              border: '1px solid rgba(0, 0, 0, 0.08)'
+            }}>
+              <h3 style={{ 
+                fontSize: '1.25rem', 
+                fontWeight: 600, 
+                color: COLORS.onyx, 
+                marginBottom: '2rem' 
+              }}>
+                Audience Segments
+              </h3>
+              <div style={{ height: '300px' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={mockSegmentData}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      dataKey="value"
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    >
+                      {mockSegmentData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'recommendations':
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {program.recommendations && program.recommendations.length > 0 ? (
+              <EnhancedRecommendationCard
+                program={program}
+                recommendations={program.recommendations}
+                expandedRecommendation={expandedRecommendation}
+                onToggleExpand={(rec) => setExpandedRecommendation(expandedRecommendation?.id === rec.id ? null : rec)}
+                onImplement={handleImplementAction}
+                onModify={(rec) => console.log('Modify:', rec)}
+                onReject={(rec) => console.log('Reject:', rec)}
+                onArchive={(rec) => console.log('Archive:', rec)}
+                onBulkAction={(action, recs) => console.log('Bulk action:', action, recs)}
+                onResetRecommendations={() => console.log('Reset recommendations')}
+                bulkActionLoading={bulkActionLoading}
+                implementedRecommendations={implementedRecommendations}
+                rejectedRecommendations={rejectedRecommendations}
+                archivedRecommendations={archivedRecommendations}
+              />
+            ) : (
+              <div style={{
+                padding: '3rem',
+                textAlign: 'center',
+                backgroundColor: 'white',
+                borderRadius: '0.75rem',
+                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.08)',
+                border: '1px solid rgba(0, 0, 0, 0.08)'
+              }}>
+                <Star size={48} style={{ color: COLORS.onyxLight, marginBottom: '1rem' }} />
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '0.5rem' }}>
+                  No Recommendations Available
+                </h3>
+                <p style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>
+                  This program doesn't have any recommendations at the moment.
+                </p>
+              </div>
+            )}
+          </div>
+        );
+
+      default: // overview
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            {/* Program Summary */}
+            <div style={{
+              padding: '2rem',
+              backgroundColor: 'white',
+              borderRadius: '0.75rem',
+              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.08)',
+              border: '1px solid rgba(0, 0, 0, 0.08)'
+            }}>
+              <h3 style={{ 
+                fontSize: '1.25rem', 
+                fontWeight: 600, 
+                color: COLORS.onyx, 
+                marginBottom: '1rem' 
+              }}>
+                Program Overview
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+                <div>
+                  <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium, display: 'block', marginBottom: '0.25rem' }}>
+                    Status
+                  </span>
+                  <span style={{ 
+                    fontSize: '1rem', 
+                    fontWeight: 600, 
+                    color: program.status === 'Active' ? COLORS.evergreen : COLORS.onyxMedium 
+                  }}>
+                    {program.status || 'Unknown'}
+                  </span>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium, display: 'block', marginBottom: '0.25rem' }}>
+                    Type
+                  </span>
+                  <span style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.onyx }}>
+                    {program.type || 'N/A'}
+                  </span>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium, display: 'block', marginBottom: '0.25rem' }}>
+                    Audience
+                  </span>
+                  <span style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.onyx }}>
+                    {program.audience || 'All Customers'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Key Metrics */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+              gap: '1rem'
+            }}>
+              <div style={{
+                padding: '1.5rem',
+                backgroundColor: 'white',
+                borderRadius: '0.75rem',
+                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.08)',
+                border: '1px solid rgba(0, 0, 0, 0.08)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <Users size={20} style={{ color: COLORS.evergreen, marginRight: '0.5rem' }} />
+                  <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>Participants</span>
+                </div>
+                <div style={{ fontSize: '2rem', fontWeight: 600, color: COLORS.onyx }}>
+                  {program.participants?.toLocaleString() || '0'}
+                </div>
+              </div>
+
+              <div style={{
+                padding: '1.5rem',
+                backgroundColor: 'white',
+                borderRadius: '0.75rem',
+                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.08)',
+                border: '1px solid rgba(0, 0, 0, 0.08)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <CheckCircle size={20} style={{ color: COLORS.sage, marginRight: '0.5rem' }} />
+                  <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>Completion Rate</span>
+                </div>
+                <div style={{ fontSize: '2rem', fontWeight: 600, color: COLORS.onyx }}>
+                  {program.completionRate ? `${program.completionRate}%` : '0%'}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+    }
   };
 
-  // ✅ NEW: Reset all recommendations to initial state (matches main dashboard)
-  const handleResetRecommendations = () => {
-    setImplementedRecommendations(new Set());
-    setRejectedRecommendations(new Set());
-    setArchivedRecommendations(new Set());
-    setExpandedRecommendation(null);
-    setBulkActionLoading(false);
-  };
-
-  // ✅ ENHANCED: Handle implementation modal close with comprehensive cleanup
+  // Handle close implementation modal
   const handleCloseImplementationModal = () => {
-    console.log('%c CLOSING IMPLEMENTATION MODAL', 'background: blue; color: white; font-size: 14px;');
-    console.log('Cleaning up modal state...');
-    
+    console.log('%c CLOSING IMPLEMENTATION MODAL', 'background: orange; color: white; font-size: 12px;');
     setShowImplementationModal(false);
     setSelectedRecommendation(null);
     setRecommendationProgramData(null);
-    
-    console.log('Modal state cleaned up');
   };
 
-  // ✅ ENHANCED: Handle program creation from implementation modal with validation
+  // Handle program created from implementation
   const handleProgramCreatedFromImplementation = (newProgram) => {
-    console.log('%c PROGRAM CREATED FROM IMPLEMENTATION', 'background: green; color: white; font-size: 14px;');
+    console.log('%c PROGRAM CREATED FROM IMPLEMENTATION', 'background: green; color: white; font-size: 12px;');
     console.log('New program created:', newProgram);
     
-    // Validate the new program data
-    if (!newProgram) {
-      console.error('❌ No program data received from implementation');
-      return;
-    }
-    
-    // ✅ FIXED: Mark the recommendation as implemented using session state
-    if (selectedRecommendation) {
-      console.log('Marking recommendation as implemented:', selectedRecommendation.id);
-      const newImplemented = new Set([...implementedRecommendations, selectedRecommendation.id]);
-      setImplementedRecommendations(newImplemented);
-    }
-    
-    // Pass to parent if callback exists
-    if (onProgramCreated) {
-      console.log('Calling parent onProgramCreated callback');
-      onProgramCreated(newProgram);
-    } else {
-      console.warn('⚠️ No onProgramCreated callback provided');
-    }
-    
-    // Close the implementation modal
+    // Close implementation modal
     handleCloseImplementationModal();
+    
+    // Pass to parent callback if provided
+    if (onProgramCreated) {
+      onProgramCreated(newProgram);
+    }
   };
 
-  // ✅ ENHANCED: Handle notification creation from implementation modal
+  // Handle notification created from implementation
   const handleNotificationCreatedFromImplementation = (notification) => {
-    console.log('%c NOTIFICATION CREATED FROM IMPLEMENTATION', 'background: blue; color: white; font-size: 14px;');
-    console.log('Notification created:', notification);
+    console.log('%c NOTIFICATION CREATED FROM IMPLEMENTATION', 'background: blue; color: white; font-size: 12px;');
+    console.log('New notification created:', notification);
     
-    // Validate notification data
-    if (!notification) {
-      console.error('❌ No notification data received');
-      return;
-    }
-    
-    // Pass to parent if callback exists
+    // Pass to parent callback if provided
     if (onNotificationCreated) {
-      console.log('Calling parent onNotificationCreated callback');
       onNotificationCreated(notification);
-    } else {
-      console.warn('⚠️ No onNotificationCreated callback provided');
     }
   };
 
-  // ✅ NEW: Handle toggle expand for unified recommendation cards
-  const handleToggleExpand = (recommendationId) => {
-    setExpandedRecommendation(expandedRecommendation === recommendationId ? null : recommendationId);
-  };
+  const tabs = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'performance', label: 'Performance' },
+    { id: 'audience', label: 'Audience' },
+    { id: 'recommendations', label: 'Recommendations' }
+  ];
 
-  // ✅ ENHANCED: Bulk actions matching main dashboard functionality
-  const handleBulkAction = async (action) => {
-    console.log('%c BULK ACTION TRIGGERED', 'background: purple; color: white; font-size: 12px;');
-    console.log('Bulk action type:', action);
-    
-    setBulkActionLoading(true);
-    const activeRecommendations = enhancedRecommendations.filter(
-      rec => !implementedRecommendations.has(rec.id) && 
-             !rejectedRecommendations.has(rec.id) && 
-             !archivedRecommendations.has(rec.id)
-    );
-
-    console.log('Active recommendations for bulk action:', activeRecommendations.length);
-
-    for (const rec of activeRecommendations) {
-      await new Promise(resolve => setTimeout(resolve, 200)); // Simulate API delay
-      
-      if (action === 'implement') {
-        console.log('Bulk implementing recommendation:', rec.id);
-        const newImplemented = new Set([...implementedRecommendations, rec.id]);
-        setImplementedRecommendations(newImplemented);
-      } else if (action === 'reject') {
-        console.log('Bulk rejecting recommendation:', rec.id);
-        const newRejected = new Set([...rejectedRecommendations, rec.id]);
-        setRejectedRecommendations(newRejected);
-      }
-    }
-    
-    setBulkActionLoading(false);
-  };
-  
-  // Check if this is a program or campaign based on reliable properties
-  const itemType = program && program.redemptionRate !== undefined ? 'program' : 'campaign';
-  
-  // Generate data using utility functions for programs
-  const engagementData = generateProgramEngagementData(program);
-  const tierData = generateProgramTierData(program);
-  const timeData = generateProgramTimeData(program);
-  const retentionData = generateProgramRetentionData(program);
-  const performanceMetrics = generateProgramPerformanceMetrics(program);
-  const redemptionCategories = generateProgramRedemptionCategories(program);
-  const deviceData = generateProgramDeviceData(program);
-  const cohortData = generateProgramCohortData(program);
-  
-  // ✅ UPDATED: Enhanced recommendations with AI explanations and RFM linking
-  const enhancedRecommendations = program?.recommendations?.map(rec => {
-    // Try to find matching RFM recommendation for enhanced data
-    const rfmRecommendation = getRecommendationById(rec.id);
-    
-    return {
-      ...rec,
-      // Use RFM data if available, otherwise generate fallback data
-      aiExplanation: rfmRecommendation?.aiExplanation || generateProgramAIExplanation(rec, program),
-      estimatedRevenue: rfmRecommendation?.estimatedRevenue || generateProgramEstimatedRevenue(rec, program),
-      memberImpact: rfmRecommendation?.memberImpact || generateMemberImpact(rec, program),
-      timeToImplement: rfmRecommendation?.timeToImplement || generateProgramTimeToImplement(rec),
-      confidenceScore: rfmRecommendation?.confidenceScore || generateProgramConfidenceScore(rec, program),
-      prerequisites: rfmRecommendation?.prerequisites || generateProgramPrerequisites(rec),
-      successMetrics: rfmRecommendation?.successMetrics || generateProgramSuccessMetrics(rec),
-      risks: rfmRecommendation?.risks || generateProgramRisks(rec)
-    };
-  }) || [];
-  
-  // Debug the enhanced recommendations
-  useEffect(() => {
-    if (enhancedRecommendations.length > 0) {
-      console.log('%c ENHANCED RECOMMENDATIONS DEBUG', 'background: cyan; color: black; font-size: 14px;');
-      enhancedRecommendations.forEach((rec, index) => {
-        console.log(`Enhanced Recommendation ${index}:`, {
-          id: rec.id,
-          title: rec.title,
-          type: rec.type,
-          hasRFMData: !!getRecommendationById(rec.id),
-          originalRec: rec
-        });
-      });
-    }
-  }, [enhancedRecommendations]);
-  
-  // If no program data is provided, show a loading message
-  if (!program) {
-    return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        width: '100vw',
-        height: '100vh',
-        backgroundColor: '#f5f7f8',
-        zIndex: 9999,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        overflow: 'hidden'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <p style={{ fontSize: '1.125rem', color: COLORS.onyxMedium, marginBottom: '0.5rem' }}>Loading program details...</p>
-          <button 
-            onClick={onClose} 
-            style={{ 
-              padding: '0.5rem 1rem', 
-              backgroundColor: COLORS.evergreen, 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '0.375rem', 
-              cursor: 'pointer' 
-            }}
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    );
-  }
-  
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      width: '100vw',
-      height: '100vh',
-      backgroundColor: '#f5f7f8',
-      zIndex: 9999,
-      display: 'flex',
-      flexDirection: 'column',
-      overflow: 'hidden'
-    }}>
-      <div style={{ 
-        width: '100%', 
-        height: '100%', 
-        display: 'flex', 
-        flexDirection: 'column',
-        overflow: 'hidden'
-      }}>
-        {/* Modal Header */}
-        <div style={modalHeaderStyle(program.needsAttention)}>
-          <div style={modalHeaderContentStyle}>
-            <div className="flex items-center">
-              {program.needsAttention && (
-                <AlertTriangle size={20} style={{ color: COLORS.red, marginRight: '0.75rem' }} />
-              )}
-              <div>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: COLORS.onyx }}>
-                  {program.title}
-                </h2>
-                <p style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>
-                  {program.type} • {program.audience} • {program.status}
-                </p>
-              </div>
-            </div>
-            <button onClick={onClose} style={closeButtonStyle}>
-              <X size={20} />
-            </button>
-          </div>
-        </div>
-        
-        {/* Tabs */}
-        <div style={tabContainerStyle}>
-          <div style={tabContentStyle}>
-            <button onClick={() => handleTabChange('overview')} style={tabButtonStyle(activeTab === 'overview')}>
-              Overview
-            </button>
-            
-            <button onClick={() => handleTabChange('performance')} style={tabButtonStyle(activeTab === 'performance')}>
-              Performance
-            </button>
-            
-            <button onClick={() => handleTabChange('recommendations')} style={tabButtonStyle(activeTab === 'recommendations')}>
-              <Brain size={16} style={{ marginRight: '0.5rem' }} />
-              AI Recommendations
-              {enhancedRecommendations.length > 0 && (
-                <span style={{ 
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginLeft: '0.5rem',
-                  backgroundColor: COLORS.evergreen,
-                  color: 'white',
-                  width: '1.5rem',
-                  height: '1.5rem',
-                  borderRadius: '50%',
-                  fontSize: '0.75rem',
-                  fontWeight: 600
-                }}>
-                  {enhancedRecommendations.length}
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
-        
-        {/* Modal Body with proper scrolling and constrained width */}
-        <div style={{
-          flex: 1,
+    <>
+      {/* ✅ FIXED: Full-screen modal overlay with proper z-index */}
+      <div 
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          zIndex: 100005, // ✅ FIXED: Above all other modals
+          backdropFilter: 'blur(4px)',
           display: 'flex',
+          alignItems: 'center',
           justifyContent: 'center',
-          overflow: 'hidden',
-          minHeight: 0
-        }}>
-          <div style={{
-            maxWidth: '80rem',
+          padding: '0'
+        }}
+        onClick={handleBackdropClick}
+      >
+        {/* ✅ FIXED: Modal container with proper z-index */}
+        <div
+          style={{
             width: '100%',
             height: '100%',
+            maxWidth: '100%',
+            maxHeight: '100%',
+            backgroundColor: '#f5f7f8',
+            zIndex: 100006, // ✅ FIXED: Container above overlay
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden'
+          }}
+          onClick={e => e.stopPropagation()}
+        >
+          {/* Modal Header */}
+          <div style={{
+            padding: '1.5rem',
+            borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'white',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            flexShrink: 0,
+            zIndex: 100007 // ✅ FIXED: Header above content
+          }}>
+            <div style={{
+              maxWidth: '80rem',
+              width: '100%',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              paddingLeft: '1.5rem',
+              paddingRight: '1.5rem'
+            }}>
+              <div>
+                <h2 style={{ 
+                  fontSize: '1.5rem', 
+                  fontWeight: 600, 
+                  color: COLORS.onyx, 
+                  margin: 0 
+                }}>
+                  {program.title}
+                </h2>
+                <p style={{ 
+                  fontSize: '0.875rem', 
+                  color: COLORS.onyxMedium, 
+                  margin: '0.25rem 0 0 0' 
+                }}>
+                  {program.type} • {program.audience}
+                </p>
+              </div>
+              
+              {/* Close Button */}
+              <button 
+                onClick={onClose}
+                style={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '2.5rem',
+                  height: '2.5rem',
+                  borderRadius: '50%',
+                  color: COLORS.onyxMedium,
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                className="hover:bg-gray-100"
+              >
+                <X size={20} />
+              </button>
+            </div>
+          </div>
+
+          {/* Tab Navigation */}
+          <div style={{
+            borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+            display: 'flex',
+            justifyContent: 'center',
+            backgroundColor: 'white',
+            flexShrink: 0,
+            zIndex: 100007 // ✅ FIXED: Tabs above content
+          }}>
+            <div style={{
+              maxWidth: '80rem',
+              width: '100%',
+              paddingLeft: '1.5rem',
+              paddingRight: '1.5rem',
+              display: 'flex',
+              gap: '2rem'
+            }}>
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabChange(tab.id)}
+                  style={{
+                    padding: '1rem 0',
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
+                    color: activeTab === tab.id ? COLORS.evergreen : COLORS.onyxMedium,
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    borderBottom: activeTab === tab.id ? `2px solid ${COLORS.evergreen}` : '2px solid transparent',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Modal Body - Scrollable Content */}
+          <div style={{
+            flex: 1,
             overflowY: 'auto',
-            overflowX: 'hidden',
-            paddingLeft: '1.5rem',
-            paddingRight: '1.5rem',
-            paddingTop: '1.5rem',
-            paddingBottom: '1.5rem'
-          }} className="tab-transition-container">
-            {activeTab === 'overview' && (
-              <div className="slide-in-left" key="overview">
-                <OverviewTab 
-                  program={program}
-                  performanceMetrics={performanceMetrics}
-                  engagementData={engagementData}
-                  onImplement={handleImplementAction}
-                  setActiveTab={handleTabChange}
-                />
-              </div>
-            )}
-            
-            {activeTab === 'performance' && (
-              <div className="slide-in-up" key="performance">
-                <PerformanceTab 
-                  program={program}
-                  performanceMetrics={performanceMetrics}
-                  engagementData={engagementData}
-                  tierData={tierData}
-                  timeData={timeData}
-                  retentionData={retentionData}
-                  redemptionCategories={redemptionCategories}
-                  deviceData={deviceData}
-                  cohortData={cohortData}
-                />
-              </div>
-            )}
-            
-            {activeTab === 'recommendations' && (
-              <div className="slide-in-right" key="recommendations">
-                <UnifiedProgramRecommendationsTab
-                  program={program}
-                  recommendations={enhancedRecommendations}
-                  expandedRecommendation={expandedRecommendation}
-                  onToggleExpand={handleToggleExpand}
-                  onImplement={handleImplementAction}
-                  onModify={handleModifyAction}
-                  onReject={handleRejectAction}
-                  onArchive={handleArchiveAction}
-                  onBulkAction={handleBulkAction}
-                  onResetRecommendations={handleResetRecommendations}
-                  bulkActionLoading={bulkActionLoading}
-                  implementedRecommendations={implementedRecommendations}
-                  rejectedRecommendations={rejectedRecommendations}
-                  archivedRecommendations={archivedRecommendations}
-                />
-              </div>
-            )}
+            display: 'flex',
+            justifyContent: 'center',
+            zIndex: 100006 // ✅ FIXED: Content z-index
+          }}>
+            <div style={{
+              maxWidth: '80rem',
+              width: '100%',
+              paddingLeft: '1.5rem',
+              paddingRight: '1.5rem',
+              paddingTop: '1.5rem',
+              paddingBottom: '1.5rem'
+            }}>
+              {renderTabContent()}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* ✅ ENHANCED: Recommendation Implementation Modal with better debugging and validation */}
+      {/* ✅ ENHANCED: Recommendation Implementation Modal with proper z-index stacking */}
       {showImplementationModal && selectedRecommendation && recommendationProgramData && (
         <RecommendationImplementationModal
           isOpen={showImplementationModal}
@@ -584,823 +666,8 @@ const DetailView = ({
           onNotificationCreated={handleNotificationCreatedFromImplementation}
         />
       )}
-
-      {/* ✅ ENHANCED: Debug Panel with more detailed state information */}
-      {process.env.NODE_ENV === 'development' && (
-        <div style={{
-          position: 'fixed',
-          bottom: '1rem',
-          right: '1rem',
-          backgroundColor: 'black',
-          color: 'white',
-          padding: '0.5rem',
-          borderRadius: '0.25rem',
-          fontSize: '0.75rem',
-          zIndex: 10002,
-          maxWidth: '300px',
-          display: 'none'
-        }}>
-          <div><strong>DetailView Debug Panel</strong></div>
-          <div>Modal State: {showImplementationModal ? 'OPEN' : 'CLOSED'}</div>
-          <div>Selected Rec: {selectedRecommendation?.id || 'NONE'}</div>
-          <div>Rec Title: {selectedRecommendation?.title || 'NONE'}</div>
-          <div>Rec Type: {selectedRecommendation?.type || 'NONE'}</div>
-          <div>Program: {recommendationProgramData?.title || 'NONE'}</div>
-          <div>Program ID: {recommendationProgramData?.id || 'NONE'}</div>
-          <div>Active Tab: {activeTab}</div>
-          <div>Enhanced Recs: {enhancedRecommendations.length}</div>
-        </div>
-      )}
-    </div>
+    </>
   );
-};
-
-// ✅ ENHANCED: Unified Program Recommendations Tab using EnhancedRecommendationCard with bulk actions
-const UnifiedProgramRecommendationsTab = ({ 
-  program,
-  recommendations,
-  expandedRecommendation, 
-  onToggleExpand, 
-  onImplement, 
-  onModify, 
-  onReject,
-  onArchive,
-  onBulkAction,
-  onResetRecommendations,
-  bulkActionLoading,
-  implementedRecommendations,
-  rejectedRecommendations,
-  archivedRecommendations
-}) => {
-  // ✅ FIXED: Calculate active recommendations (exclude archived)
-  const activeRecommendations = recommendations.filter(
-    rec => !implementedRecommendations.has(rec.id) && 
-           !rejectedRecommendations.has(rec.id) && 
-           !archivedRecommendations.has(rec.id)
-  );
-
-  const implementedCount = implementedRecommendations.size;
-  const rejectedCount = rejectedRecommendations.size;
-  const totalPotentialRevenue = activeRecommendations.reduce((sum, rec) => sum + (rec.estimatedRevenue || 0), 0);
-  const totalMemberImpact = activeRecommendations.reduce((sum, rec) => sum + (rec.memberImpact || 0), 0);
-
-  // ✅ FIXED: Filter out archived recommendations for display
-  const visibleRecommendations = recommendations.filter(rec => !archivedRecommendations.has(rec.id));
-
-  if (!recommendations || recommendations.length === 0) {
-    return (
-      <div style={{ textAlign: 'center', padding: '4rem' }}>
-        <Brain size={64} style={{ color: COLORS.onyxSoft, marginBottom: '1rem' }} />
-        <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.onyxMedium, marginBottom: '0.5rem' }}>
-          No AI Recommendations Available
-        </h3>
-        <p style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>
-          Our AI is analyzing your loyalty program performance. Check back in a few minutes for optimization suggestions.
-        </p>
-      </div>
-    );
-  }
-  
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      {/* ✅ ENHANCED: Program Recommendations Summary Header matching main dashboard */}
-      <div style={{
-        background: 'linear-gradient(135deg, rgba(26, 76, 73, 0.05) 0%, rgba(77, 152, 146, 0.05) 100%)',
-        borderRadius: '0.75rem',
-        padding: '1.5rem',
-        border: '1px solid rgba(26, 76, 73, 0.1)'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <Sparkles size={24} style={{ color: COLORS.evergreen, marginRight: '0.75rem' }} />
-            <div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '0.25rem' }}>
-                AI-Powered Program Optimization
-              </h3>
-              <p style={{ fontSize: '0.875rem', color: COLORS.onyxMedium, margin: 0 }}>
-                Advanced analytics and member behavior insights for {program.title}
-              </p>
-            </div>
-          </div>
-          
-          <div style={{ display: 'flex', gap: '1.5rem' }}>
-            <div style={{ textAlign: 'center' }}>
-              <p style={{ fontSize: '1.5rem', fontWeight: 700, color: COLORS.evergreen, marginBottom: '0.25rem' }}>
-                {activeRecommendations.length}
-              </p>
-              <p style={{ fontSize: '0.75rem', color: COLORS.onyxMedium }}>Active</p>
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <p style={{ fontSize: '1.5rem', fontWeight: 700, color: '#059669', marginBottom: '0.25rem' }}>
-                ${totalPotentialRevenue.toLocaleString()}
-              </p>
-              <p style={{ fontSize: '0.75rem', color: COLORS.onyxMedium }}>Revenue Potential</p>
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <p style={{ fontSize: '1.5rem', fontWeight: 700, color: COLORS.blue, marginBottom: '0.25rem' }}>
-                {totalMemberImpact.toLocaleString()}
-              </p>
-              <p style={{ fontSize: '0.75rem', color: COLORS.onyxMedium }}>Members Affected</p>
-            </div>
-          </div>
-        </div>
-
-        {/* ✅ ENHANCED: Bulk Actions matching main dashboard */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <span style={{ fontSize: '0.875rem', fontWeight: 500, color: COLORS.onyxMedium }}>
-              Bulk Actions:
-            </span>
-            {activeRecommendations.length > 0 ? (
-              <button
-                onClick={() => onBulkAction('implement')}
-                disabled={bulkActionLoading}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.5rem 1rem',
-                  borderRadius: '0.375rem',
-                  border: 'none',
-                  backgroundColor: '#059669',
-                  color: 'white',
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  cursor: bulkActionLoading ? 'not-allowed' : 'pointer',
-                  opacity: bulkActionLoading ? 0.7 : 1,
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  if (!bulkActionLoading) {
-                    e.target.style.backgroundColor = '#047857';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!bulkActionLoading) {
-                    e.target.style.backgroundColor = '#059669';
-                  }
-                }}
-              >
-                {bulkActionLoading ? (
-                  <RefreshCw 
-                    size={14} 
-                    style={{ 
-                      animation: 'spin 1s linear infinite',
-                      transformOrigin: 'center'
-                    }} 
-                  />
-                ) : (
-                  <CheckCircle size={14} />
-                )}
-                Implement All ({activeRecommendations.length})
-              </button>
-            ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium, fontStyle: 'italic' }}>
-                  All recommendations completed
-                </span>
-              </div>
-            )}
-            
-            {/* ✅ NEW: Reset Button matching main dashboard */}
-            <button
-              onClick={onResetRecommendations}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.5rem 1rem',
-                borderRadius: '0.375rem',
-                border: '1px solid rgba(0,0,0,0.1)',
-                backgroundColor: 'transparent',
-                color: COLORS.onyxMedium,
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = 'rgba(0,0,0,0.05)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = 'transparent';
-              }}
-            >
-              <RefreshCw size={14} />
-              Reset
-            </button>
-          </div>
-
-          {/* Program Health Indicator */}
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '0.5rem', 
-            padding: '0.5rem 1rem', 
-            backgroundColor: 'rgba(255, 255, 255, 0.7)', 
-            borderRadius: '0.375rem' 
-          }}>
-            <Award size={16} style={{ color: program.roi > 0 ? COLORS.green : COLORS.red }} />
-            <span style={{ fontSize: '0.875rem', fontWeight: 500, color: COLORS.onyxMedium }}>
-              Program Health: 
-            </span>
-            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: program.roi > 200 ? COLORS.green : program.roi > 0 ? COLORS.yellow : COLORS.red }}>
-              {program.roi > 200 ? 'Excellent' : program.roi > 0 ? 'Good' : 'Needs Attention'}
-            </span>
-          </div>
-        </div>
-
-        {/* Progress Summary */}
-        {(implementedCount > 0 || rejectedCount > 0) && (
-          <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: 'rgba(255, 255, 255, 0.7)', borderRadius: '0.5rem' }}>
-            <div style={{ display: 'flex', gap: '2rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <CheckCircle size={16} style={{ color: COLORS.green }} />
-                <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>
-                  {implementedCount} Implemented
-                </span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <XCircle size={16} style={{ color: COLORS.red }} />
-                <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>
-                  {rejectedCount} Rejected
-                </span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <AlertCircle size={16} style={{ color: COLORS.yellow }} />
-                <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>
-                  {activeRecommendations.length} Pending
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ✅ ENHANCED: Recommendations List using EnhancedRecommendationCard */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        {visibleRecommendations.map((recommendation) => (
-          <EnhancedRecommendationCard
-            key={recommendation.id}
-            recommendation={recommendation}
-            isExpanded={expandedRecommendation === recommendation.id}
-            onToggleExpand={onToggleExpand}
-            onImplement={onImplement}
-            onModify={onModify}
-            onReject={onReject}
-            onArchive={onArchive}
-            isImplemented={implementedRecommendations.has(recommendation.id)}
-            isRejected={rejectedRecommendations.has(recommendation.id)}
-            isArchived={archivedRecommendations.has(recommendation.id)}
-            showActions={true}
-            compact={false}
-          />
-        ))}
-      </div>
-
-      {/* ✅ ADD: CSS for spin animation */}
-      <style>
-        {`
-          @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-        `}
-      </style>
-    </div>
-  );
-};
-
-// Overview and Performance tabs remain the same...
-const OverviewTab = ({ program, performanceMetrics, engagementData, onImplement, setActiveTab }) => {
-  const hasNoData = program.participants === 0 || program.status === 'Scheduled';
-  
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
-      {/* Left Column */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        {/* Program Status Card */}
-        <div style={program.needsAttention ? alertCardStyle() : programEnhancedCardStyle}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.onyx }}>Program Status</h3>
-            <div style={statusBadgeStyle(program.status)}>
-              {program.status}
-            </div>
-          </div>
-          
-          {program.needsAttention && (
-            <div style={insightBoxStyle(COLORS.red, 'rgba(244, 67, 54, 0.05)')}>
-              <h4 style={insightTitleStyle}>Attention Required</h4>
-              <p style={insightTextStyle}>{program.attentionReason}</p>
-            </div>
-          )}
-          
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
-            <div>
-              <p style={programMetricLabelStyle}>Program Type</p>
-              <p style={programMetricValueStyle}>{program.type}</p>
-            </div>
-            <div>
-              <p style={programMetricLabelStyle}>Target Audience</p>
-              <p style={programMetricValueStyle}>{program.audience}</p>
-            </div>
-            <div>
-              <p style={programMetricLabelStyle}>Total Participants</p>
-              <p style={programMetricValueStyle}>{hasNoData ? 'N/A' : program.participants?.toLocaleString()}</p>
-            </div>
-            <div>
-              <p style={programMetricLabelStyle}>ROI</p>
-              <p style={{
-                ...programMetricValueStyle,
-                color: hasNoData ? COLORS.onyxMedium : program.roi > 0 ? COLORS.green : COLORS.red
-              }}>
-                {hasNoData ? 'N/A' : `${program.roi}%`}
-              </p>
-            </div>
-          </div>
-          
-          {/* Financial Summary Section */}
-          <div style={programFinancialSectionStyle}>
-            <div style={programFinancialCardStyle('rgba(76, 175, 80, 0.05)', 'rgba(76, 175, 80, 0.2)')}>
-              <div style={programFinancialIconStyle('rgba(76, 175, 80, 0.2)')}>
-                <DollarSign size={20} color={COLORS.green} />
-              </div>
-              <div>
-                <p style={programMetricLabelStyle}>Total Revenue</p>
-                <p style={programMetricValueStyle}>${program.revenue?.toLocaleString() || '0'}</p>
-              </div>
-            </div>
-            
-            <div style={programFinancialCardStyle('rgba(33, 150, 243, 0.05)', 'rgba(33, 150, 243, 0.2)')}>
-              <div style={programFinancialIconStyle('rgba(33, 150, 243, 0.2)')}>
-                <Target size={20} color={COLORS.blue} />
-              </div>
-              <div>
-                <p style={programMetricLabelStyle}>Program Cost</p>
-                <p style={programMetricValueStyle}>${program.cost?.toLocaleString() || '0'}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Performance Overview */}
-        <div style={programEnhancedCardStyle}>
-          <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '1rem' }}>
-            Performance Overview
-          </h3>
-          
-          {hasNoData ? (
-            <div style={{ textAlign: 'center', padding: '2rem' }}>
-              <Award size={48} style={{ color: COLORS.onyxSoft, marginBottom: '1rem' }} />
-              <h4 style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.onyxMedium, marginBottom: '0.5rem' }}>
-                No Data Available
-              </h4>
-              <p style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>
-                Program {program.status === 'Scheduled' ? 'is scheduled to launch' : 'has not started yet'}
-              </p>
-            </div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
-              {performanceMetrics.map((metric, index) => (
-                <div key={index} style={programMetricEnhancedCardStyle(metric.bgColor, metric.iconBg)}>
-                  <div style={programMetricIconContainerStyle(metric.iconBg)}>
-                    {metric.icon}
-                  </div>
-                  <div>
-                    <p style={programMetricLabelStyle}>{metric.label}</p>
-                    <p style={programMetricValueStyle}>{metric.value}</p>
-                    <p style={programMetricSubtextStyle}>{metric.subtext}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-        
-        {/* Engagement Trend */}
-        {!hasNoData && (
-          <div style={programEnhancedCardStyle}>
-            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '1rem' }}>
-              Engagement Over Time
-            </h3>
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={engagementData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
-                <XAxis dataKey="month" stroke={COLORS.onyxMedium} fontSize={12} />
-                <YAxis stroke={COLORS.onyxMedium} fontSize={12} />
-                <Tooltip />
-                <Area 
-                  type="monotone" 
-                  dataKey="participants" 
-                  stroke={COLORS.evergreen} 
-                  fill={COLORS.evergreen}
-                  fillOpacity={0.2}
-                  strokeWidth={2}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="redemptions" 
-                  stroke={COLORS.blue} 
-                  fill={COLORS.blue}
-                  fillOpacity={0.2}
-                  strokeWidth={2}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-      </div>
-      
-      {/* Right Column - Quick Actions & Recommendations */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        {/* Quick Actions */}
-        <div style={programEnhancedCardStyle}>
-          <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '1rem' }}>
-            Quick Actions
-          </h3>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <button style={quickActionButtonStyle('rgba(33, 150, 243, 0.1)', COLORS.blue)}>
-              <Edit size={16} style={{ marginRight: '0.5rem' }} />
-              Edit Program
-            </button>
-            
-            <button style={quickActionButtonStyle('rgba(76, 175, 80, 0.1)', COLORS.green)}>
-              <Target size={16} style={{ marginRight: '0.5rem' }} />
-              Duplicate Program
-            </button>
-            
-            <button style={quickActionButtonStyle('rgba(255, 193, 7, 0.1)', COLORS.yellow)}>
-              <Users size={16} style={{ marginRight: '0.5rem' }} />
-              Manage Members
-            </button>
-            
-            <button style={quickActionButtonStyle('rgba(156, 39, 176, 0.1)', '#9c27b0')}>
-              <Award size={16} style={{ marginRight: '0.5rem' }} />
-              Adjust Rewards
-            </button>
-          </div>
-        </div>
-        
-        {/* Key Metrics Summary */}
-        {!hasNoData && (
-          <div style={programEnhancedCardStyle}>
-            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '1rem' }}>
-              Key Metrics
-            </h3>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>Redemption Rate</span>
-                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.onyx }}>
-                  {program.redemptionRate}%
-                </span>
-              </div>
-              <div style={progressBarContainerStyle}>
-                <div style={progressBarStyle(program.redemptionRate, COLORS.evergreen)} />
-              </div>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>Retention Rate</span>
-                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.onyx }}>
-                  {program.retentionRate}%
-                </span>
-              </div>
-              <div style={progressBarContainerStyle}>
-                <div style={progressBarStyle(program.retentionRate, COLORS.blue)} />
-              </div>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>Repeat Purchase Rate</span>
-                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.onyx }}>
-                  {program.repeatPurchaseRate}%
-                </span>
-              </div>
-              <div style={progressBarContainerStyle}>
-                <div style={progressBarStyle(program.repeatPurchaseRate, COLORS.green)} />
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Top Recommendations Preview */}
-        {program.recommendations && program.recommendations.length > 0 && (
-          <div style={programEnhancedCardStyle}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.onyx }}>
-                AI Recommendations
-              </h3>
-              <button 
-                onClick={() => setActiveTab('recommendations')}
-                style={{ 
-                  fontSize: '0.875rem', 
-                  color: COLORS.evergreen, 
-                  background: 'none', 
-                  border: 'none', 
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center'
-                }}
-              >
-                View All
-                <ChevronRight size={16} style={{ marginLeft: '0.25rem' }} />
-              </button>
-            </div>
-            
-            {program.recommendations.slice(0, 2).map((rec, index) => (
-              <div key={index} style={{ 
-                padding: '0.75rem', 
-                backgroundColor: 'rgba(26, 76, 73, 0.05)', 
-                borderRadius: '0.5rem', 
-                marginBottom: index < 1 ? '0.75rem' : 0,
-                border: '1px solid rgba(26, 76, 73, 0.1)'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                  <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.onyx }}>{rec.title}</h4>
-                  <div style={{ display: 'flex', gap: '0.25rem' }}>
-                    <span style={tagStyle(getImpactColor(rec.impact), `rgba(${getImpactColor(rec.impact).replace('#', '').match(/.{2}/g).map(x => parseInt(x, 16)).join(', ')}, 0.1)`)}>
-                      {rec.impact}
-                    </span>
-                  </div>
-                </div>
-                <p style={{ fontSize: '0.75rem', color: COLORS.onyxMedium, lineHeight: 1.4 }}>
-                  {rec.description.substring(0, 100)}...
-                </p>
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    console.log('%c OVERVIEW QUICK IMPLEMENT CLICKED', 'background: purple; color: white; font-size: 12px;');
-                    console.log('Recommendation from overview:', rec);
-                    onImplement(rec);
-                  }}
-                  style={{ 
-                    fontSize: '0.75rem', 
-                    color: COLORS.evergreen, 
-                    background: 'none', 
-                    border: 'none', 
-                    cursor: 'pointer',
-                    marginTop: '0.5rem',
-                    padding: 0
-                  }}
-                >
-                  Quick Implement with Wizard →
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const PerformanceTab = ({ 
-  program, 
-  performanceMetrics, 
-  engagementData, 
-  tierData, 
-  timeData, 
-  retentionData, 
-  redemptionCategories, 
-  deviceData, 
-  cohortData 
-}) => {
-  const hasNoData = program.participants === 0 || program.status === 'Scheduled';
-  
-  if (hasNoData) {
-    return (
-      <div style={{ textAlign: 'center', padding: '4rem' }}>
-        <BarChart2 size={64} style={{ color: COLORS.onyxSoft, marginBottom: '1rem' }} />
-        <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.onyxMedium, marginBottom: '0.5rem' }}>
-          No Performance Data Available
-        </h3>
-        <p style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>
-          Program {program.status === 'Scheduled' ? 'is scheduled to launch' : 'has not started yet'}
-        </p>
-      </div>
-    );
-  }
-  
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      {/* Performance Metrics Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
-        {performanceMetrics.map((metric, index) => (
-          <div key={index} style={programMetricEnhancedCardStyle(metric.bgColor, metric.iconBg)}>
-            <div style={programMetricIconContainerStyle(metric.iconBg)}>
-              {metric.icon}
-            </div>
-            <div>
-              <p style={programMetricLabelStyle}>{metric.label}</p>
-              <p style={programMetricValueStyle}>{metric.value}</p>
-              <p style={programMetricSubtextStyle}>{metric.subtext}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-      
-      {/* Charts Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
-        {/* Engagement Over Time */}
-        <div style={programEnhancedCardStyle}>
-          <h3 style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '1rem' }}>
-            Program Engagement
-          </h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <AreaChart data={engagementData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
-              <XAxis dataKey="month" stroke={COLORS.onyxMedium} fontSize={12} />
-              <YAxis stroke={COLORS.onyxMedium} fontSize={12} />
-              <Tooltip />
-              <Legend />
-              <Area type="monotone" dataKey="participants" stackId="1" stroke={COLORS.evergreen} fill={COLORS.evergreen} fillOpacity={0.6} name="Participants" />
-              <Area type="monotone" dataKey="redemptions" stackId="2" stroke={COLORS.blue} fill={COLORS.blue} fillOpacity={0.6} name="Redemptions" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-        
-        {/* Tier Performance */}
-        <div style={programEnhancedCardStyle}>
-          <h3 style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '1rem' }}>
-            Performance by Tier
-          </h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={tierData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
-              <XAxis dataKey="tier" stroke={COLORS.onyxMedium} fontSize={12} />
-              <YAxis stroke={COLORS.onyxMedium} fontSize={12} />
-              <Tooltip />
-              <Bar dataKey="redemptionRate" fill={COLORS.evergreen} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-        
-        {/* Retention Analysis */}
-        <div style={programEnhancedCardStyle}>
-          <h3 style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '1rem' }}>
-            Member Retention
-          </h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={retentionData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
-              <XAxis dataKey="month" stroke={COLORS.onyxMedium} fontSize={12} />
-              <YAxis stroke={COLORS.onyxMedium} fontSize={12} />
-              <Tooltip />
-              <Line type="monotone" dataKey="retention" stroke={COLORS.blue} strokeWidth={3} dot={{ fill: COLORS.blue, strokeWidth: 2, r: 4 }} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-        
-        {/* Redemption Categories */}
-        <div style={programEnhancedCardStyle}>
-          <h3 style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '1rem' }}>
-            Redemption Categories
-          </h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie
-                data={redemptionCategories}
-                cx="50%"
-                cy="50%"
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-              >
-                {redemptionCategories.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={PROGRAM_CHART_COLORS[index % PROGRAM_CHART_COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-      
-      {/* Additional Analytics Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
-        {/* Device Usage */}
-        <div style={programEnhancedCardStyle}>
-          <h3 style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '1rem' }}>
-            Device Usage
-          </h3>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={deviceData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
-              <XAxis dataKey="device" stroke={COLORS.onyxMedium} fontSize={12} />
-              <YAxis stroke={COLORS.onyxMedium} fontSize={12} />
-              <Tooltip />
-              <Bar dataKey="usage" fill={COLORS.evergreenLight} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-        
-        {/* Cohort Analysis */}
-        <div style={programEnhancedCardStyle}>
-          <h3 style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '1rem' }}>
-            Member Cohorts
-          </h3>
-          <ResponsiveContainer width="100%" height={200}>
-            <AreaChart data={cohortData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
-              <XAxis dataKey="week" stroke={COLORS.onyxMedium} fontSize={12} />
-              <YAxis stroke={COLORS.onyxMedium} fontSize={12} />
-              <Tooltip />
-              <Area type="monotone" dataKey="newMembers" stackId="1" stroke={COLORS.green} fill={COLORS.green} fillOpacity={0.6} />
-              <Area type="monotone" dataKey="returningMembers" stackId="1" stroke={COLORS.blue} fill={COLORS.blue} fillOpacity={0.6} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Helper functions for generating enhanced program recommendation data (keep existing implementations)
-const generateProgramAIExplanation = (rec, program) => {
-  const explanations = {
-    'crisis': `Critical analysis of ${program.title} reveals systemic failures with ${program.redemptionRate || 10}% completion rate causing customer frustration. Machine learning models trained on 50,000+ loyalty programs identify this as requiring immediate intervention to prevent permanent brand damage.`,
-    'recovery': `Behavioral analysis using customer journey mapping shows ${program.title} participants have elevated churn propensity. Predictive models suggest significant recovery potential with targeted intervention within optimal time window.`,
-    'restructure': `Comparative analysis reveals fundamental design opportunities in ${program.title}. A/B testing data shows optimized structure with milestone rewards can drive substantially higher completion rates through behavioral economics principles.`,
-    'targeting': `Behavioral analysis of ${program.participants?.toLocaleString() || 'program'} members reveals significant segmentation opportunities. RFM modeling shows optimal targeting can improve engagement and ROI substantially.`,
-    'adjustment': `Economic modeling of program mechanics indicates optimization opportunities. Elasticity analysis suggests strategic adjustments could improve unit economics while maintaining member satisfaction.`,
-    'enhancement': `Content personalization analysis using collaborative filtering identifies opportunities to increase member engagement significantly through strategic program enhancements aligned with member preferences.`,
-    'restriction': `Cost-benefit analysis reveals program inefficiencies affecting overall ROI. Predictive modeling shows strategic restrictions could improve unit economics while maintaining high engagement levels.`,
-    'communication': `Engagement frequency analysis indicates communication gaps affecting member retention. Lifecycle stage modeling shows optimal touchpoint timing could increase retention rates substantially.`,
-  };
-  
-  return explanations[rec.type] || explanations['enhancement'];
-};
-
-const generateProgramEstimatedRevenue = (rec, program) => {
-  const baseRevenue = program.revenue || 50000;
-  const multipliers = {
-    'high': 0.3,
-    'medium': 0.18,
-    'low': 0.1
-  };
-  
-  return Math.round(baseRevenue * (multipliers[rec.impact] || 0.18));
-};
-
-const generateProgramTimeToImplement = (rec) => {
-  const times = {
-    'easy': '2-3 days',
-    'medium': '1-2 weeks', 
-    'hard': '2-4 weeks'
-  };
-  
-  return times[rec.difficulty] || '1-2 weeks';
-};
-
-const generateProgramConfidenceScore = (rec, program) => {
-  const baseScore = 78;
-  const impactBonus = { 'high': 12, 'medium': 8, 'low': 4 };
-  const difficultyPenalty = { 'easy': 0, 'medium': -6, 'hard': -12 };
-  const performanceBonus = program.roi > 100 ? 8 : program.roi > 0 ? 4 : -8;
-  
-  return Math.min(96, Math.max(65, baseScore + (impactBonus[rec.impact] || 8) + (difficultyPenalty[rec.difficulty] || -6) + performanceBonus));
-};
-
-const generateProgramPrerequisites = (rec) => {
-  return [
-    'Program audit and member data analysis required',
-    'Technical infrastructure setup and configuration',
-    'Member communication and change management strategy',
-    'Testing and validation framework implementation'
-  ];
-};
-
-const generateProgramSuccessMetrics = (rec) => {
-  return [
-    'Increased member engagement by 25-40%',
-    'Improved program completion rates',
-    'Enhanced customer satisfaction scores',
-    'Better retention and lifetime value'
-  ];
-};
-
-const generateProgramRisks = (rec) => {
-  return [
-    'Implementation complexity may affect user experience',
-    'Requires careful change management and member communication'
-  ];
-};
-
-const generateMemberImpact = (rec, program) => {
-  const baseMembers = program.participants || 1000;
-  const impactRatios = {
-    'crisis': 0.95,
-    'recovery': 0.65,
-    'restructure': 0.90,
-    'targeting': 0.65,
-    'adjustment': 0.85,
-    'enhancement': 0.75,
-    'restriction': 0.45,
-    'communication': 0.90
-  };
-  
-  return Math.round(baseMembers * (impactRatios[rec.type] || 0.75));
 };
 
 export default DetailView;
