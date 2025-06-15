@@ -47,9 +47,6 @@ const RecommendationImplementationModal = ({
       setImplementationData(null);
       setShowModifyModal(false);
       
-      // Prevent body scroll when modal is open
-      document.body.style.overflow = 'hidden';
-      
       // Start the setup simulation with more detailed steps
       const stepInterval = setInterval(() => {
         setSetupStep(prevStep => {
@@ -76,13 +73,6 @@ const RecommendationImplementationModal = ({
     }
   }, [isOpen, recommendation]);
 
-  // Cleanup on unmount or close
-  useEffect(() => {
-    if (!isOpen) {
-      document.body.style.overflow = 'unset';
-    }
-  }, [isOpen]);
-
   // Generate the implementation data based on recommendation
   const generateImplementationData = () => {
     if (!recommendation) {
@@ -98,13 +88,7 @@ const RecommendationImplementationModal = ({
     if (isAtRiskPunchCardRecommendation()) {
       data = generateAtRiskPunchCardImplementation();
     } else if (isTrailEssentialsRecommendation()) {
-      data = generateTrailEssentialsOptimizationImplementation();
-    } else if (isPotentialLoyalistsRecommendation()) {
-      data = generatePotentialLoyalistsImplementation();
-    } else if (recommendation.type === 'winback' || recommendation.segment === 'At Risk') {
-      data = generateWinbackImplementation();
-    } else if (recommendation.type === 'retention' || recommendation.segment === 'Potential Loyalists') {
-      data = generateRetentionImplementation();
+      data = generateTrailEssentialsImplementation();
     } else if (recommendation.type === 'enhancement') {
       data = generateEnhancementImplementation();
     } else if (recommendation.type === 'targeting') {
@@ -114,6 +98,7 @@ const RecommendationImplementationModal = ({
     } else if (recommendation.type === 'communication') {
       data = generateCommunicationImplementation();
     } else {
+      // Default implementation for other types
       data = generateDefaultImplementation();
     }
     
@@ -121,189 +106,125 @@ const RecommendationImplementationModal = ({
     setImplementationData(data);
   };
 
-  // Check if this is the At Risk punch card recommendation
+  // Helper function to detect At Risk Recovery Punch Card recommendations
   const isAtRiskPunchCardRecommendation = () => {
-    return recommendation?.id === "rec-atrisk-punchcard" || 
-           (recommendation?.title?.includes("At Risk") && recommendation?.title?.includes("Punch Card"));
+    return (
+      // Check recommendation ID patterns for At Risk punch card
+      (recommendation?.id && (
+        recommendation.id.includes('rec-atrisk-punchcard') || 
+        recommendation.id.includes('atrisk-punchcard') ||
+        recommendation.id.startsWith('atrisk-') ||
+        recommendation.id === 'rec-atrisk-punchcard-new'
+      )) ||
+      // Check recommendation title for At Risk keywords
+      (recommendation?.title && (
+        recommendation.title.toLowerCase().includes('at risk') && 
+        recommendation.title.toLowerCase().includes('punch card')
+      )) ||
+      // Check if this targets the At Risk segment specifically
+      (recommendation?.segment && recommendation.segment.toLowerCase() === 'at risk') ||
+      // Check if program audience is At Risk
+      (programData?.audience && programData.audience.toLowerCase().includes('at risk'))
+    );
   };
 
-  // Check if this is the Trail Essentials recommendation
+  // Helper function to detect Trail Essentials recommendations
   const isTrailEssentialsRecommendation = () => {
-    return recommendation?.id === "rec-trail-essentials-optimization" || 
-           recommendation?.title?.includes("Trail Essentials");
+    return (
+      // Check recommendation ID patterns
+      (recommendation?.id && (
+        recommendation.id.includes('rec-p2-') || 
+        recommendation.id.includes('rec-c2-') ||
+        recommendation.id.startsWith('p2-') ||
+        recommendation.id.startsWith('c2-')
+      )) ||
+      // Check program title
+      (programData?.title && programData.title.toLowerCase().includes('trail essentials')) ||
+      // Check recommendation title for Trail Essentials keywords
+      (recommendation?.title && (
+        recommendation.title.toLowerCase().includes('trail essentials') ||
+        (recommendation.title.toLowerCase().includes('punch card') && 
+         recommendation.title.toLowerCase().includes('optimization'))
+      )) ||
+      // Check if this is the Trail Essentials program (ID 2)
+      (programData?.id === 2) ||
+      // Check if program needs attention and has negative ROI (Trail Essentials characteristics)
+      (programData?.needsAttention && programData?.roi < 0 && !isAtRiskPunchCardRecommendation())
+    );
   };
 
-  // Check if this is the Potential Loyalists recommendation
-  const isPotentialLoyalistsRecommendation = () => {
-    return recommendation?.id === "rec-potential-punchcard" || 
-           (recommendation?.title?.includes("Potential Loyalists") && recommendation?.title?.includes("Re-engagement"));
-  };
-
-  // At Risk Punch Card Implementation
+  // At Risk Recovery Punch Card specific implementation
   const generateAtRiskPunchCardImplementation = () => {
     return {
-      title: "At Risk Customer Recovery Punch Card",
-      type: "Member Winback Campaign",
-      audience: "At Risk",
-      description: "Deploy targeted 4-purchase punch card requiring weekly visits and minimum $10 per purchase. Rewards: 100 bonus points after 2 qualifying visits, $5 coupon after 4 visits. Designed to boost recency from quarterly+ to weekly engagement patterns and maintain frequency for R:2 F:3 customers.",
-      startDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      pointsValue: '15',
-      rules: [
-        'Welcome back bonus: 200 points upon re-engagement',
-        'Double points for first 30 days of activity',
-        'Simplified 3-punch card system for quick wins',
-        'Bonus multipliers for weekend activities'
-      ],
-      rewards: [
-        'Immediate 20% discount on next purchase (100 points)',
-        'Free gear maintenance service (300 points)',
-        'Exclusive early access to sales (250 points)',
-        'Personal gear consultation (400 points)',
-        'Premium membership upgrade trial (500 points)'
-      ],
-      tiers: [
-        { name: 'Reconnected', threshold: '0 points' },
-        { name: 'Active', threshold: '500 points' },
-        { name: 'Engaged', threshold: '1,200 points' }
-      ],
-      earningMechanics: [
-        'Store visit: 50 points',
-        'Purchase completion: 10 points per $1 spent',
-        'Product review: 75 points',
-        'Social media engagement: 25 points',
-        'Friend referral: 200 points'
-      ],
-      programTouchpoints: [
-        'Personalized "We miss you" email series',
-        'SMS notifications for exclusive offers',
-        'In-store welcome back recognition',
-        'Mobile app push notifications',
-        'Direct mail with special offers'
-      ],
-      projectedMetrics: {
-        participantsRecovered: `${Math.round((programData?.participants || 18900) * 0.65).toLocaleString()}`,
-        revenueRecovery: `$${Math.round((programData?.revenue || 890000) * 0.35 / 1000)}K`,
-        customerSatisfactionIncrease: '+35%',
-        brandSentimentImprovement: '+28%',
-        retentionRateImprovement: '+42%',
-        programROI: '+285%',
-        timeToPositiveROI: '6 weeks',
-        churnReduction: '58%',
-        npsImprovement: '+22 points'
-      },
-      problemSolved: {
-        issue: 'Member Churn Risk Identified',
-        impact: `${programData?.participants?.toLocaleString() || '18,900'} members showing disengagement patterns`,
-        solution: 'AI-powered reactivation with personalized member journeys',
-        outcome: 'Reduced churn and increased member lifetime value through targeted intervention'
-      },
-      implementationPlan: [
-        {
-          phase: 'Immediate Response (Days 1-7)',
-          actions: [
-            'Deploy personalized outreach campaigns',
-            'Set up simplified earning mechanisms',
-            'Create member recovery analytics dashboard',
-            'Launch welcome back bonus program'
-          ]
-        },
-        {
-          phase: 'Engagement Building (Days 8-30)',
-          actions: [
-            'Implement double points promotion',
-            'Launch 3-punch card quick wins',
-            'Deploy social media engagement campaigns',
-            'Monitor reactivation metrics'
-          ]
-        },
-        {
-          phase: 'Long-term Retention (Days 31-90)',
-          actions: [
-            'Transition to standard loyalty program',
-            'Implement tier progression rewards',
-            'Launch referral incentive programs',
-            'Measure program effectiveness and ROI'
-          ]
-        }
-      ]
-    };
-  };
-
-  // Trail Essentials Optimization Implementation
-  const generateTrailEssentialsOptimizationImplementation = () => {
-    return {
-      title: "Trail Essentials Punch Card Optimization",
-      type: "Program Optimization",
-      audience: "Trail Essentials Participants",
-      description: "Trail Essentials Punch Card shows optimization opportunity with 10% completion rate. Program structure improvements using proven success models could unlock significant revenue potential while enhancing member experience.",
+      title: 'At Risk Recovery Punch Card',
+      type: 'Program Enhancement',
+      audience: 'At Risk Segment',
+      description: 'Strategic punch card program designed to improve recency and frequency patterns for At Risk customers through targeted weekly engagement requirements and milestone rewards.',
       startDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       endDate: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      pointsValue: '12',
+      pointsValue: '10',
       rules: [
-        'Optimize punch card mechanics based on Adventure Gear success model',
-        'Implement milestone rewards at 25%, 50%, 75%, and 100% completion',
-        'Add bonus multipliers for seasonal gear categories',
-        'Create achievement badges for completion streaks'
+        '4-purchase punch card with $10 minimum purchase requirement',
+        'Weekly visit requirements to boost recency patterns',
+        'Milestone rewards: 100 points after 2 visits, $5 coupon after 4 visits',
+        'Targeted to At Risk segment (R:3 F:3 customers)',
+        'Progress tracking and completion analytics'
       ],
       rewards: [
-        'Trail mix sample pack (25% completion - 200 points)',
-        'Gear maintenance workshop access (50% completion - 400 points)',
-        'Exclusive trail guide downloads (75% completion - 600 points)',
-        'Premium trail gear discount (100% completion - 1000 points)',
-        'Trail community membership upgrade (streak rewards)'
+        '100 bonus points after 2 qualifying visits',
+        '$5 coupon completion reward after 4 visits',
+        'Weekly engagement milestone recognition',
+        'Progress tracking dashboard access',
+        'Completion celebration email with exclusive offers'
       ],
-      tiers: [
-        { name: 'Trail Explorer', threshold: '500 points' },
-        { name: 'Trail Expert', threshold: '2,000 points' },
-        { name: 'Trail Master', threshold: '5,000 points' }
-      ],
+      tiers: [],
       earningMechanics: [
-        'Trail gear purchase: 15 points per $1 spent',
-        'Workshop attendance: 300 points',
-        'Trail review submission: 150 points',
-        'Seasonal challenge completion: 500 points',
-        'Community engagement: 75 points per interaction'
+        'Weekly purchase requirement for punch progression',
+        'Milestone bonuses: 100 points at 2-visit mark',
+        'Completion celebration: $5 coupon reward',
+        'Engagement rewards: 50 points for feedback participation',
+        'Progress sharing: 25 points for social media engagement'
       ],
       programTouchpoints: [
-        'Enhanced mobile trail tracking app',
-        'Weekly trail recommendations email',
-        'In-store trail gear consultation',
-        'Seasonal trail challenge campaigns',
-        'Trail community events and meetups'
+        'Enhanced mobile app progress tracking',
+        'Personalized email milestone celebrations',
+        'SMS reminders for weekly engagement opportunities',
+        'In-app achievement notifications',
+        'Recovery-focused member communication'
       ],
       projectedMetrics: {
-        participantsRecovered: `${Math.round((programData?.participants || 12673) * 0.80).toLocaleString()}`,
-        revenueRecovery: `$${Math.round(180000 / 1000)}K`,
-        customerSatisfactionIncrease: '+45%',
-        brandSentimentImprovement: '+38%',
-        retentionRateImprovement: '+52%',
-        programROI: '+320%',
-        timeToPositiveROI: '8 weeks',
-        churnReduction: '48%',
-        npsImprovement: '+28 points'
+        participantsRecovered: '7,650',
+        revenueRecovery: '$215K',
+        additionalPurchases: '12,000',
+        averageOrderValue: '$17.90',
+        recencyImprovement: '60%',
+        frequencyImprovement: '35%',
+        monetaryImprovement: '3%',
+        responseRate: '40%',
+        timeToPositiveROI: '6 weeks',
+        programROI: '+280%'
       },
       problemSolved: {
-        issue: 'Program Performance Enhancement Opportunity',
-        impact: 'Trail Essentials showing 10% completion rate vs 48% benchmark',
-        solution: 'Structure optimization using proven Adventure Gear success model',
-        outcome: 'Improved completion rates and member satisfaction through enhanced program mechanics'
+        issue: 'At Risk Recovery Punch Card',
+        impact: 'Declining frequency and recency for high value customers puts them at risk of disengaging and lowering their lifetime value.',
+        solution: 'Increase recency and frequency by targeting segment members with multi-step punch card with multiple reward levels',
+        outcome: 'Incentivize incremental increase in purchase frequency and recency with punch card requiring at least one purchase per week for the next month. Lower than average qualifying purchase amount makes this an attractive option for members to re-engage.'
       },
       implementationPlan: [
         {
           phase: 'Analysis & Planning (Days 1-14)',
           actions: [
-            'Conduct comprehensive program performance audit',
-            'Benchmark against Adventure Gear success model',
-            'Design optimized reward structure and mechanics',
-            'Create enhanced member communication strategy'
+            'Conduct comprehensive At Risk member behavior analysis',
+            'Design 4-purchase punch card with weekly requirements',
+            'Create recovery-focused communication templates',
+            'Set up progress tracking and analytics systems'
           ]
         },
         {
           phase: 'Pilot Launch (Days 15-45)',
           actions: [
-            'Launch optimized program with 25% of participants',
-            'Monitor engagement and completion metrics',
+            'Launch punch card program with 25% of At Risk members',
+            'Monitor weekly engagement and completion metrics',
             'Collect member feedback and satisfaction data',
             'Refine program elements based on early results'
           ]
@@ -311,256 +232,71 @@ const RecommendationImplementationModal = ({
         {
           phase: 'Full Rollout (Days 46-120)',
           actions: [
-            'Expand to all Trail Essentials members',
+            'Expand to all At Risk segment members',
             'Implement member re-engagement campaigns',
             'Scale successful program elements',
-            'Document optimization results and best practices'
+            'Document recovery results and best practices'
           ]
         }
       ]
     };
   };
 
-  // Potential Loyalists Implementation
-  const generatePotentialLoyalistsImplementation = () => {
+  // Trail Essentials specific implementation
+  const generateTrailEssentialsImplementation = () => {
     return {
-      title: "Potential Loyalists Advancement Program",
-      type: "Member Retention & Growth",
-      audience: "Potential Loyalists",
-      description: "Strategic retention program to convert Potential Loyalists into highly engaged advocates through enhanced benefits, community building, and exclusive experiences.",
-      startDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      title: 'Trail Essentials Program Optimization',
+      type: 'Program Enhancement',
+      audience: 'Trail Essentials Participants',
+      description: 'Comprehensive program optimization to improve member experience and engagement through data-driven enhancements, simplified progression paths, and enhanced value communication.',
+      startDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       endDate: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      pointsValue: '10',
+      pointsValue: '12',
       rules: [
-        'Enhanced earning rates for frequent purchasers',
-        'Bonus points for community engagement',
-        'Milestone rewards for program progression',
-        'Exclusive access to member-only events'
+        'Streamlined 3-punch progression for better completion rates',
+        'Progressive milestone rewards at each punch level',
+        'Clear value communication throughout member journey',
+        'Bonus completion incentives for early engagement',
+        'Simplified redemption process with guided assistance'
       ],
       rewards: [
-        'Priority customer service (200 points)',
-        'Exclusive product previews (350 points)',
-        'VIP event invitations (500 points)',
-        'Personalized gear recommendations (150 points)',
-        'Annual member appreciation gift (800 points)'
+        'Milestone celebration reward (300 points)',
+        'Trail gear starter kit (750 points)',
+        'Exclusive trail guide access (500 points)',
+        'Premium gear discount (25% off)',
+        'Completion bonus reward (1000 points)'
       ],
-      tiers: [
-        { name: 'Rising Star', threshold: '1,000 points' },
-        { name: 'Trail Advocate', threshold: '3,000 points' },
-        { name: 'Elite Explorer', threshold: '6,000 points' }
-      ],
+      tiers: [],
       earningMechanics: [
-        'Purchase activity: 12 points per $1 spent',
-        'Product reviews and ratings: 100 points',
-        'Community forum participation: 50 points',
-        'Event attendance: 150 points',
-        'Social media sharing: 40 points'
+        'Simplified punch progression: 1 punch per qualifying purchase',
+        'Milestone bonuses: 100 points at each punch level',
+        'Completion celebration: 500 bonus points',
+        'Engagement rewards: 50 points for feedback participation',
+        'Progress sharing: 25 points for social media engagement'
       ],
       programTouchpoints: [
-        'Monthly member spotlight features',
-        'Exclusive member webinars and workshops',
-        'Early access to seasonal sales',
-        'Personalized adventure planning tools',
-        'Community forum and discussion groups'
+        'Enhanced mobile app progress tracking',
+        'Personalized email milestone celebrations',
+        'SMS reminders for progression opportunities',
+        'In-app achievement notifications',
+        'Member success story sharing platform'
       ],
       projectedMetrics: {
-        participantsRecovered: `${Math.round((programData?.participants || 37200) * 0.75).toLocaleString()}`,
-        revenueRecovery: `$${Math.round((programData?.revenue || 1240000) * 0.45 / 1000)}K`,
-        customerSatisfactionIncrease: '+32%',
-        brandSentimentImprovement: '+25%',
-        retentionRateImprovement: '+38%',
-        programROI: '+320%',
-        timeToPositiveROI: '10 weeks',
-        churnReduction: '52%',
-        npsImprovement: '+25 points'
-      },
-      problemSolved: {
-        issue: 'Member Progression Opportunity',
-        impact: `${programData?.participants?.toLocaleString() || '37,200'} members ready for enhanced engagement`,
-        solution: 'Advanced tier program with community focus and exclusive benefits',
-        outcome: 'Increased member advocacy and higher lifetime value through enhanced engagement'
-      },
-      implementationPlan: [
-        {
-          phase: 'Analysis & Planning (Days 1-14)',
-          actions: [
-            'Conduct comprehensive member behavior analysis',
-            'Design enhanced tier progression system',
-            'Create community engagement platforms',
-            'Set up exclusive event planning and execution'
-          ]
-        },
-        {
-          phase: 'Pilot Launch (Days 15-45)',
-          actions: [
-            'Launch enhanced program with select member group',
-            'Monitor engagement and progression metrics',
-            'Collect member feedback and satisfaction data',
-            'Refine tier benefits based on member preferences'
-          ]
-        },
-        {
-          phase: 'Full Rollout (Days 46-120)',
-          actions: [
-            'Expand to all Potential Loyalists members',
-            'Implement full community platform features',
-            'Launch exclusive events and experiences',
-            'Measure tier advancement and advocacy impact'
-          ]
-        }
-      ]
-    };
-  };
-
-  // Winback type implementation
-  const generateWinbackImplementation = () => {
-    return {
-      title: `${programData?.audience || 'At Risk'} Reactivation Program`,
-      type: 'Member Winback Campaign',
-      audience: programData?.audience || 'At Risk Members',
-      description: `Targeted reactivation program designed to re-engage ${programData?.audience || 'at-risk'} members through personalized incentives, simplified earning mechanisms, and enhanced member experience.`,
-      startDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      pointsValue: '15',
-      rules: [
-        'Welcome back bonus: 200 points upon re-engagement',
-        'Double points for first 30 days of activity',
-        'Simplified 3-punch card system for quick wins',
-        'Bonus multipliers for weekend activities'
-      ],
-      rewards: [
-        'Immediate 20% discount on next purchase (100 points)',
-        'Free gear maintenance service (300 points)',
-        'Exclusive early access to sales (250 points)',
-        'Personal gear consultation (400 points)',
-        'Premium membership upgrade trial (500 points)'
-      ],
-      tiers: [
-        { name: 'Reconnected', threshold: '0 points' },
-        { name: 'Active', threshold: '500 points' },
-        { name: 'Engaged', threshold: '1,200 points' }
-      ],
-      earningMechanics: [
-        'Store visit: 50 points',
-        'Purchase completion: 10 points per $1 spent',
-        'Product review: 75 points',
-        'Social media engagement: 25 points',
-        'Friend referral: 200 points'
-      ],
-      programTouchpoints: [
-        'Personalized "We miss you" email series',
-        'SMS notifications for exclusive offers',
-        'In-store welcome back recognition',
-        'Mobile app push notifications',
-        'Direct mail with special offers'
-      ],
-      projectedMetrics: {
-        participantsRecovered: `${Math.round((programData?.participants || 18900) * 0.65).toLocaleString()}`,
-        revenueRecovery: `$${Math.round((programData?.revenue || 890000) * 0.35 / 1000)}K`,
-        customerSatisfactionIncrease: '+35%',
-        brandSentimentImprovement: '+28%',
-        retentionRateImprovement: '+42%',
-        programROI: '+285%',
-        timeToPositiveROI: '6 weeks',
-        churnReduction: '58%',
+        participantsRecovered: '9,500',
+        revenueRecovery: '$185K',
+        customerSatisfactionIncrease: '+38%',
+        brandSentimentImprovement: '+32%',
+        retentionRateImprovement: '+45%',
+        programROI: '+225%',
+        timeToPositiveROI: '8 weeks',
+        churnReduction: '42%',
         npsImprovement: '+22 points'
       },
       problemSolved: {
-        issue: 'Member Churn Risk Identified',
-        impact: `${programData?.participants?.toLocaleString() || '18,900'} members showing disengagement patterns`,
-        solution: 'AI-powered reactivation with personalized member journeys',
-        outcome: 'Reduced churn and increased member lifetime value through targeted intervention'
-      },
-      implementationPlan: [
-        {
-          phase: 'Immediate Response (Days 1-7)',
-          actions: [
-            'Deploy personalized outreach campaigns',
-            'Set up simplified earning mechanisms',
-            'Create member recovery analytics dashboard',
-            'Launch welcome back bonus program'
-          ]
-        },
-        {
-          phase: 'Engagement Building (Days 8-30)',
-          actions: [
-            'Implement double points promotion',
-            'Launch 3-punch card quick wins',
-            'Deploy social media engagement campaigns',
-            'Monitor reactivation metrics'
-          ]
-        },
-        {
-          phase: 'Long-term Retention (Days 31-90)',
-          actions: [
-            'Transition to standard loyalty program',
-            'Implement tier progression rewards',
-            'Launch referral incentive programs',
-            'Measure program effectiveness and ROI'
-          ]
-        }
-      ]
-    };
-  };
-
-  // Retention type implementation
-  const generateRetentionImplementation = () => {
-    return {
-      title: `${programData?.audience || 'Potential Loyalists'} Advancement Program`,
-      type: 'Member Retention & Growth',
-      audience: programData?.audience || 'Potential Loyalists',
-      description: `Strategic retention program to convert ${programData?.audience || 'potential loyalists'} into highly engaged advocates through enhanced benefits, community building, and exclusive experiences.`,
-      startDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      endDate: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      pointsValue: '10',
-      rules: [
-        'Enhanced earning rates for frequent purchasers',
-        'Bonus points for community engagement',
-        'Milestone rewards for program progression',
-        'Exclusive access to member-only events'
-      ],
-      rewards: [
-        'Priority customer service (200 points)',
-        'Exclusive product previews (350 points)',
-        'VIP event invitations (500 points)',
-        'Personalized gear recommendations (150 points)',
-        'Annual member appreciation gift (800 points)'
-      ],
-      tiers: [
-        { name: 'Rising Star', threshold: '1,000 points' },
-        { name: 'Trail Advocate', threshold: '3,000 points' },
-        { name: 'Elite Explorer', threshold: '6,000 points' }
-      ],
-      earningMechanics: [
-        'Purchase activity: 12 points per $1 spent',
-        'Product reviews and ratings: 100 points',
-        'Community forum participation: 50 points',
-        'Event attendance: 150 points',
-        'Social media sharing: 40 points'
-      ],
-      programTouchpoints: [
-        'Monthly member spotlight features',
-        'Exclusive member webinars and workshops',
-        'Early access to seasonal sales',
-        'Personalized adventure planning tools',
-        'Community forum and discussion groups'
-      ],
-      projectedMetrics: {
-        participantsRecovered: `${Math.round((programData?.participants || 37200) * 0.75).toLocaleString()}`,
-        revenueRecovery: `$${Math.round((programData?.revenue || 1240000) * 0.45 / 1000)}K`,
-        customerSatisfactionIncrease: '+32%',
-        brandSentimentImprovement: '+25%',
-        retentionRateImprovement: '+38%',
-        programROI: '+320%',
-        timeToPositiveROI: '10 weeks',
-        churnReduction: '52%',
-        npsImprovement: '+25 points'
-      },
-      problemSolved: {
-        issue: 'Member Progression Opportunity',
-        impact: `${programData?.participants?.toLocaleString() || '37,200'} members ready for enhanced engagement`,
-        solution: 'Advanced tier program with community focus and exclusive benefits',
-        outcome: 'Increased member advocacy and higher lifetime value through enhanced engagement'
+        issue: 'Trail Essentials Program Optimization Opportunity',
+        impact: '10% completion rate indicates structure needs enhancement for better member experience',
+        solution: 'Comprehensive program optimization with simplified progression and enhanced member communication',
+        outcome: 'Improved member satisfaction and program performance through data-driven enhancements'
       },
       implementationPlan: [
         {
@@ -678,7 +414,7 @@ const RecommendationImplementationModal = ({
             'Expand to all members',
             'Launch advanced tier benefits',
             'Implement social features',
-            'Measure long-term impact and optimization results'
+            'Measure long-term impact'
           ]
         }
       ]
@@ -1033,51 +769,19 @@ const RecommendationImplementationModal = ({
     };
   };
 
-  // Handle implementation with full program creation
-  const handleImplementRecommendation = () => {
+  // Handle program creation
+  const handleCreateProgram = () => {
     if (!implementationData) {
-      console.error('No implementation data available');
+      console.warn('No implementation data available for program creation');
       return;
     }
 
-    console.log('Implementing recommendation with data:', implementationData);
+    console.log('Creating program from implementation');
 
-    // Create a complete program object with all necessary fields
     const newProgram = {
-      id: `rec-impl-${Date.now()}`,
-      title: implementationData.title,
-      type: implementationData.type,
-      description: implementationData.description,
-      audience: implementationData.audience,
-      status: 'Scheduled',
-      startDate: implementationData.startDate,
-      endDate: implementationData.endDate,
-      pointsValue: implementationData.pointsValue,
-      rules: implementationData.rules,
-      rewards: implementationData.rewards,
-      tiers: implementationData.tiers || [],
-      earningMechanics: implementationData.earningMechanics || [],
-      programTouchpoints: implementationData.programTouchpoints || [],
-      projectedMetrics: implementationData.projectedMetrics || {},
-      problemSolved: implementationData.problemSolved || {},
-      implementationPlan: implementationData.implementationPlan || [],
-      category: recommendation?.category || 'loyalty',
-      priority: recommendation?.impact === 'high' ? 'High' : 'Medium',
-      budget: `$${Math.round(Math.random() * 50000 + 10000).toLocaleString()}`,
-      expectedROI: implementationData.projectedMetrics?.programROI || '+200%',
-      targetAudience: implementationData.audience,
-      kpiTargets: [
-        `Increase retention by ${implementationData.projectedMetrics?.retentionRateImprovement || '30%'}`,
-        `Achieve ${implementationData.projectedMetrics?.programROI || '200%'} ROI`,
-        `Recover ${implementationData.projectedMetrics?.participantsRecovered || '1,000'} members`
-      ],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      lastModified: new Date().toLocaleDateString(),
-      createdBy: 'AI Recommendation Engine',
-      phase: 'Implementation',
-      progress: 0,
-      status: 'Scheduled',
+      ...implementationData,
+      id: Date.now(),
+      status: implementationData.startDate ? 'Scheduled' : 'Draft',
       participants: 0,
       pointsIssued: 0,
       redemptions: 0,
@@ -1161,7 +865,7 @@ const RecommendationImplementationModal = ({
       onNotificationCreated(notification);
     }
     
-    // Close implementation modal
+    // Close both modals and restore scroll
     setShowModifyModal(false);
     document.body.style.overflow = 'unset';
     onClose();
@@ -1190,482 +894,857 @@ const RecommendationImplementationModal = ({
 
   return (
     <>
-      {/* ✅ FIXED: Dynamic z-index and backdrop management - UPDATED z-index values */}
-      <div 
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: showModifyModal ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.8)',
-          zIndex: 100010, // ✅ FIXED: Updated from 10000 to 100010 (higher than RFM modal's 100001)
-          backdropFilter: 'blur(4px)',
-          opacity: showModifyModal ? 0.5 : 1,
-          pointerEvents: showModifyModal ? 'none' : 'auto'
-        }}
-        onClick={showModifyModal ? undefined : handleMainModalClose}
-      />
-      
-      {/* ✅ FIXED: Modal content with updated z-index */}
-      <div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          backgroundColor: '#f5f7f8',
-          zIndex: 100011, // ✅ FIXED: Updated from 10001 to 100011 (higher than backdrop)
-          display: 'flex',
-          flexDirection: 'column',
-          filter: showModifyModal ? 'blur(2px)' : 'none',
-          pointerEvents: showModifyModal ? 'none' : 'auto'
-        }}
-      >
-        {/* Modal Header */}
-        <div style={{
-          padding: '1.5rem 2rem',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
-          backgroundColor: 'white',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-          zIndex: 100012 // ✅ FIXED: Updated z-index for header
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{
-              width: '3rem',
-              height: '3rem',
-              backgroundColor: COLORS.green,
-              borderRadius: '0.75rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              animation: currentPhase === 'setup' ? 'pulse 2s infinite' : 'none'
-            }}>
-              {currentPhase === 'setup' ? (
-                <Zap size={20} color="white" />
-              ) : (
-                <CheckCircle size={20} color="white" />
-              )}
-            </div>
-            
-            <div>
-              <h2 style={{
-                fontSize: '1.5rem',
-                fontWeight: 700,
-                color: COLORS.onyx,
-                margin: 0,
-                marginBottom: '0.25rem'
-              }}>
-                {currentPhase === 'setup' ? 'Preparing Enhancement...' : 'Enhancement Ready'}
-              </h2>
-              <p style={{
-                fontSize: '0.875rem',
-                color: COLORS.onyxMedium,
-                margin: 0
-              }}>
-                {currentPhase === 'setup' 
-                  ? `Analyzing ${recommendation?.title || 'recommendation'} requirements` 
-                  : `${recommendation?.title || 'Recommendation'} implementation configured`
-                }
-              </p>
-            </div>
-          </div>
-          
-          <button
-            onClick={handleMainModalClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: '0.5rem',
-              borderRadius: '0.5rem',
-              color: COLORS.onyxMedium,
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
-              e.target.style.color = COLORS.onyx;
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor = 'transparent';
-              e.target.style.color = COLORS.onyxMedium;
-            }}
-          >
-            <X size={24} />
-          </button>
-        </div>
-
-        {/* Modal Body */}
-        <div style={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: '2rem',
-          display: 'flex',
-          justifyContent: 'center'
-        }}>
-          <div style={{ maxWidth: '60rem', width: '100%' }}>
-            
-            {/* Setup Phase */}
-            {currentPhase === 'setup' && (
+      <div>
+        {/* Dynamic z-index and backdrop management */}
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: showModifyModal ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.8)',
+            zIndex: showModifyModal ? 50000 : 50000,
+            backdropFilter: 'blur(4px)',
+            opacity: showModifyModal ? 0.5 : 1,
+            pointerEvents: showModifyModal ? 'none' : 'auto'
+          }}
+          onClick={showModifyModal ? undefined : handleMainModalClose}
+        />
+        
+        {/* Modal content with dynamic styling */}
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: '#f5f7f8',
+            zIndex: showModifyModal ? 50001 : 50001,
+            display: 'flex',
+            flexDirection: 'column',
+            filter: showModifyModal ? 'blur(2px)' : 'none',
+            pointerEvents: showModifyModal ? 'none' : 'auto'
+          }}
+        >
+          {/* Header */}
+          <div style={{
+            padding: '1.5rem',
+            borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            backgroundColor: 'white',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
               <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(26, 76, 73, 0.1)',
                 display: 'flex',
-                flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                height: '60vh',
-                textAlign: 'center'
+                marginRight: '1rem'
               }}>
+                <Lightbulb size={20} style={{ color: COLORS.evergreen }} />
+              </div>
+              <div>
+                <h2 style={{ 
+                  fontSize: '1.5rem', 
+                  fontWeight: 600, 
+                  color: COLORS.onyx,
+                  margin: 0,
+                  marginBottom: '0.25rem'
+                }}>
+                  {currentPhase === 'setup' ? 'Setting Up Enhancement Plan' : 'Review Implementation Strategy'}
+                </h2>
+                <p style={{
+                  fontSize: '0.875rem',
+                  color: COLORS.onyxMedium,
+                  margin: 0
+                }}>
+                  {recommendation?.title || 'AI-Powered Program Optimization'}
+                </p>
+              </div>
+            </div>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                handleMainModalClose();
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '2.5rem',
+                height: '2.5rem',
+                borderRadius: '50%',
+                color: COLORS.onyxMedium,
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s ease'
+              }}
+              onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(0,0,0,0.05)'}
+              onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          {/* Content */}
+          <div style={{ 
+            flex: 1, 
+            overflow: 'hidden',
+            display: 'flex',
+            justifyContent: 'center'
+          }}>
+            <div style={{
+              maxWidth: '80rem',
+              width: '100%',
+              padding: '2rem 3rem',
+              overflowY: 'auto'
+            }}>
+              {currentPhase === 'setup' ? (
+                // Setup Phase
                 <div style={{
-                  width: '8rem',
-                  height: '8rem',
-                  backgroundColor: 'white',
-                  borderRadius: '50%',
                   display: 'flex',
+                  flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-                  marginBottom: '2rem',
-                  animation: 'float 3s ease-in-out infinite'
+                  minHeight: '60vh',
+                  textAlign: 'center'
                 }}>
-                  <Brain size={40} color={COLORS.blue} style={{ animation: 'spin 4s linear infinite' }} />
-                </div>
-                
-                <h3 style={{
-                  fontSize: '1.5rem',
-                  fontWeight: 600,
-                  color: COLORS.onyx,
-                  marginBottom: '1rem'
-                }}>
-                  AI Enhancement Engine Active
-                </h3>
-                
-                <p style={{
-                  fontSize: '1rem',
-                  color: COLORS.onyxMedium,
-                  marginBottom: '2rem',
-                  maxWidth: '32rem',
-                  lineHeight: 1.6
-                }}>
-                  {setupSteps[setupStep] || 'Preparing enhancement configuration...'}
-                </p>
-                
-                {/* Progress Bar */}
-                <div style={{
-                  width: '24rem',
-                  height: '0.5rem',
-                  backgroundColor: 'rgba(0, 0, 0, 0.1)',
-                  borderRadius: '0.25rem',
-                  overflow: 'hidden',
-                  marginBottom: '1rem'
-                }}>
+                  {/* Setup Animation */}
                   <div style={{
-                    width: `${setupProgress}%`,
-                    height: '100%',
-                    backgroundColor: COLORS.green,
-                    borderRadius: '0.25rem',
-                    transition: 'width 0.8s ease'
-                  }} />
-                </div>
-                
-                <div style={{
-                  fontSize: '0.875rem',
-                  color: COLORS.onyxMedium
-                }}>
-                  {Math.round(setupProgress)}% Complete
-                </div>
-              </div>
-            )}
-
-            {/* Review Phase */}
-            {currentPhase === 'review' && implementationData && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                
-                {/* Header Section */}
-                <div style={{
-                  backgroundColor: 'white',
-                  borderRadius: '1rem',
-                  padding: '2rem',
-                  boxShadow: '0 4px 24px rgba(0, 0, 0, 0.06)',
-                  border: '1px solid rgba(0, 0, 0, 0.05)'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-                    <div style={{
-                      width: '3rem',
-                      height: '3rem',
-                      backgroundColor: 'rgba(26, 76, 73, 0.1)',
-                      borderRadius: '0.5rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}>
-                      <Lightbulb size={20} color={COLORS.evergreen} />
-                    </div>
-                    
-                    <div>
-                      <h3 style={{
-                        fontSize: '1.25rem',
-                        fontWeight: 700,
-                        color: COLORS.onyx,
-                        margin: 0,
-                        marginBottom: '0.25rem'
-                      }}>
-                        {implementationData.title}
-                      </h3>
-                      <div style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        backgroundColor: 'rgba(26, 76, 73, 0.1)',
-                        padding: '0.25rem 0.75rem',
-                        borderRadius: '1rem',
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        color: COLORS.evergreen,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.025em'
-                      }}>
-                        <Sparkles size={12} />
-                        {implementationData.type}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <p style={{
-                    fontSize: '1rem',
-                    color: COLORS.onyxMedium,
-                    lineHeight: 1.6,
-                    margin: 0
-                  }}>
-                    {implementationData.description}
-                  </p>
-                </div>
-
-                {/* Key Metrics Grid */}
-                <div style={{
-                  backgroundColor: 'white',
-                  borderRadius: '1rem',
-                  padding: '2rem',
-                  boxShadow: '0 4px 24px rgba(0, 0, 0, 0.06)',
-                  border: '1px solid rgba(0, 0, 0, 0.05)'
-                }}>
-                  <h3 style={{
-                    fontSize: '1.125rem',
-                    fontWeight: 600,
-                    color: COLORS.onyx,
-                    marginBottom: '1.5rem',
+                    width: '140px',
+                    height: '140px',
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(26, 76, 73, 0.05)',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.5rem'
+                    justifyContent: 'center',
+                    marginBottom: '2rem',
+                    position: 'relative',
+                    boxShadow: '0 8px 32px rgba(26, 76, 73, 0.1)'
                   }}>
-                    <TrendingUp size={18} color={COLORS.green} />
-                    Projected Impact Metrics
+                    <div style={{
+                      width: '100px',
+                      height: '100px',
+                      borderRadius: '50%',
+                      backgroundColor: COLORS.evergreen,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      animation: 'pulse 2s infinite',
+                      boxShadow: '0 4px 20px rgba(26, 76, 73, 0.3)'
+                    }}>
+                      <Brain size={40} color="white" style={{
+                        animation: 'float 3s ease-in-out infinite'
+                      }} />
+                    </div>
+                    
+                    {/* Progress Ring */}
+                    <svg 
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '140px',
+                        height: '140px',
+                        transform: 'rotate(-90deg)'
+                      }}
+                    >
+                      <circle
+                        cx="70"
+                        cy="70"
+                        r="65"
+                        stroke="rgba(26, 76, 73, 0.2)"
+                        strokeWidth="6"
+                        fill="none"
+                      />
+                      <circle
+                        cx="70"
+                        cy="70"
+                        r="65"
+                        stroke={COLORS.evergreen}
+                        strokeWidth="6"
+                        fill="none"
+                        strokeDasharray={`${2 * Math.PI * 65}`}
+                        strokeDashoffset={`${2 * Math.PI * 65 * (1 - setupProgress / 100)}`}
+                        style={{ 
+                          transition: 'stroke-dashoffset 0.5s ease',
+                          strokeLinecap: 'round'
+                        }}
+                      />
+                    </svg>
+                  </div>
+
+                  <h3 style={{
+                    fontSize: '2.25rem',
+                    fontWeight: 600,
+                    color: COLORS.onyx,
+                    marginBottom: '1rem',
+                    maxWidth: '600px'
+                  }}>
+                    AI is Optimizing Your Program
                   </h3>
                   
-                  <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(4, 1fr)', 
-                    gap: '1.5rem' 
+                  <p style={{
+                    fontSize: '1.125rem',
+                    color: COLORS.onyxMedium,
+                    marginBottom: '3rem',
+                    maxWidth: '700px',
+                    lineHeight: 1.6
                   }}>
-                    {[
-                      { 
-                        label: 'Members Recovered', 
-                        value: implementationData.projectedMetrics.participantsRecovered,
-                        icon: Users,
-                        color: COLORS.blue
-                      },
-                      { 
-                        label: 'Revenue Recovery', 
-                        value: implementationData.projectedMetrics.revenueRecovery,
-                        icon: DollarSign,
-                        color: COLORS.green
-                      },
-                      { 
-                        label: 'ROI Improvement', 
-                        value: implementationData.projectedMetrics.programROI,
-                        icon: TrendingUp,
-                        color: COLORS.evergreen
-                      },
-                      { 
-                        label: 'Time to Positive ROI', 
-                        value: implementationData.projectedMetrics.timeToPositiveROI,
-                        icon: Clock,
-                        color: COLORS.orange
-                      }
-                    ].map((metric, index) => (
-                      <div key={index} style={{
-                        textAlign: 'center',
-                        padding: '1rem',
-                        borderRadius: '0.75rem',
-                        backgroundColor: 'rgba(0, 0, 0, 0.02)',
-                        border: '1px solid rgba(0, 0, 0, 0.05)'
+                    Our AI is analyzing your program and designing an optimization strategy based on member behavior patterns and performance data to enhance the member experience.
+                  </p>
+
+                  {/* Current Step Indicator */}
+                  <div style={{
+                    backgroundColor: 'white',
+                    padding: '1.5rem 2rem',
+                    borderRadius: '0.75rem',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                    marginBottom: '2rem',
+                    maxWidth: '500px',
+                    width: '100%'
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      marginBottom: '1rem'
+                    }}>
+                      <div style={{
+                        width: '24px',
+                        height: '24px',
+                        borderRadius: '50%',
+                        backgroundColor: COLORS.evergreen,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginRight: '0.75rem'
                       }}>
+                        <Settings size={12} color="white" style={{
+                          animation: 'spin 2s linear infinite'
+                        }} />
+                      </div>
+                      <span style={{
+                        fontSize: '1rem',
+                        fontWeight: 600,
+                        color: COLORS.onyx
+                      }}>
+                        {setupSteps[Math.min(setupStep, setupSteps.length - 1)]}
+                      </span>
+                    </div>
+                    
+                    {/* Progress Bar */}
+                    <div style={{
+                      width: '100%',
+                      height: '8px',
+                      backgroundColor: 'rgba(0,0,0,0.1)',
+                      borderRadius: '4px',
+                      overflow: 'hidden'
+                    }}>
+                      <div style={{
+                        width: `${setupProgress}%`,
+                        height: '100%',
+                        backgroundColor: COLORS.evergreen,
+                        borderRadius: '4px',
+                        transition: 'width 0.5s ease'
+                      }} />
+                    </div>
+                    
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginTop: '0.75rem'
+                    }}>
+                      <span style={{
+                        fontSize: '0.875rem',
+                        color: COLORS.onyxMedium
+                      }}>
+                        Step {Math.min(setupStep + 1, setupSteps.length)} of {setupSteps.length}
+                      </span>
+                      <span style={{
+                        fontSize: '1rem',
+                        fontWeight: 600,
+                        color: COLORS.evergreen
+                      }}>
+                        {Math.round(setupProgress)}%
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Processing Info */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '2rem',
+                    opacity: 0.7
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Target size={16} color={COLORS.onyxMedium} />
+                      <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>Analysis</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Users size={16} color={COLORS.onyxMedium} />
+                      <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>Segmentation</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <TrendingUp size={16} color={COLORS.onyxMedium} />
+                      <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>ROI Projection</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                // Review Phase - Implementation details content
+                implementationData && (
+                  <div>
+                    {/* Problem & Solution Summary */}
+                    <div style={{
+                      backgroundColor: 'white',
+                      borderLeft: `4px solid ${COLORS.evergreen}`,
+                      padding: '2rem',
+                      borderRadius: '0.75rem',
+                      marginBottom: '2rem',
+                      boxShadow: '0 2px 10px rgba(0,0,0,0.08)'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
                         <div style={{
-                          width: '2.5rem',
-                          height: '2.5rem',
-                          backgroundColor: `${metric.color}15`,
+                          width: '48px',
+                          height: '48px',
                           borderRadius: '50%',
+                          backgroundColor: 'rgba(26, 76, 73, 0.1)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          margin: '0 auto 0.75rem'
+                          flexShrink: 0
                         }}>
-                          <metric.icon size={16} color={metric.color} />
+                          <Target size={24} style={{ color: COLORS.evergreen }} />
                         </div>
-                        <div style={{
-                          fontSize: '1.25rem',
-                          fontWeight: 700,
-                          color: COLORS.onyx,
-                          marginBottom: '0.25rem'
-                        }}>
-                          {metric.value}
-                        </div>
-                        <div style={{
-                          fontSize: '0.75rem',
-                          color: COLORS.onyxMedium,
-                          fontWeight: 500
-                        }}>
-                          {metric.label}
+                        <div style={{ flex: 1 }}>
+                          <h3 style={{
+                            fontSize: '1.5rem',
+                            fontWeight: 600,
+                            color: COLORS.onyx,
+                            marginBottom: '1.5rem'
+                          }}>
+                            {isAtRiskPunchCardRecommendation() ? 'Segment Optimization Strategy' : 'Program Optimization Strategy'}
+                          </h3>
+                          
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                            <div>
+                              <h4 style={{
+                                fontSize: '0.875rem',
+                                fontWeight: 600,
+                                color: COLORS.blue,
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px',
+                                marginBottom: '0.5rem'
+                              }}>
+                                🎯 Opportunity Identified
+                              </h4>
+                              <p style={{
+                                fontSize: '1.125rem',
+                                color: COLORS.onyx,
+                                marginBottom: '0.75rem',
+                                fontWeight: 600
+                              }}>
+                                {implementationData.problemSolved.issue}
+                              </p>
+                              <p style={{
+                                fontSize: '0.875rem',
+                                color: COLORS.onyxMedium,
+                                lineHeight: 1.5
+                              }}>
+                                {implementationData.problemSolved.impact}
+                              </p>
+                            </div>
+                            
+                            <div>
+                              <h4 style={{
+                                fontSize: '0.875rem',
+                                fontWeight: 600,
+                                color: COLORS.green,
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px',
+                                marginBottom: '0.5rem'
+                              }}>
+                                ✓ Enhancement Solution
+                              </h4>
+                              <p style={{
+                                fontSize: '1.125rem',
+                                color: COLORS.onyx,
+                                marginBottom: '0.75rem',
+                                fontWeight: 600
+                              }}>
+                                {implementationData.problemSolved.solution}
+                              </p>
+                              <p style={{
+                                fontSize: '0.875rem',
+                                color: COLORS.onyxMedium,
+                                lineHeight: 1.5
+                              }}>
+                                {implementationData.problemSolved.outcome}
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
 
-                {/* Problem & Solution Section */}
-                <div style={{
-                  backgroundColor: 'white',
-                  borderRadius: '1rem',
-                  padding: '2rem',
-                  boxShadow: '0 4px 24px rgba(0, 0, 0, 0.06)',
-                  border: '1px solid rgba(0, 0, 0, 0.05)'
-                }}>
-                  <h3 style={{
-                    fontSize: '1.125rem',
-                    fontWeight: 600,
-                    color: COLORS.onyx,
-                    marginBottom: '1.5rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                  }}>
-                    <Target size={18} color={COLORS.blue} />
-                    {recommendation?.segment ? 'Segment Optimization Strategy' : 'Program Optimization Strategy'}
-                  </h3>
+                    {/* Projected Impact Metrics */}
+                    <div style={{
+                      backgroundColor: 'white',
+                      borderRadius: '0.75rem',
+                      boxShadow: '0 2px 10px rgba(0, 0, 0, 0.08)',
+                      padding: '2rem',
+                      marginBottom: '2rem'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '2rem' }}>
+                        <div style={{
+                          width: '48px',
+                          height: '48px',
+                          borderRadius: '50%',
+                          backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          marginRight: '1rem'
+                        }}>
+                          <TrendingUp size={24} style={{ color: COLORS.green }} />
+                        </div>
+                        <div>
+                          <h3 style={{
+                            fontSize: '1.5rem',
+                            fontWeight: 600,
+                            color: COLORS.onyx,
+                            margin: 0,
+                            marginBottom: '0.25rem'
+                          }}>
+                            {isAtRiskPunchCardRecommendation() ? 'Projected Impact' : 'Projected Enhancement Impact'}
+                          </h3>
+                          <p style={{
+                            fontSize: '0.875rem',
+                            color: COLORS.onyxMedium,
+                            margin: 0
+                          }}>
+                            {isAtRiskPunchCardRecommendation() ? 'Based on AI analysis of similar recommendations' : 'Based on AI analysis of similar optimization programs'}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {/* Primary Metrics */}
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(4, 1fr)',
+                        gap: '1.5rem',
+                        marginBottom: '2rem'
+                      }}>
+                        {(isAtRiskPunchCardRecommendation() ? [
+                          { 
+                            label: 'Participating Members', 
+                            value: implementationData.projectedMetrics.participantsRecovered,
+                            subtext: `~${implementationData.projectedMetrics.responseRate} Estimated Response Rate`,
+                            icon: Users,
+                            color: COLORS.blue,
+                            highlight: false
+                          },
+                          { 
+                            label: 'Revenue Impact', 
+                            value: implementationData.projectedMetrics.revenueRecovery,
+                            subtext: 'Additional Revenue',
+                            icon: DollarSign,
+                            color: COLORS.green,
+                            highlight: false
+                          },
+                          { 
+                            label: 'Additional Purchases', 
+                            value: `Estimate ${implementationData.projectedMetrics.additionalPurchases} additional purchases`,
+                            subtext: 'Incremental Activity',
+                            icon: ShoppingBag,
+                            color: COLORS.evergreen,
+                            highlight: true
+                          },
+                          { 
+                            label: 'Average Order Value', 
+                            value: `Estimate ${implementationData.projectedMetrics.averageOrderValue} AOV`,
+                            subtext: 'Per Transaction',
+                            icon: DollarSign,
+                            color: COLORS.yellow,
+                            highlight: false
+                          }
+                        ] : [
+                          { 
+                            label: 'Members Affected', 
+                            value: implementationData.projectedMetrics.participantsRecovered,
+                            icon: Users,
+                            color: COLORS.blue,
+                            highlight: false
+                          },
+                          { 
+                            label: 'Revenue Impact', 
+                            value: implementationData.projectedMetrics.revenueRecovery,
+                            icon: DollarSign,
+                            color: COLORS.green,
+                            highlight: false
+                          },
+                          { 
+                            label: 'Program ROI', 
+                            value: implementationData.projectedMetrics.programROI,
+                            icon: TrendingUp,
+                            color: COLORS.evergreen,
+                            highlight: true
+                          },
+                          { 
+                            label: 'Time to ROI', 
+                            value: implementationData.projectedMetrics.timeToPositiveROI,
+                            icon: Clock,
+                            color: COLORS.yellow,
+                            highlight: false
+                          }
+                        ]).map((metric, index) => (
+                          <div key={index} style={{
+                            textAlign: 'center',
+                            padding: '1.5rem',
+                            backgroundColor: metric.highlight ? 'rgba(26, 76, 73, 0.05)' : 'rgba(0,0,0,0.02)',
+                            borderRadius: '0.75rem',
+                            border: metric.highlight ? `2px solid ${COLORS.evergreen}` : 'none'
+                          }}>
+                            <div style={{
+                              width: '56px',
+                              height: '56px',
+                              borderRadius: '50%',
+                              backgroundColor: `${metric.color}15`,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              margin: '0 auto 1rem'
+                            }}>
+                              <metric.icon size={28} color={metric.color} />
+                            </div>
+                            <div style={{
+                              fontSize: metric.highlight ? '2rem' : '1.75rem',
+                              fontWeight: 700,
+                              color: metric.highlight ? COLORS.evergreen : COLORS.onyx,
+                              marginBottom: '0.5rem'
+                            }}>
+                              {metric.value}
+                            </div>
+                            <div style={{
+                              fontSize: '0.875rem',
+                              color: COLORS.onyxMedium,
+                              fontWeight: 500
+                            }}>
+                              {metric.label}
+                            </div>
+                            {metric.subtext && (
+                              <div style={{
+                                fontSize: '0.75rem',
+                                color: COLORS.onyxMedium,
+                                marginTop: '0.25rem'
+                              }}>
+                                {metric.subtext}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Secondary Metrics */}
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(3, 1fr)',
+                        gap: '1rem'
+                      }}>
+                        {(isAtRiskPunchCardRecommendation() ? [
+                          {
+                            label: 'Recency Improvement',
+                            value: implementationData.projectedMetrics.recencyImprovement,
+                            change: 'improvement'
+                          },
+                          {
+                            label: 'Frequency Improvement',
+                            value: implementationData.projectedMetrics.frequencyImprovement,
+                            change: 'improvement'
+                          },
+                          {
+                            label: 'Monetary Improvement',
+                            value: implementationData.projectedMetrics.monetaryImprovement,
+                            change: 'improvement'
+                          }
+                        ] : [
+                          {
+                            label: 'Member Satisfaction',
+                            value: implementationData.projectedMetrics.customerSatisfactionIncrease,
+                            change: 'increase'
+                          },
+                          {
+                            label: 'Brand Sentiment (NPS)',
+                            value: implementationData.projectedMetrics.npsImprovement || implementationData.projectedMetrics.brandSentimentImprovement,
+                            change: 'improvement'
+                          },
+                          {
+                            label: 'Member Retention',
+                            value: implementationData.projectedMetrics.churnReduction || implementationData.projectedMetrics.retentionRateImprovement,
+                            change: 'improvement'
+                          }
+                        ]).map((metric, index) => (
+                          <div key={index} style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '1rem',
+                            backgroundColor: 'rgba(76, 175, 80, 0.05)',
+                            borderRadius: '0.5rem',
+                            border: '1px solid rgba(76, 175, 80, 0.2)'
+                          }}>
+                            <span style={{
+                              fontSize: '0.875rem',
+                              color: COLORS.onyx,
+                              fontWeight: 500
+                            }}>
+                              {metric.label}
+                            </span>
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.25rem'
+                            }}>
+                              <ArrowUpRight size={16} style={{ color: COLORS.green }} />
+                              <span style={{
+                                fontSize: '0.875rem',
+                                fontWeight: 600,
+                                color: COLORS.green
+                              }}>
+                                {metric.value}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Simplified Program Configuration Summary */}
+                    <div style={{
+                      backgroundColor: 'white',
+                      borderRadius: '0.75rem',
+                      boxShadow: '0 2px 10px rgba(0, 0, 0, 0.08)',
+                      overflow: 'hidden',
+                      marginBottom: '2rem'
+                    }}>
+                      <div style={{
+                        padding: '1.5rem',
+                        backgroundColor: 'rgba(0,0,0,0.02)',
+                        borderBottom: '1px solid rgba(0,0,0,0.05)'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          <Award size={24} style={{ color: COLORS.evergreen, marginRight: '0.75rem' }} />
+                          <h3 style={{
+                            fontSize: '1.25rem',
+                            fontWeight: 600,
+                            color: COLORS.onyx,
+                            margin: 0
+                          }}>
+                            Enhancement Configuration
+                          </h3>
+                        </div>
+                      </div>
+
+                      <div style={{ padding: '2rem' }}>
+                        <div style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(2, 1fr)',
+                          gap: '2rem',
+                          marginBottom: '2rem'
+                        }}>
+                          <div>
+                            <h4 style={{
+                              fontSize: '0.875rem',
+                              fontWeight: 600,
+                              color: COLORS.onyxMedium,
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.5px',
+                              marginBottom: '1rem'
+                            }}>
+                              Program Details
+                            </h4>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span style={{ color: COLORS.onyxMedium, fontSize: '0.875rem' }}>Title:</span>
+                                <span style={{ fontWeight: 600, color: COLORS.onyx, fontSize: '0.875rem' }}>{implementationData.title}</span>
+                              </div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span style={{ color: COLORS.onyxMedium, fontSize: '0.875rem' }}>Type:</span>
+                                <span style={{ fontWeight: 600, color: COLORS.onyx, fontSize: '0.875rem' }}>{implementationData.type}</span>
+                              </div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span style={{ color: COLORS.onyxMedium, fontSize: '0.875rem' }}>Audience:</span>
+                                <span style={{ fontWeight: 600, color: COLORS.onyx, fontSize: '0.875rem' }}>{implementationData.audience}</span>
+                              </div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span style={{ color: COLORS.onyxMedium, fontSize: '0.875rem' }}>Duration:</span>
+                                <span style={{ fontWeight: 600, color: COLORS.onyx, fontSize: '0.875rem' }}>
+                                  {implementationData.startDate} to {implementationData.endDate}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div>
+                            <h4 style={{
+                              fontSize: '0.875rem',
+                              fontWeight: 600,
+                              color: COLORS.onyxMedium,
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.5px',
+                              marginBottom: '1rem'
+                            }}>
+                              Enhancement Description
+                            </h4>
+                            <div style={{
+                              padding: '1rem',
+                              backgroundColor: 'rgba(26, 76, 73, 0.05)',
+                              borderRadius: '0.5rem',
+                              borderLeft: `3px solid ${COLORS.evergreen}`
+                            }}>
+                              <p style={{
+                                fontSize: '0.875rem',
+                                color: COLORS.onyx,
+                                lineHeight: 1.6,
+                                margin: 0
+                              }}>
+                                {implementationData.description}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              )}
+            </div>
+          </div>
+
+          {/* Footer */}
+          {currentPhase === 'review' && (
+            <div style={{
+              padding: '1.5rem',
+              borderTop: '1px solid rgba(0, 0, 0, 0.1)',
+              backgroundColor: 'white',
+              display: 'flex',
+              justifyContent: 'center',
+              boxShadow: '0 -2px 4px rgba(0,0,0,0.1)'
+            }}>
+              <div style={{
+                maxWidth: '80rem',
+                width: '100%',
+                paddingLeft: '3rem',
+                paddingRight: '3rem',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleMainModalClose();
+                  }}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    borderRadius: '0.5rem',
+                    backgroundColor: 'transparent',
+                    border: '1px solid rgba(0,0,0,0.15)',
+                    color: COLORS.onyxMedium,
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = 'rgba(0,0,0,0.05)';
+                    e.target.style.borderColor = 'rgba(0,0,0,0.2)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = 'transparent';
+                    e.target.style.borderColor = 'rgba(0,0,0,0.15)';
+                  }}
+                >
+                  Review Later
+                </button>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{
+                      fontSize: '0.75rem',
+                      color: COLORS.onyxMedium,
+                      marginBottom: '0.25rem'
+                    }}>
+                      {isAtRiskPunchCardRecommendation() ? 'Projected Revenue Impact' : 'Projected Program ROI'}
+                    </div>
+                    <div style={{
+                      fontSize: '1.5rem',
+                      fontWeight: 700,
+                      color: COLORS.green
+                    }}>
+                      {isAtRiskPunchCardRecommendation() ? 
+                        implementationData?.projectedMetrics?.revenueRecovery : 
+                        implementationData?.projectedMetrics?.programROI}
+                    </div>
+                  </div>
                   
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-                    <div>
-                      <h4 style={{
-                        fontSize: '0.875rem',
-                        fontWeight: 600,
-                        color: COLORS.blue,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px',
-                        marginBottom: '0.5rem'
-                      }}>
-                        🎯 Opportunity Identified
-                      </h4>
-                      <p style={{
-                        fontSize: '1.125rem',
-                        color: COLORS.onyx,
-                        marginBottom: '0.75rem',
-                        fontWeight: 600
-                      }}>
-                        {implementationData.problemSolved.issue}
-                      </p>
-                      <p style={{
-                        fontSize: '0.875rem',
-                        color: COLORS.onyxMedium,
-                        lineHeight: 1.5
-                      }}>
-                        {implementationData.problemSolved.impact}
-                      </p>
-                    </div>
-                    
-                    <div>
-                      <h4 style={{
-                        fontSize: '0.875rem',
-                        fontWeight: 600,
-                        color: COLORS.green,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px',
-                        marginBottom: '0.5rem'
-                      }}>
-                        ✓ Enhancement Solution
-                      </h4>
-                      <p style={{
-                        fontSize: '1.125rem',
-                        color: COLORS.onyx,
-                        marginBottom: '0.75rem',
-                        fontWeight: 600
-                      }}>
-                        {implementationData.problemSolved.solution}
-                      </p>
-                      <p style={{
-                        fontSize: '0.875rem',
-                        color: COLORS.onyxMedium,
-                        lineHeight: 1.5
-                      }}>
-                        {implementationData.problemSolved.outcome}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div style={{
-                  backgroundColor: 'white',
-                  borderRadius: '1rem',
-                  padding: '2rem',
-                  boxShadow: '0 4px 24px rgba(0, 0, 0, 0.06)',
-                  border: '1px solid rgba(0, 0, 0, 0.05)',
-                  display: 'flex',
-                  gap: '1rem',
-                  justifyContent: 'center'
-                }}>
-                  <button
-                    onClick={handleModifyRecommendation}
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      console.log('Modify button clicked');
+                      handleModifyRecommendation();
+                    }}
                     style={{
-                      padding: '0.875rem 1.5rem',
+                      padding: '0.75rem 1.5rem',
                       borderRadius: '0.5rem',
                       backgroundColor: 'white',
-                      color: COLORS.onyx,
-                      border: `2px solid ${COLORS.onyxLight}`,
-                      cursor: 'pointer',
+                      color: COLORS.evergreen,
                       fontSize: '0.875rem',
                       fontWeight: 600,
+                      border: `1px solid ${COLORS.evergreen}`,
+                      cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '0.5rem',
                       transition: 'all 0.2s ease'
                     }}
                     onMouseEnter={(e) => {
-                      e.target.style.borderColor = COLORS.onyx;
-                      e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.02)';
+                      e.target.style.backgroundColor = 'rgba(26, 76, 73, 0.05)';
                     }}
                     onMouseLeave={(e) => {
-                      e.target.style.borderColor = COLORS.onyxLight;
                       e.target.style.backgroundColor = 'white';
                     }}
                   >
                     <Edit size={16} />
-                    Customize Enhancement
+                    Modify & Customize
                   </button>
                   
-                  <button
-                    onClick={handleImplementRecommendation}
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      console.log('Implement enhancement button clicked');
+                      handleCreateProgram();
+                    }}
                     style={{
                       padding: '0.875rem 2rem',
                       borderRadius: '0.5rem',
                       backgroundColor: COLORS.evergreen,
                       color: 'white',
-                      border: 'none',
-                      cursor: 'pointer',
                       fontSize: '0.875rem',
                       fontWeight: 600,
+                      border: 'none',
+                      cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '0.5rem',
@@ -1688,8 +1767,8 @@ const RecommendationImplementationModal = ({
                   </button>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* CSS Styles */}
@@ -1708,20 +1787,42 @@ const RecommendationImplementationModal = ({
             0%, 100% { transform: translateY(0px); }
             50% { transform: translateY(-10px); }
           }
+          
+          /* Force modify modal to appear on top */
+          [data-modal-type="modify"] {
+            z-index: 60000 !important;
+          }
+          
+          [data-modal-type="modify"] * {
+            z-index: inherit !important;
+          }
         `}</style>
       </div>
 
-      {/* ✅ FIXED: Modify Modal with proper z-index stacking (even higher than implementation modal) */}
+      {/* Modify Modal with proper z-index stacking */}
       {showModifyModal && implementationData && (
-        <FullScreenLoyaltyProgramModal
-          isOpen={showModifyModal}
-          onClose={handleModifyModalClose}
-          onProgramCreated={handleProgramCreatedFromModify}
-          onNotificationCreated={onNotificationCreated}
-          prepopulatedData={implementationData}
-          isModifyMode={true}
-          style={{ zIndex: 100020 }} // ✅ FIXED: Highest z-index for modify modal
-        />
+        <div 
+          data-modal-type="modify"
+          style={{ 
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 60000,
+            pointerEvents: 'auto'
+          }}
+        >
+          <FullScreenLoyaltyProgramModal
+            isOpen={showModifyModal}
+            onClose={handleModifyModalClose}
+            onProgramCreated={handleProgramCreatedFromModify}
+            onNotificationCreated={onNotificationCreated}
+            prepopulatedData={implementationData}
+            isModifyMode={true}
+            style={{ zIndex: 60001 }}
+          />
+        </div>
       )}
     </>
   );
