@@ -10,7 +10,7 @@ import {
 } from '../../data/RFMAnalyticsData';
 
 const DetailView = ({ 
-  program, 
+  item: program, 
   onClose, 
   onImplement, 
   onModify, 
