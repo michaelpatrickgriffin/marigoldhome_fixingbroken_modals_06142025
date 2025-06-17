@@ -8,6 +8,7 @@ import { ActionModal, FeedbackModal } from './components/common/ActionModals';
 import { KpiCards, RevenueChart, MembershipChart, CampaignPerformanceChart } from './components/dashboard/DashboardComponents';
 import { ProgramList, ProgramModal } from './components/loyalty/ProgramList';
 import { CampaignList, CampaignModal } from './components/campaigns/CampaignList';
+import CampaignDetailView from './components/campaigns/CampaignDetailView';
 import NotificationPanel from './components/layout/NotificationPanel';
 import ProfilePanel from './components/layout/ProfilePanel';
 import KpiAnalyticsModal from './components/analytics/KpiAnalyticsModal';
@@ -55,7 +56,7 @@ const App = () => {
   // State management
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [isMenuOpen, setIsMenuOpen] = useState(true);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMenuPinned, setIsMenuPinned] = useState(true);
   const [campaigns, setCampaigns] = useState(initialCampaignData);
   const [loyaltyPrograms, setLoyaltyPrograms] = useState(initialLoyaltyProgramData);
@@ -762,12 +763,14 @@ const App = () => {
                 campaigns={campaigns}
                 onCampaignClick={handleCampaignClick}
                 onCampaignCreated={handleCampaignCreated}
+                onViewAllClick={() => setShowCampaignModal(true)}
               />
             ) : activeTab === 'loyalty' ? (
               <ProgramList 
                 programs={loyaltyPrograms}
                 onProgramClick={handleProgramClick}
                 onProgramCreated={handleLoyaltyProgramCreated}
+                onViewAllClick={() => setShowLoyaltyModal(true)}
               />
             ) : (
               <ActionBarWithCopilot 
@@ -784,15 +787,20 @@ const App = () => {
       
       {/* ✅ FIXED: Campaign Detail View - Pass selectedCampaign properly */}
       {selectedCampaign && (
-        <DetailView
-          item={selectedCampaign}
-          type="campaign"
+        <CampaignDetailView
+          campaign={selectedCampaign}
           onClose={() => setSelectedCampaign(null)}
-          onActionClick={openActionModal}
-          onSplitTestClick={() => setShowSplitTestModal(true)}
+          onImplement={(recommendation) => {
+            console.log(`Implementing recommendation: ${recommendation.title} for campaign: ${selectedCampaign.title}`);
+          }}
+          onModify={(recommendation) => {
+            console.log(`Modifying recommendation: ${recommendation.title} for campaign: ${selectedCampaign.title}`);
+          }}
+          onReject={(recommendation) => {
+            console.log(`Rejecting recommendation: ${recommendation.title} for campaign: ${selectedCampaign.title}`);
+          }}
         />
       )}
-
       {/* ✅ FIXED: Program Detail View - Pass selectedProgram properly */}
       {selectedProgram && (
         <DetailView
