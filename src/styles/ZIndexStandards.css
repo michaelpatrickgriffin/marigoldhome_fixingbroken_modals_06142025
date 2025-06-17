@@ -1,0 +1,117 @@
+/* src/styles/ZIndexStandards.css */
+/* Z-Index Standards for Modal and Component Layering */
+
+/* 
+  Z-Index Stack Order (from lowest to highest):
+  
+  1. Base Layer (0-99): Normal content, cards, main UI
+  2. Dropdown Layer (100-199): Dropdowns, tooltips, small overlays
+  3. Sidebar Layer (200-299): Sidebars, navigation panels
+  4. Modal Layer (15000-15999): Full-screen modals, dialogs
+  5. Critical Layer (16000-16999): Critical alerts, error messages
+  6. System Layer (20000+): AI assistants, system-level overlays
+*/
+
+/* Base Layer - Normal Content */
+.z-base { z-index: 1; }
+.z-elevated { z-index: 10; }
+.z-card-hover { z-index: 20; }
+
+/* Dropdown Layer - Small Overlays */
+.z-dropdown { z-index: 100; }
+.z-tooltip { z-index: 150; }
+.z-popover { z-index: 200; }
+
+/* Navigation Layer - Sidebars and Panels */
+.z-sidebar { z-index: 300; }
+.z-header { z-index: 350; }
+.z-navigation { z-index: 400; }
+
+/* Panel Layer - Side Panels */
+.z-panel { z-index: 1000; }
+.z-notification-panel { z-index: 1100; }
+.z-profile-panel { z-index: 1200; }
+
+/* Modal Layer - Full Screen Overlays */
+.z-modal-backdrop { z-index: 15000; }
+.z-modal { z-index: 15001; }
+.z-modal-header { z-index: 15002; }
+
+/* Specific Modal Types */
+.z-program-modal { z-index: 15100; }
+.z-campaign-modal { z-index: 15200; }
+.z-creation-modal { z-index: 15300; }
+.z-detail-modal { z-index: 15400; }
+.z-kpi-modal { z-index: 15500; }
+
+/* High Priority Modals */
+.z-loyalty-creation-modal { z-index: 15600; }
+.z-recommendation-modal { z-index: 15700; }
+.z-implementation-modal { z-index: 15800; }
+
+/* Critical Layer - Alerts and Confirmations */
+.z-alert { z-index: 16000; }
+.z-confirmation { z-index: 16100; }
+.z-error-modal { z-index: 16200; }
+
+/* System Layer - AI and System Components */
+.z-ai-assistant { z-index: 20000; }
+.z-ai-response-modal { z-index: 20100; }
+.z-system-notification { z-index: 20200; }
+
+/* Special Cases */
+.z-loading-overlay { z-index: 19000; }
+.z-debug-overlay { z-index: 99999; }
+
+/* Utility Classes for Dynamic Z-Index */
+.z-above-modal { z-index: 15999; }
+.z-below-modal { z-index: 14999; }
+.z-top-layer { z-index: 21000; }
+
+/* 
+  Usage Guidelines:
+  
+  1. Use semantic class names rather than raw z-index values
+  2. Always use these predefined classes for consistency
+  3. If you need a custom z-index, add it to this file first
+  4. Test modal layering after adding new components
+  5. Avoid using inline z-index styles when possible
+  
+  Example:
+  <div className="z-modal-backdrop">
+    <div className="z-modal">
+      <div className="z-modal-header">
+        <!-- Modal content -->
+      </div>
+    </div>
+  </div>
+*/
+
+/* Responsive Z-Index Adjustments */
+@media (max-width: 768px) {
+  /* On mobile, reduce z-index conflicts by using higher separation */
+  .z-modal { z-index: 16000; }
+  .z-modal-backdrop { z-index: 15999; }
+}
+
+/* Dark Mode Z-Index Adjustments */
+@media (prefers-color-scheme: dark) {
+  /* Ensure proper layering in dark mode */
+  .z-modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.9);
+  }
+}
+
+/* Print Mode - Remove Z-Index for Print */
+@media print {
+  * {
+    z-index: auto !important;
+  }
+}
+
+/* Accessibility - High Contrast Mode */
+@media (prefers-contrast: high) {
+  .z-modal {
+    border: 3px solid;
+  }
+}

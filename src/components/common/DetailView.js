@@ -1,504 +1,290 @@
-// src/components/common/DetailView.js
+// src/components/common/DetailView.js - Updated for Modal System
 import React, { useState, useEffect } from 'react';
-import { X, Download, Share2, ArrowLeft, ArrowRight, Clock, Users, TrendingUp, AlertTriangle, CheckCircle, ExternalLink, Star } from 'lucide-react';
+import { X, Settings, Users, BarChart3, Lightbulb, ChevronRight, AlertTriangle, CheckCircle, TrendingUp, Star, Calendar, Mail, Target, Gift, Zap, Play, Pause, Edit, Trash2, ArrowLeft, ArrowUpRight, DollarSign, Percent, Clock, Award } from 'lucide-react';
 import { COLORS } from '../../styles/ColorStyles';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
-import RecommendationImplementationModal from '../loyalty/RecommendationImplementationModal';
-import EnhancedRecommendationCard from './EnhancedRecommendationCard';
-import { 
-  getRecommendationById 
-} from '../../data/RFMAnalyticsData';
 
 const DetailView = ({ 
-  item: program, 
+  program, 
   onClose, 
   onImplement, 
   onModify, 
   onReject,
-  initialTab: propInitialTab = 'overview',
-  setActiveTab: externalSetActiveTab = null,
-  // ✅ CRITICAL: Callbacks for program creation and notifications
+  initialTab = 'overview',
   onProgramCreated,
-  onNotificationCreated
+  onNotificationCreated,
+  // New modal navigation props
+  onNavigate,
+  onGoBack,
+  currentView = 'main',
+  viewData = {},
+  canGoBack = false,
+  modalId,
+  isModal = false
 }) => {
-  // ALL HOOKS MUST BE AT THE TOP - NO EXCEPTIONS
-  const [activeTab, setActiveTab] = useState(propInitialTab);
-  const [expandedRecommendation, setExpandedRecommendation] = useState(null);
-  const [bulkActionLoading, setBulkActionLoading] = useState(false);
-  
-  // ✅ FIXED: Session-only state management (no localStorage persistence) - matches main dashboard
-  const [implementedRecommendations, setImplementedRecommendations] = useState(new Set());
-  const [rejectedRecommendations, setRejectedRecommendations] = useState(new Set());
-  const [archivedRecommendations, setArchivedRecommendations] = useState(new Set());
-  
-  // ✅ UPDATED: State for recommendation implementation modal with better debugging
-  const [showImplementationModal, setShowImplementationModal] = useState(false);
-  const [selectedRecommendation, setSelectedRecommendation] = useState(null);
-  const [recommendationProgramData, setRecommendationProgramData] = useState(null);
-  
-  // ✅ FIXED: Proper modal behavior with body scroll prevention and escape key
-  useEffect(() => {
-    // Prevent body scroll when modal is open
-    document.body.style.overflow = 'hidden';
-    
-    // Handle escape key
-    const handleEscape = (e) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-    
-    document.addEventListener('keydown', handleEscape);
-    
-    return () => {
-      document.body.style.overflow = 'unset';
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, [onClose]);
-  
-  // Sync internal activeTab with prop
-  useEffect(() => {
-    setActiveTab(propInitialTab);
-  }, [propInitialTab]);
-  
-  // ✅ FIXED: Handle deep linking to recommendations tab
-  useEffect(() => {
-    // If program has initial tab set and it's recommendations, set it
-    if (program?.initialTab === 'recommendations') {
-      setActiveTab('recommendations');
-    }
-  }, [program?.initialTab]);
-  
-  // Debug logging for the current program
-  useEffect(() => {
-    if (program) {
-      console.log('%c DETAIL VIEW DEBUG', 'background: purple; color: white; font-size: 14px;');
-      console.log('Current program:', program);
-      console.log('Program title:', program.title);
-      console.log('Program recommendations:', program.recommendations);
-      if (program.recommendations) {
-        program.recommendations.forEach((rec, index) => {
-          console.log(`Recommendation ${index}:`, {
-            id: rec.id,
-            title: rec.title,
-            type: rec.type
-          });
-        });
-      }
-    }
-  }, [program]);
+  const [activeTab, setActiveTab] = useState(initialTab);
 
-  // Debug logging for implementation modal state changes
+  // Update active tab when initialTab changes (for deep linking)
   useEffect(() => {
-    console.log('%c IMPLEMENTATION MODAL STATE DEBUG', 'background: orange; color: white; font-size: 12px;');
-    console.log('showImplementationModal:', showImplementationModal);
-    console.log('selectedRecommendation:', selectedRecommendation);
-    console.log('recommendationProgramData:', recommendationProgramData);
-  }, [showImplementationModal, selectedRecommendation, recommendationProgramData]);
-  
-  // NOW ALL OTHER LOGIC AFTER ALL HOOKS
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-    if (externalSetActiveTab) {
-      externalSetActiveTab(tab);
+    if (initialTab) {
+      setActiveTab(initialTab);
     }
-  };
-  
-  // ✅ ENHANCED: Improved implement action with better debugging and validation
-  const handleImplementAction = (recommendation) => {
-    console.log('%c IMPLEMENT ACTION TRIGGERED', 'background: red; color: white; font-size: 16px;');
-    console.log('Recommendation object received:', recommendation);
-    console.log('Recommendation ID:', recommendation?.id);
-    console.log('Recommendation title:', recommendation?.title);
-    console.log('Recommendation type:', recommendation?.type);
-    console.log('Program object:', program);
-    console.log('Program title:', program?.title);
-    console.log('Program ID:', program?.id);
-    
-    // ✅ VALIDATION: Ensure we have both recommendation and program data
-    if (!recommendation) {
-      console.error('❌ No recommendation provided to implement action');
-      return;
-    }
-    
-    if (!program) {
-      console.error('❌ No program data available for implementation');
-      return;
-    }
-    
-    // ✅ ENHANCED: Set state with comprehensive debugging
-    console.log('%c SETTING IMPLEMENTATION MODAL STATE', 'background: green; color: white; font-size: 14px;');
-    
-    // Set the recommendation data
-    console.log('Setting selected recommendation:', {
-      id: recommendation.id,
-      title: recommendation.title,
-      type: recommendation.type,
-      fullRecommendation: recommendation
-    });
-    setSelectedRecommendation(recommendation);
-    
-    // Set the program data
-    console.log('Setting program data:', {
-      id: program.id,
-      title: program.title,
-      type: program.type,
-      fullProgram: program
-    });
-    setRecommendationProgramData(program);
-    
-    // Open the modal
-    console.log('Opening implementation modal...');
-    setShowImplementationModal(true);
-    
-    // ✅ VERIFICATION: Verify state was set after a brief delay
-    setTimeout(() => {
-      console.log('%c VERIFYING MODAL STATE AFTER SETTING', 'background: blue; color: white; font-size: 12px;');
-      console.log('Modal should be open:', true);
-      console.log('Selected recommendation set:', !!recommendation);
-      console.log('Program data set:', !!program);
-    }, 100);
-  };
+  }, [initialTab]);
 
-  // Handle backdrop click
-  const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget) {
-      onClose();
+  if (!program) return null;
+
+  // Handle recommendation actions using modal navigation instead of new modals
+  const handleImplementRecommendation = (recommendation) => {
+    if (onNavigate) {
+      onNavigate('implementation', {
+        recommendation,
+        action: 'implement',
+        program
+      });
     }
   };
 
-  // Mock data for charts (in real app, this would come from program data)
-  const mockPerformanceData = [
-    { month: 'Jan', participants: 400, revenue: 2400 },
-    { month: 'Feb', participants: 300, revenue: 1398 },
-    { month: 'Mar', participants: 200, revenue: 9800 },
-    { month: 'Apr', participants: 278, revenue: 3908 },
-    { month: 'May', participants: 189, revenue: 4800 },
-    { month: 'Jun', participants: 239, revenue: 3800 },
-  ];
-
-  const mockSegmentData = [
-    { name: 'New', value: 400, fill: COLORS.evergreen },
-    { name: 'Active', value: 300, fill: COLORS.sage },
-    { name: 'At Risk', value: 200, fill: COLORS.mint },
-    { name: 'Lost', value: 100, fill: COLORS.seafoam },
-  ];
-
-  // Render tab content
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'performance':
-        return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            {/* Performance Overview */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '1rem'
-            }}>
-              <div style={{
-                padding: '1.5rem',
-                backgroundColor: 'white',
-                borderRadius: '0.75rem',
-                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.08)',
-                border: '1px solid rgba(0, 0, 0, 0.08)'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <Users size={20} style={{ color: COLORS.evergreen, marginRight: '0.5rem' }} />
-                  <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>Total Participants</span>
-                </div>
-                <div style={{ fontSize: '2rem', fontWeight: 600, color: COLORS.onyx }}>
-                  {program.participants?.toLocaleString() || '0'}
-                </div>
-              </div>
-
-              <div style={{
-                padding: '1.5rem',
-                backgroundColor: 'white',
-                borderRadius: '0.75rem',
-                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.08)',
-                border: '1px solid rgba(0, 0, 0, 0.08)'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <TrendingUp size={20} style={{ color: COLORS.sage, marginRight: '0.5rem' }} />
-                  <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>ROI</span>
-                </div>
-                <div style={{ 
-                  fontSize: '2rem', 
-                  fontWeight: 600, 
-                  color: (program.roi || 0) >= 0 ? COLORS.evergreen : '#ef4444' 
-                }}>
-                  {program.roi ? `${program.roi}%` : '0%'}
-                </div>
-              </div>
-            </div>
-
-            {/* Performance Chart */}
-            <div style={{
-              padding: '2rem',
-              backgroundColor: 'white',
-              borderRadius: '0.75rem',
-              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.08)',
-              border: '1px solid rgba(0, 0, 0, 0.08)'
-            }}>
-              <h3 style={{ 
-                fontSize: '1.25rem', 
-                fontWeight: 600, 
-                color: COLORS.onyx, 
-                marginBottom: '2rem' 
-              }}>
-                Performance Trends
-              </h3>
-              <div style={{ height: '300px' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={mockPerformanceData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
-                    <XAxis dataKey="month" stroke={COLORS.onyxMedium} />
-                    <YAxis stroke={COLORS.onyxMedium} />
-                    <Tooltip />
-                    <Legend />
-                    <Line 
-                      type="monotone" 
-                      dataKey="participants" 
-                      stroke={COLORS.evergreen} 
-                      strokeWidth={3}
-                      name="Participants"
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="revenue" 
-                      stroke={COLORS.sage} 
-                      strokeWidth={3}
-                      name="Revenue"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'audience':
-        return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            {/* Audience Breakdown */}
-            <div style={{
-              padding: '2rem',
-              backgroundColor: 'white',
-              borderRadius: '0.75rem',
-              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.08)',
-              border: '1px solid rgba(0, 0, 0, 0.08)'
-            }}>
-              <h3 style={{ 
-                fontSize: '1.25rem', 
-                fontWeight: 600, 
-                color: COLORS.onyx, 
-                marginBottom: '2rem' 
-              }}>
-                Audience Segments
-              </h3>
-              <div style={{ height: '300px' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={mockSegmentData}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={100}
-                      dataKey="value"
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    >
-                      {mockSegmentData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'recommendations':
-        return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {program.recommendations && program.recommendations.length > 0 ? (
-              <EnhancedRecommendationCard
-                program={program}
-                recommendations={program.recommendations}
-                expandedRecommendation={expandedRecommendation}
-                onToggleExpand={(rec) => setExpandedRecommendation(expandedRecommendation?.id === rec.id ? null : rec)}
-                onImplement={handleImplementAction}
-                onModify={(rec) => console.log('Modify:', rec)}
-                onReject={(rec) => console.log('Reject:', rec)}
-                onArchive={(rec) => console.log('Archive:', rec)}
-                onBulkAction={(action, recs) => console.log('Bulk action:', action, recs)}
-                onResetRecommendations={() => console.log('Reset recommendations')}
-                bulkActionLoading={bulkActionLoading}
-                implementedRecommendations={implementedRecommendations}
-                rejectedRecommendations={rejectedRecommendations}
-                archivedRecommendations={archivedRecommendations}
-              />
-            ) : (
-              <div style={{
-                padding: '3rem',
-                textAlign: 'center',
-                backgroundColor: 'white',
-                borderRadius: '0.75rem',
-                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.08)',
-                border: '1px solid rgba(0, 0, 0, 0.08)'
-              }}>
-                <Star size={48} style={{ color: COLORS.onyxLight, marginBottom: '1rem' }} />
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '0.5rem' }}>
-                  No Recommendations Available
-                </h3>
-                <p style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>
-                  This program doesn't have any recommendations at the moment.
-                </p>
-              </div>
-            )}
-          </div>
-        );
-
-      default: // overview
-        return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            {/* Program Summary */}
-            <div style={{
-              padding: '2rem',
-              backgroundColor: 'white',
-              borderRadius: '0.75rem',
-              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.08)',
-              border: '1px solid rgba(0, 0, 0, 0.08)'
-            }}>
-              <h3 style={{ 
-                fontSize: '1.25rem', 
-                fontWeight: 600, 
-                color: COLORS.onyx, 
-                marginBottom: '1rem' 
-              }}>
-                Program Overview
-              </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
-                <div>
-                  <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium, display: 'block', marginBottom: '0.25rem' }}>
-                    Status
-                  </span>
-                  <span style={{ 
-                    fontSize: '1rem', 
-                    fontWeight: 600, 
-                    color: program.status === 'Active' ? COLORS.evergreen : COLORS.onyxMedium 
-                  }}>
-                    {program.status || 'Unknown'}
-                  </span>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium, display: 'block', marginBottom: '0.25rem' }}>
-                    Type
-                  </span>
-                  <span style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.onyx }}>
-                    {program.type || 'N/A'}
-                  </span>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium, display: 'block', marginBottom: '0.25rem' }}>
-                    Audience
-                  </span>
-                  <span style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.onyx }}>
-                    {program.audience || 'All Customers'}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Key Metrics */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-              gap: '1rem'
-            }}>
-              <div style={{
-                padding: '1.5rem',
-                backgroundColor: 'white',
-                borderRadius: '0.75rem',
-                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.08)',
-                border: '1px solid rgba(0, 0, 0, 0.08)'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <Users size={20} style={{ color: COLORS.evergreen, marginRight: '0.5rem' }} />
-                  <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>Participants</span>
-                </div>
-                <div style={{ fontSize: '2rem', fontWeight: 600, color: COLORS.onyx }}>
-                  {program.participants?.toLocaleString() || '0'}
-                </div>
-              </div>
-
-              <div style={{
-                padding: '1.5rem',
-                backgroundColor: 'white',
-                borderRadius: '0.75rem',
-                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.08)',
-                border: '1px solid rgba(0, 0, 0, 0.08)'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <CheckCircle size={20} style={{ color: COLORS.sage, marginRight: '0.5rem' }} />
-                  <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>Completion Rate</span>
-                </div>
-                <div style={{ fontSize: '2rem', fontWeight: 600, color: COLORS.onyx }}>
-                  {program.completionRate ? `${program.completionRate}%` : '0%'}
-                </div>
-              </div>
-            </div>
-          </div>
-        );
+  const handleModifyRecommendation = (recommendation) => {
+    if (onNavigate) {
+      onNavigate('implementation', {
+        recommendation,
+        action: 'modify',
+        program
+      });
     }
   };
 
-  // Handle close implementation modal
-  const handleCloseImplementationModal = () => {
-    console.log('%c CLOSING IMPLEMENTATION MODAL', 'background: orange; color: white; font-size: 12px;');
-    setShowImplementationModal(false);
-    setSelectedRecommendation(null);
-    setRecommendationProgramData(null);
+  const handleRejectRecommendation = (recommendation) => {
+    if (onNavigate) {
+      onNavigate('implementation', {
+        recommendation,
+        action: 'reject',
+        program
+      });
+    }
   };
 
-  // Handle program created from implementation
-  const handleProgramCreatedFromImplementation = (newProgram) => {
-    console.log('%c PROGRAM CREATED FROM IMPLEMENTATION', 'background: green; color: white; font-size: 12px;');
-    console.log('New program created:', newProgram);
-    
-    // Close implementation modal
-    handleCloseImplementationModal();
-    
-    // Pass to parent callback if provided
+  // Handle program creation from implementation view
+  const handleProgramCreated = (newProgram) => {
+    console.log('Program created from DetailView:', newProgram);
     if (onProgramCreated) {
       onProgramCreated(newProgram);
     }
+    // Navigate back to main view
+    if (onNavigate) {
+      onNavigate('main');
+    }
   };
 
-  // Handle notification created from implementation
-  const handleNotificationCreatedFromImplementation = (notification) => {
-    console.log('%c NOTIFICATION CREATED FROM IMPLEMENTATION', 'background: blue; color: white; font-size: 12px;');
-    console.log('New notification created:', notification);
-    
-    // Pass to parent callback if provided
+  // Handle notification creation from implementation view
+  const handleNotificationCreated = (notification) => {
+    console.log('Notification created from DetailView:', notification);
     if (onNotificationCreated) {
       onNotificationCreated(notification);
     }
   };
 
-  const tabs = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'performance', label: 'Performance' },
-    { id: 'audience', label: 'Audience' },
-    { id: 'recommendations', label: 'Recommendations' }
-  ];
+  // Handle KPI drill-downs
+  const handleKpiClick = (kpi) => {
+    if (onNavigate) {
+      onNavigate('kpi-detail', { kpi });
+    }
+  };
 
-  return (
-    <>
-      {/* ✅ FIXED: Full-screen modal overlay with proper z-index */}
-      <div 
+  // Handle audience segment drill-downs
+  const handleSegmentClick = (segment) => {
+    if (onNavigate) {
+      onNavigate('audience-segment', { segment });
+    }
+  };
+
+  // Handle program editing
+  const handleEditProgram = () => {
+    if (onNavigate) {
+      onNavigate('edit-program', { program });
+    }
+  };
+
+  // Render different views based on currentView
+  const renderCurrentView = () => {
+    switch (currentView) {
+      case 'implementation':
+        return (
+          <RecommendationImplementationView
+            recommendation={viewData.recommendation}
+            program={viewData.program}
+            action={viewData.action}
+            onProgramCreated={handleProgramCreated}
+            onNotificationCreated={handleNotificationCreated}
+            onCancel={() => onNavigate('main')}
+          />
+        );
+      case 'kpi-detail':
+        return (
+          <KpiDetailView
+            kpi={viewData.kpi}
+            program={program}
+            onDrillDown={(subKpi) => onNavigate('kpi-breakdown', { kpi: subKpi, parentKpi: viewData.kpi })}
+          />
+        );
+      case 'kpi-breakdown':
+        return (
+          <KpiBreakdownView
+            kpi={viewData.kpi}
+            parentKpi={viewData.parentKpi}
+            program={program}
+          />
+        );
+      case 'audience-segment':
+        return (
+          <AudienceSegmentView
+            segment={viewData.segment}
+            program={program}
+            onDrillDown={(subSegment) => onNavigate('audience-detail', { segment: subSegment })}
+          />
+        );
+      case 'audience-detail':
+        return (
+          <AudienceDetailView
+            segment={viewData.segment}
+            program={program}
+          />
+        );
+      case 'edit-program':
+        return (
+          <EditProgramView
+            program={viewData.program}
+            onSave={(updatedProgram) => {
+              if (onProgramCreated) {
+                onProgramCreated(updatedProgram);
+              }
+              onNavigate('main');
+            }}
+            onCancel={() => onNavigate('main')}
+          />
+        );
+      default:
+        return renderMainView();
+    }
+  };
+
+  // Main view with tabs
+  const renderMainView = () => {
+    const tabs = [
+      { id: 'overview', label: 'Overview', icon: BarChart3 },
+      { id: 'performance', label: 'Performance', icon: TrendingUp },
+      { id: 'audience', label: 'Audience', icon: Users },
+      { id: 'recommendations', label: 'Recommendations', icon: Lightbulb },
+      { id: 'settings', label: 'Settings', icon: Settings }
+    ];
+
+    const getTabContent = () => {
+      switch (activeTab) {
+        case 'overview':
+          return (
+            <OverviewTab 
+              program={program} 
+              onKpiClick={handleKpiClick}
+              onEditProgram={handleEditProgram}
+            />
+          );
+        case 'performance':
+          return (
+            <PerformanceTab 
+              program={program}
+              onKpiClick={handleKpiClick}
+            />
+          );
+        case 'audience':
+          return (
+            <AudienceTab 
+              program={program}
+              onSegmentClick={handleSegmentClick}
+            />
+          );
+        case 'recommendations':
+          return (
+            <RecommendationsTab 
+              program={program} 
+              onImplement={handleImplementRecommendation}
+              onModify={handleModifyRecommendation}
+              onReject={handleRejectRecommendation}
+            />
+          );
+        case 'settings':
+          return (
+            <SettingsTab 
+              program={program}
+              onEditProgram={handleEditProgram}
+            />
+          );
+        default:
+          return <OverviewTab program={program} onKpiClick={handleKpiClick} />;
+      }
+    };
+
+    return (
+      <>
+        {/* Navigation Tabs */}
+        <div style={{
+          display: 'flex',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+          backgroundColor: 'white',
+          flexShrink: 0
+        }}>
+          {tabs.map(tab => {
+            const IconComponent = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '1rem 1.5rem',
+                  color: activeTab === tab.id ? COLORS.evergreen : COLORS.onyxMedium,
+                  fontSize: '0.875rem',
+                  fontWeight: activeTab === tab.id ? 600 : 500,
+                  background: 'none',
+                  border: 'none',
+                  borderBottom: activeTab === tab.id ? `2px solid ${COLORS.evergreen}` : '2px solid transparent',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  if (activeTab !== tab.id) {
+                    e.target.style.color = COLORS.onyx;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (activeTab !== tab.id) {
+                    e.target.style.color = COLORS.onyxMedium;
+                  }
+                }}
+              >
+                <IconComponent size={16} />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Tab Content */}
+        <div style={{ 
+          flex: 1, 
+          overflow: 'auto',
+          backgroundColor: '#fafbfc'
+        }}>
+          {getTabContent()}
+        </div>
+      </>
+    );
+  };
+
+  // For legacy mode (when not using modal system)
+  if (!isModal) {
+    return (
+      <div
         style={{
           position: 'fixed',
           top: 0,
@@ -508,165 +294,1160 @@ const DetailView = ({
           width: '100%',
           height: '100%',
           backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          zIndex: 100005, // ✅ FIXED: Above all other modals
-          backdropFilter: 'blur(4px)',
+          zIndex: 15400,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '0'
+          padding: '2rem'
         }}
-        onClick={handleBackdropClick}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            onClose();
+          }
+        }}
       >
-        {/* ✅ FIXED: Modal container with proper z-index */}
         <div
           style={{
-            width: '100%',
-            height: '100%',
-            maxWidth: '100%',
-            maxHeight: '100%',
-            backgroundColor: '#f5f7f8',
-            zIndex: 100006, // ✅ FIXED: Container above overlay
+            width: '90vw',
+            maxWidth: '1200px',
+            height: '85vh',
+            backgroundColor: 'white',
+            borderRadius: '1rem',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
             display: 'flex',
             flexDirection: 'column',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            position: 'relative',
+            zIndex: 15401
           }}
-          onClick={e => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
         >
-          {/* Modal Header */}
+          {/* Legacy Header */}
           <div style={{
-            padding: '1.5rem',
+            padding: '1.5rem 2rem',
             borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
             display: 'flex',
-            justifyContent: 'center',
+            justifyContent: 'space-between',
             alignItems: 'center',
             backgroundColor: 'white',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            flexShrink: 0,
-            zIndex: 100007 // ✅ FIXED: Header above content
+            position: 'relative',
+            zIndex: 15402
           }}>
-            <div style={{
-              maxWidth: '80rem',
-              width: '100%',
+            <div>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: COLORS.onyx, margin: 0 }}>
+                {program.title || program.name}
+              </h2>
+              <p style={{ fontSize: '0.875rem', color: COLORS.onyxMedium, margin: '0.25rem 0 0 0' }}>
+                {program.type || 'Campaign'} Details
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '2.5rem',
+                height: '2.5rem',
+                borderRadius: '50%',
+                color: COLORS.onyxMedium,
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <X size={20} />
+            </button>
+          </div>
+          {renderMainView()}
+        </div>
+      </div>
+    );
+  }
+
+  // For modal system mode
+  return (
+    <div style={{ 
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
+      {renderCurrentView()}
+    </div>
+  );
+};
+
+// Helper function to get view titles
+const getViewTitle = (view, data) => {
+  switch (view) {
+    case 'implementation':
+      return `${data.action === 'implement' ? 'Implement' : data.action === 'modify' ? 'Modify' : 'Reject'} Recommendation`;
+    case 'kpi-detail':
+      return `${data.kpi?.name || 'KPI'} Details`;
+    case 'kpi-breakdown':
+      return `${data.kpi?.name || 'KPI'} Breakdown`;
+    case 'audience-segment':
+      return `${data.segment?.name || 'Segment'} Analysis`;
+    case 'audience-detail':
+      return `${data.segment?.name || 'Segment'} Details`;
+    case 'edit-program':
+      return 'Edit Program';
+    default:
+      return 'Details';
+  }
+};
+
+// Recommendation Implementation View (previously a separate modal)
+const RecommendationImplementationView = ({ 
+  recommendation, 
+  program, 
+  action, 
+  onProgramCreated, 
+  onNotificationCreated,
+  onCancel 
+}) => {
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
+  const [customizations, setCustomizations] = useState({});
+  const [rejectionReason, setRejectionReason] = useState('');
+
+  const handleExecuteAction = async () => {
+    if (!recommendation || !action) return;
+
+    setIsProcessing(true);
+
+    // Simulate processing time
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Execute the action
+    switch (action) {
+      case 'implement':
+        await handleImplement();
+        break;
+      case 'modify':
+        await handleModify();
+        break;
+      case 'reject':
+        await handleReject();
+        break;
+      default:
+        console.error('Unknown action:', action);
+    }
+
+    setIsProcessing(false);
+    setIsComplete(true);
+
+    // Auto-navigate back after success
+    setTimeout(() => {
+      onCancel();
+    }, 2000);
+  };
+
+  const handleImplement = async () => {
+    console.log('Implementing recommendation:', recommendation.id);
+    
+    // Create a new program or modify existing based on recommendation type
+    if (recommendation.title.toLowerCase().includes('program')) {
+      const newProgram = {
+        id: `program-${Date.now()}`,
+        title: recommendation.implementationDetails?.title || recommendation.title,
+        type: recommendation.implementationDetails?.type || 'Loyalty Program',
+        status: 'Draft',
+        audience: recommendation.implementationDetails?.audience || 'All Members',
+        description: recommendation.implementationDetails?.description || recommendation.description,
+        createdFrom: 'recommendation',
+        originalRecommendation: recommendation
+      };
+      
+      if (onProgramCreated) {
+        onProgramCreated(newProgram);
+      }
+    }
+    
+    // Always create a notification
+    if (onNotificationCreated) {
+      onNotificationCreated({
+        id: `notification-${Date.now()}`,
+        type: 'success',
+        title: 'Recommendation Implemented',
+        message: `Successfully implemented: ${recommendation.title}`,
+        timestamp: new Date().toISOString(),
+        action: 'implement',
+        program: program,
+        recommendation: recommendation
+      });
+    }
+  };
+
+  const handleModify = async () => {
+    console.log('Modifying recommendation:', recommendation.id, customizations);
+    
+    if (onNotificationCreated) {
+      onNotificationCreated({
+        id: `notification-${Date.now()}`,
+        type: 'info',
+        title: 'Recommendation Modified',
+        message: `Modified and implemented: ${recommendation.title}`,
+        timestamp: new Date().toISOString(),
+        action: 'modify',
+        program: program,
+        recommendation: recommendation,
+        customizations: customizations
+      });
+    }
+  };
+
+  const handleReject = async () => {
+    console.log('Rejecting recommendation:', recommendation.id, rejectionReason);
+    
+    if (onNotificationCreated) {
+      onNotificationCreated({
+        id: `notification-${Date.now()}`,
+        type: 'warning',
+        title: 'Recommendation Rejected',
+        message: `Rejected: ${recommendation.title}`,
+        timestamp: new Date().toISOString(),
+        action: 'reject',
+        program: program,
+        recommendation: recommendation,
+        reason: rejectionReason
+      });
+    }
+  };
+
+  if (isComplete) {
+    return (
+      <div style={{ 
+        padding: '3rem 2rem', 
+        textAlign: 'center',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100%'
+      }}>
+        <div style={{
+          width: '4rem',
+          height: '4rem',
+          borderRadius: '50%',
+          backgroundColor: 'rgba(76, 175, 80, 0.2)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: '1.5rem'
+        }}>
+          <CheckCircle size={32} color="#4CAF50" />
+        </div>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: COLORS.onyx, margin: '0 0 1rem 0' }}>
+          {action === 'implement' ? 'Recommendation Implemented!' : 
+           action === 'modify' ? 'Changes Saved!' : 
+           'Recommendation Rejected'}
+        </h2>
+        <p style={{ color: COLORS.onyxMedium, fontSize: '1rem', lineHeight: '1.5' }}>
+          {action === 'implement' ? 'The recommendation has been successfully implemented and will be activated shortly.' :
+           action === 'modify' ? 'Your modifications have been saved and the recommendation has been implemented.' :
+           'The recommendation has been rejected and will not be implemented.'}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: '2rem', height: '100%', overflow: 'auto' }}>
+      <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+        {/* Action Summary */}
+        <div style={{
+          padding: '1.5rem',
+          backgroundColor: 'rgba(26, 76, 73, 0.05)',
+          borderRadius: '1rem',
+          borderLeft: `4px solid ${COLORS.evergreen}`,
+          marginBottom: '2rem'
+        }}>
+          <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.onyx, margin: '0 0 0.5rem 0' }}>
+            {recommendation.title}
+          </h3>
+          <p style={{ color: COLORS.onyxMedium, fontSize: '0.875rem', margin: 0 }}>
+            {recommendation.description}
+          </p>
+        </div>
+
+        {/* Action-specific content */}
+        {action === 'modify' && (
+          <div style={{ marginBottom: '2rem' }}>
+            <h4 style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '1rem' }}>
+              Customization Options
+            </h4>
+            <textarea
+              placeholder="Add your modifications..."
+              value={customizations.notes || ''}
+              onChange={(e) => setCustomizations(prev => ({ ...prev, notes: e.target.value }))}
+              style={{
+                width: '100%',
+                minHeight: '100px',
+                padding: '1rem',
+                border: '1px solid rgba(0, 0, 0, 0.2)',
+                borderRadius: '0.5rem',
+                fontSize: '0.875rem',
+                resize: 'vertical',
+                fontFamily: 'inherit'
+              }}
+            />
+          </div>
+        )}
+
+        {action === 'reject' && (
+          <div style={{ marginBottom: '2rem' }}>
+            <h4 style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '1rem' }}>
+              Reason for Rejection
+            </h4>
+            <textarea
+              placeholder="Please provide a reason for rejecting this recommendation..."
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              style={{
+                width: '100%',
+                minHeight: '100px',
+                padding: '1rem',
+                border: '1px solid rgba(0, 0, 0, 0.2)',
+                borderRadius: '0.5rem',
+                fontSize: '0.875rem',
+                resize: 'vertical',
+                fontFamily: 'inherit'
+              }}
+            />
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+          <button
+            onClick={onCancel}
+            disabled={isProcessing}
+            style={{
+              padding: '0.75rem 1.5rem',
+              borderRadius: '0.5rem',
+              border: '1px solid rgba(0, 0, 0, 0.2)',
+              backgroundColor: 'white',
+              color: COLORS.onyx,
+              cursor: isProcessing ? 'not-allowed' : 'pointer',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              opacity: isProcessing ? 0.6 : 1,
+              transition: 'all 0.2s ease'
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleExecuteAction}
+            disabled={isProcessing || (action === 'reject' && !rejectionReason.trim())}
+            style={{
+              padding: '0.75rem 1.5rem',
+              borderRadius: '0.5rem',
+              border: 'none',
+              backgroundColor: action === 'implement' ? COLORS.evergreen : 
+                              action === 'modify' ? COLORS.blue : 
+                              COLORS.red,
+              color: 'white',
+              cursor: (isProcessing || (action === 'reject' && !rejectionReason.trim())) ? 'not-allowed' : 'pointer',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              opacity: (isProcessing || (action === 'reject' && !rejectionReason.trim())) ? 0.6 : 1,
               display: 'flex',
-              justifyContent: 'space-between',
               alignItems: 'center',
-              paddingLeft: '1.5rem',
-              paddingRight: '1.5rem'
+              gap: '0.5rem',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            {isProcessing ? (
+              <>
+                <div style={{ 
+                  width: '16px', 
+                  height: '16px', 
+                  border: '2px solid rgba(255,255,255,0.3)', 
+                  borderTopColor: 'white', 
+                  borderRadius: '50%', 
+                  animation: 'spin 1s linear infinite' 
+                }} />
+                Processing...
+              </>
+            ) : (
+              <>
+                {action === 'implement' ? 'Implement' : 
+                 action === 'modify' ? 'Save Changes' : 
+                 'Reject'}
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Tab Components with enhanced functionality
+const OverviewTab = ({ program, onKpiClick, onEditProgram }) => {
+  const mockKpis = [
+    { name: 'Revenue', value: '$125K', change: '+12%', trend: 'up' },
+    { name: 'Active Members', value: '2,341', change: '+8%', trend: 'up' },
+    { name: 'Engagement Rate', value: '67%', change: '+5%', trend: 'up' },
+    { name: 'Avg Order Value', value: '$89', change: '-2%', trend: 'down' }
+  ];
+
+  return (
+    <div style={{ padding: '2rem' }}>
+      <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.onyx, margin: 0 }}>
+          Program Overview
+        </h3>
+        <button
+          onClick={onEditProgram}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.75rem 1rem',
+            backgroundColor: COLORS.evergreen,
+            color: 'white',
+            border: 'none',
+            borderRadius: '0.5rem',
+            fontSize: '0.875rem',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          <Edit size={16} />
+          Edit Program
+        </button>
+      </div>
+
+      {/* KPI Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+        {mockKpis.map((kpi, index) => (
+          <div
+            key={index}
+            onClick={() => onKpiClick(kpi)}
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '1rem',
+              padding: '1.5rem',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              border: '1px solid rgba(0, 0, 0, 0.05)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium, fontWeight: 500 }}>
+                {kpi.name}
+              </span>
+              <ArrowUpRight size={16} color={COLORS.onyxMedium} />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ fontSize: '1.5rem', fontWeight: 700, color: COLORS.onyx }}>
+                {kpi.value}
+              </span>
+              <span style={{ 
+                fontSize: '0.875rem', 
+                fontWeight: 500,
+                color: kpi.trend === 'up' ? COLORS.evergreen : COLORS.red 
+              }}>
+                {kpi.change}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Program Details */}
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '1rem',
+        padding: '2rem',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+      }}>
+        <h4 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '1.5rem' }}>
+          Program Details
+        </h4>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
+          <div>
+            <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium, display: 'block', marginBottom: '0.5rem' }}>
+              Program Type
+            </span>
+            <span style={{ fontSize: '1rem', fontWeight: 500, color: COLORS.onyx }}>
+              {program.type || 'Loyalty Program'}
+            </span>
+          </div>
+          <div>
+            <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium, display: 'block', marginBottom: '0.5rem' }}>
+              Status
+            </span>
+            <span style={{ 
+              fontSize: '1rem', 
+              fontWeight: 500, 
+              color: program.status === 'Active' ? COLORS.evergreen : COLORS.amber
             }}>
-              <div>
-                <h2 style={{ 
-                  fontSize: '1.5rem', 
-                  fontWeight: 600, 
-                  color: COLORS.onyx, 
-                  margin: 0 
-                }}>
-                  {program.title}
-                </h2>
-                <p style={{ 
-                  fontSize: '0.875rem', 
-                  color: COLORS.onyxMedium, 
-                  margin: '0.25rem 0 0 0' 
-                }}>
-                  {program.type} • {program.audience}
-                </p>
-              </div>
-              
-              {/* Close Button */}
-              <button 
-                onClick={onClose}
-                style={{ 
+              {program.status || 'Active'}
+            </span>
+          </div>
+          <div>
+            <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium, display: 'block', marginBottom: '0.5rem' }}>
+              Target Audience
+            </span>
+            <span style={{ fontSize: '1rem', fontWeight: 500, color: COLORS.onyx }}>
+              {program.audience || 'All Members'}
+            </span>
+          </div>
+          <div>
+            <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium, display: 'block', marginBottom: '0.5rem' }}>
+              Launch Date
+            </span>
+            <span style={{ fontSize: '1rem', fontWeight: 500, color: COLORS.onyx }}>
+              {program.launchDate || 'January 15, 2024'}
+            </span>
+          </div>
+        </div>
+        
+        {program.description && (
+          <div style={{ marginTop: '1.5rem' }}>
+            <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium, display: 'block', marginBottom: '0.5rem' }}>
+              Description
+            </span>
+            <p style={{ fontSize: '1rem', color: COLORS.onyx, lineHeight: '1.5', margin: 0 }}>
+              {program.description}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const PerformanceTab = ({ program, onKpiClick }) => {
+  const performanceMetrics = [
+    { name: 'Total Revenue', value: '$125,000', change: '+12%', trend: 'up', icon: DollarSign },
+    { name: 'Conversion Rate', value: '3.2%', change: '+0.8%', trend: 'up', icon: Percent },
+    { name: 'Avg Session Duration', value: '4m 32s', change: '+15%', trend: 'up', icon: Clock },
+    { name: 'Customer Satisfaction', value: '4.7/5', change: '+0.2', trend: 'up', icon: Award }
+  ];
+
+  return (
+    <div style={{ padding: '2rem' }}>
+      <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '2rem' }}>
+        Performance Metrics
+      </h3>
+      
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+        {performanceMetrics.map((metric, index) => {
+          const IconComponent = metric.icon;
+          return (
+            <div
+              key={index}
+              onClick={() => onKpiClick(metric)}
+              style={{
+                backgroundColor: 'white',
+                borderRadius: '1rem',
+                padding: '2rem',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                border: '1px solid rgba(0, 0, 0, 0.05)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                <div style={{
+                  width: '3rem',
+                  height: '3rem',
+                  borderRadius: '0.75rem',
+                  backgroundColor: 'rgba(26, 76, 73, 0.1)',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '2.5rem',
-                  height: '2.5rem',
-                  borderRadius: '50%',
-                  color: COLORS.onyxMedium,
-                  backgroundColor: 'transparent',
+                  justifyContent: 'center'
+                }}>
+                  <IconComponent size={20} color={COLORS.evergreen} />
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '0.875rem', fontWeight: 500, color: COLORS.onyxMedium, margin: 0 }}>
+                    {metric.name}
+                  </h4>
+                  <p style={{ fontSize: '1.5rem', fontWeight: 700, color: COLORS.onyx, margin: 0 }}>
+                    {metric.value}
+                  </p>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <TrendingUp size={16} color={COLORS.evergreen} />
+                <span style={{ fontSize: '0.875rem', color: COLORS.evergreen, fontWeight: 500 }}>
+                  {metric.change} from last period
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+const AudienceTab = ({ program, onSegmentClick }) => {
+  const segments = [
+    { name: 'VIP Members', size: 1250, percentage: '12%', revenue: '$45K' },
+    { name: 'Regular Members', size: 3400, percentage: '35%', revenue: '$65K' },
+    { name: 'New Members', size: 2100, percentage: '22%', revenue: '$15K' },
+    { name: 'Inactive Members', size: 1800, percentage: '18%', revenue: '$8K' }
+  ];
+
+  return (
+    <div style={{ padding: '2rem' }}>
+      <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '2rem' }}>
+        Audience Segments
+      </h3>
+      
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+        {segments.map((segment, index) => (
+          <div
+            key={index}
+            onClick={() => onSegmentClick(segment)}
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '1rem',
+              padding: '2rem',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              border: '1px solid rgba(0, 0, 0, 0.05)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h4 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.onyx, margin: 0 }}>
+                {segment.name}
+              </h4>
+              <ChevronRight size={20} color={COLORS.onyxMedium} />
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: COLORS.onyxMedium, display: 'block', marginBottom: '0.25rem' }}>
+                  SIZE
+                </span>
+                <span style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.onyx }}>
+                  {segment.size.toLocaleString()}
+                </span>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: COLORS.onyxMedium, display: 'block', marginBottom: '0.25rem' }}>
+                  PERCENTAGE
+                </span>
+                <span style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.onyx }}>
+                  {segment.percentage}
+                </span>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: COLORS.onyxMedium, display: 'block', marginBottom: '0.25rem' }}>
+                  REVENUE
+                </span>
+                <span style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.onyx }}>
+                  {segment.revenue}
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const RecommendationsTab = ({ program, onImplement, onModify, onReject }) => {
+  const recommendations = [
+    {
+      id: 1,
+      title: 'Increase Email Frequency for Engaged Segments',
+      description: 'Boost engagement by sending targeted emails to your most active customer segments twice weekly instead of once.',
+      impact: 'High',
+      effort: 'Low',
+      expectedROI: '180%'
+    },
+    {
+      id: 2,
+      title: 'Launch Personalized Reward Campaigns',
+      description: 'Create tailored reward campaigns based on customer purchase history and preferences.',
+      impact: 'High',
+      effort: 'Medium',
+      expectedROI: '250%'
+    },
+    {
+      id: 3,
+      title: 'Implement Tiered Loyalty Structure',
+      description: 'Add premium tiers to your loyalty program to incentivize higher spending and engagement.',
+      impact: 'Medium',
+      effort: 'High',
+      expectedROI: '120%'
+    }
+  ];
+
+  return (
+    <div style={{ padding: '2rem' }}>
+      <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '2rem' }}>
+        AI-Powered Recommendations
+      </h3>
+      
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+        {recommendations.map((rec) => (
+          <div key={rec.id} style={{
+            backgroundColor: 'white',
+            borderRadius: '1rem',
+            padding: '2rem',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+            border: '1px solid rgba(0, 0, 0, 0.05)'
+          }}>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                <h4 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.onyx, margin: 0 }}>
+                  {rec.title}
+                </h4>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <span style={{
+                    padding: '0.25rem 0.5rem',
+                    borderRadius: '0.25rem',
+                    backgroundColor: rec.impact === 'High' ? 'rgba(76, 175, 80, 0.1)' : 
+                                    rec.impact === 'Medium' ? 'rgba(255, 193, 7, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                    color: rec.impact === 'High' ? COLORS.evergreen : 
+                           rec.impact === 'Medium' ? COLORS.amber : COLORS.onyxMedium,
+                    fontSize: '0.75rem',
+                    fontWeight: 500
+                  }}>
+                    {rec.impact} Impact
+                  </span>
+                  <span style={{
+                    padding: '0.25rem 0.5rem',
+                    borderRadius: '0.25rem',
+                    backgroundColor: 'rgba(0, 123, 191, 0.1)',
+                    color: COLORS.blue,
+                    fontSize: '0.75rem',
+                    fontWeight: 500
+                  }}>
+                    {rec.expectedROI} ROI
+                  </span>
+                </div>
+              </div>
+              <p style={{ fontSize: '0.875rem', color: COLORS.onyxMedium, lineHeight: '1.5', margin: 0 }}>
+                {rec.description}
+              </p>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button
+                onClick={() => onImplement(rec)}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: COLORS.evergreen,
+                  color: 'white',
                   border: 'none',
+                  borderRadius: '0.5rem',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
                   cursor: 'pointer',
                   transition: 'all 0.2s ease'
                 }}
-                className="hover:bg-gray-100"
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = '#1A4C49';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = COLORS.evergreen;
+                }}
               >
-                <X size={20} />
+                Implement
+              </button>
+              <button
+                onClick={() => onModify(rec)}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: COLORS.blue,
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = '#005A8B';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = COLORS.blue;
+                }}
+              >
+                Modify
+              </button>
+              <button
+                onClick={() => onReject(rec)}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: 'white',
+                  color: COLORS.red,
+                  border: `1px solid ${COLORS.red}`,
+                  borderRadius: '0.5rem',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = COLORS.red;
+                  e.target.style.color = 'white';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = 'white';
+                  e.target.style.color = COLORS.red;
+                }}
+              >
+                Reject
               </button>
             </div>
           </div>
-
-          {/* Tab Navigation */}
-          <div style={{
-            borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
-            display: 'flex',
-            justifyContent: 'center',
-            backgroundColor: 'white',
-            flexShrink: 0,
-            zIndex: 100007 // ✅ FIXED: Tabs above content
-          }}>
-            <div style={{
-              maxWidth: '80rem',
-              width: '100%',
-              paddingLeft: '1.5rem',
-              paddingRight: '1.5rem',
-              display: 'flex',
-              gap: '2rem'
-            }}>
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => handleTabChange(tab.id)}
-                  style={{
-                    padding: '1rem 0',
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                    color: activeTab === tab.id ? COLORS.evergreen : COLORS.onyxMedium,
-                    backgroundColor: 'transparent',
-                    border: 'none',
-                    borderBottom: activeTab === tab.id ? `2px solid ${COLORS.evergreen}` : '2px solid transparent',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Modal Body - Scrollable Content */}
-          <div style={{
-            flex: 1,
-            overflowY: 'auto',
-            display: 'flex',
-            justifyContent: 'center',
-            zIndex: 100006 // ✅ FIXED: Content z-index
-          }}>
-            <div style={{
-              maxWidth: '80rem',
-              width: '100%',
-              paddingLeft: '1.5rem',
-              paddingRight: '1.5rem',
-              paddingTop: '1.5rem',
-              paddingBottom: '1.5rem'
-            }}>
-              {renderTabContent()}
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
+    </div>
+  );
+};
 
-      {/* ✅ ENHANCED: Recommendation Implementation Modal with proper z-index stacking */}
-      {showImplementationModal && selectedRecommendation && recommendationProgramData && (
-        <RecommendationImplementationModal
-          isOpen={showImplementationModal}
-          onClose={handleCloseImplementationModal}
-          recommendation={selectedRecommendation}
-          programData={recommendationProgramData}
-          onProgramCreated={handleProgramCreatedFromImplementation}
-          onNotificationCreated={handleNotificationCreatedFromImplementation}
-        />
-      )}
-    </>
+const SettingsTab = ({ program, onEditProgram }) => (
+  <div style={{ padding: '2rem' }}>
+    <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '2rem' }}>
+      Program Settings
+    </h3>
+    
+    <div style={{
+      backgroundColor: 'white',
+      borderRadius: '1rem',
+      padding: '2rem',
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <h4 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.onyx, margin: 0 }}>
+          Program Configuration
+        </h4>
+        <button
+          onClick={onEditProgram}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.75rem 1rem',
+            backgroundColor: COLORS.evergreen,
+            color: 'white',
+            border: 'none',
+            borderRadius: '0.5rem',
+            fontSize: '0.875rem',
+            cursor: 'pointer'
+          }}
+        >
+          <Settings size={16} />
+          Edit Settings
+        </button>
+      </div>
+      
+      <p style={{ color: COLORS.onyxMedium, lineHeight: '1.5' }}>
+        Program configuration options and advanced settings would be displayed here.
+        This includes targeting rules, reward structures, communication preferences, and integration settings.
+      </p>
+    </div>
+  </div>
+);
+
+// Placeholder components for drill-down views
+const KpiDetailView = ({ kpi, program, onDrillDown }) => (
+  <div style={{ padding: '2rem' }}>
+    <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '2rem' }}>
+      {kpi?.name || 'KPI'} Analysis
+    </h3>
+    <div style={{
+      backgroundColor: 'white',
+      borderRadius: '1rem',
+      padding: '2rem',
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+    }}>
+      <p style={{ color: COLORS.onyxMedium, lineHeight: '1.5', marginBottom: '2rem' }}>
+        Detailed analytics and breakdown for {kpi?.name || 'this KPI'} would be displayed here.
+        This includes trend analysis, comparison data, and actionable insights.
+      </p>
+      <button 
+        onClick={() => onDrillDown({ name: 'Sub-metric Analysis', parentKpi: kpi })}
+        style={{
+          padding: '0.75rem 1.5rem',
+          backgroundColor: COLORS.evergreen,
+          color: 'white',
+          border: 'none',
+          borderRadius: '0.5rem',
+          fontSize: '0.875rem',
+          cursor: 'pointer'
+        }}
+      >
+        Drill Down Further
+      </button>
+    </div>
+  </div>
+);
+
+const KpiBreakdownView = ({ kpi, parentKpi, program }) => (
+  <div style={{ padding: '2rem' }}>
+    <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '2rem' }}>
+      {kpi?.name || 'KPI'} Breakdown
+    </h3>
+    <div style={{
+      backgroundColor: 'white',
+      borderRadius: '1rem',
+      padding: '2rem',
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+    }}>
+      <p style={{ color: COLORS.onyxMedium, lineHeight: '1.5' }}>
+        Parent KPI: {parentKpi?.name || 'N/A'}
+      </p>
+      <p style={{ color: COLORS.onyxMedium, lineHeight: '1.5' }}>
+        Detailed breakdown data and sub-metrics for {kpi?.name || 'this metric'} would be displayed here.
+      </p>
+    </div>
+  </div>
+);
+
+const AudienceSegmentView = ({ segment, program, onDrillDown }) => (
+  <div style={{ padding: '2rem' }}>
+    <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '2rem' }}>
+      {segment?.name || 'Segment'} Analysis
+    </h3>
+    <div style={{
+      backgroundColor: 'white',
+      borderRadius: '1rem',
+      padding: '2rem',
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+    }}>
+      <p style={{ color: COLORS.onyxMedium, lineHeight: '1.5', marginBottom: '2rem' }}>
+        Segment analysis and behavioral insights for {segment?.name || 'this segment'} would be displayed here.
+      </p>
+      <button 
+        onClick={() => onDrillDown({ name: 'Detailed Demographics', parentSegment: segment })}
+        style={{
+          padding: '0.75rem 1.5rem',
+          backgroundColor: COLORS.evergreen,
+          color: 'white',
+          border: 'none',
+          borderRadius: '0.5rem',
+          fontSize: '0.875rem',
+          cursor: 'pointer'
+        }}
+      >
+        View Demographics
+      </button>
+    </div>
+  </div>
+);
+
+const AudienceDetailView = ({ segment, program }) => (
+  <div style={{ padding: '2rem' }}>
+    <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '2rem' }}>
+      {segment?.name || 'Segment'} Demographics
+    </h3>
+    <div style={{
+      backgroundColor: 'white',
+      borderRadius: '1rem',
+      padding: '2rem',
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+    }}>
+      <p style={{ color: COLORS.onyxMedium, lineHeight: '1.5' }}>
+        Detailed demographic information and customer profiles for {segment?.name || 'this segment'} would be displayed here.
+      </p>
+    </div>
+  </div>
+);
+
+const EditProgramView = ({ program, onSave, onCancel }) => {
+  const [formData, setFormData] = useState({
+    title: program.title || program.name || '',
+    type: program.type || 'Loyalty Program',
+    status: program.status || 'Active',
+    audience: program.audience || 'All Members',
+    description: program.description || ''
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave({ ...program, ...formData });
+  };
+
+  return (
+    <div style={{ padding: '2rem', height: '100%', overflow: 'auto' }}>
+      <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+        <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '2rem' }}>
+          Edit Program
+        </h3>
+        
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: COLORS.onyx, marginBottom: '0.5rem' }}>
+              Program Name
+            </label>
+            <input
+              type="text"
+              value={formData.title}
+              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '1px solid rgba(0, 0, 0, 0.2)',
+                borderRadius: '0.5rem',
+                fontSize: '1rem',
+                fontFamily: 'inherit'
+              }}
+              required
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: COLORS.onyx, marginBottom: '0.5rem' }}>
+              Program Type
+            </label>
+            <select
+              value={formData.type}
+              onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '1px solid rgba(0, 0, 0, 0.2)',
+                borderRadius: '0.5rem',
+                fontSize: '1rem',
+                fontFamily: 'inherit'
+              }}
+            >
+              <option value="Loyalty Program">Loyalty Program</option>
+              <option value="Rewards Program">Rewards Program</option>
+              <option value="VIP Program">VIP Program</option>
+              <option value="Referral Program">Referral Program</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: COLORS.onyx, marginBottom: '0.5rem' }}>
+              Status
+            </label>
+            <select
+              value={formData.status}
+              onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '1px solid rgba(0, 0, 0, 0.2)',
+                borderRadius: '0.5rem',
+                fontSize: '1rem',
+                fontFamily: 'inherit'
+              }}
+            >
+              <option value="Active">Active</option>
+              <option value="Draft">Draft</option>
+              <option value="Paused">Paused</option>
+              <option value="Archived">Archived</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: COLORS.onyx, marginBottom: '0.5rem' }}>
+              Target Audience
+            </label>
+            <input
+              type="text"
+              value={formData.audience}
+              onChange={(e) => setFormData(prev => ({ ...prev, audience: e.target.value }))}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '1px solid rgba(0, 0, 0, 0.2)',
+                borderRadius: '0.5rem',
+                fontSize: '1rem',
+                fontFamily: 'inherit'
+              }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: COLORS.onyx, marginBottom: '0.5rem' }}>
+              Description
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              rows={4}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '1px solid rgba(0, 0, 0, 0.2)',
+                borderRadius: '0.5rem',
+                fontSize: '1rem',
+                fontFamily: 'inherit',
+                resize: 'vertical'
+              }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
+            <button
+              type="button"
+              onClick={onCancel}
+              style={{
+                padding: '0.75rem 1.5rem',
+                border: '1px solid rgba(0, 0, 0, 0.2)',
+                backgroundColor: 'white',
+                color: COLORS.onyx,
+                borderRadius: '0.5rem',
+                fontSize: '0.875rem',
+                cursor: 'pointer'
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              style={{
+                padding: '0.75rem 1.5rem',
+                backgroundColor: COLORS.evergreen,
+                color: 'white',
+                border: 'none',
+                borderRadius: '0.5rem',
+                fontSize: '0.875rem',
+                cursor: 'pointer'
+              }}
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 };
 

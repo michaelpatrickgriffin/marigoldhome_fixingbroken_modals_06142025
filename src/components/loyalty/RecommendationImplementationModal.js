@@ -1,1830 +1,900 @@
-// src/components/loyalty/RecommendationImplementationModal.js
+// src/components/loyalty/RecommendationImplementationModal.js - Updated for Modal System
 import React, { useState, useEffect } from 'react';
-import { 
-  X, CheckCircle, Target, TrendingUp, Award, 
-  Users, DollarSign, ArrowUpRight, Zap, 
-  Calendar, Settings, Star, ShoppingBag, Clock,
-  Brain, Lightbulb, Gift, Mail, Sparkles, Edit
-} from 'lucide-react';
+import { X, CheckCircle, Edit, Trash2, Lightbulb, Target, TrendingUp, AlertCircle, Clock, Sparkles, ArrowRight, DollarSign, Users, Calendar, Star } from 'lucide-react';
 import { COLORS } from '../../styles/ColorStyles';
-import FullScreenLoyaltyProgramModal from './FullScreenLoyaltyProgramModal';
 
 const RecommendationImplementationModal = ({ 
   isOpen, 
   onClose, 
   recommendation, 
-  programData, 
-  onProgramCreated, 
-  onNotificationCreated 
+  program, 
+  action, 
+  onProgramCreated,
+  onNotificationCreated,
+  // New modal system props
+  onNavigate,
+  onGoBack,
+  currentView = 'main',
+  viewData = {},
+  canGoBack = false,
+  modalId,
+  isModal = false
 }) => {
-  const [currentPhase, setCurrentPhase] = useState('setup'); // 'setup', 'review'
-  const [setupProgress, setSetupProgress] = useState(0);
-  const [implementationData, setImplementationData] = useState(null);
-  const [setupStep, setSetupStep] = useState(0);
-  const [showModifyModal, setShowModifyModal] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
+  const [customizations, setCustomizations] = useState({
+    title: '',
+    description: '',
+    targetAudience: '',
+    budget: '',
+    timeline: '',
+    notes: ''
+  });
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [validationErrors, setValidationErrors] = useState({});
 
-  const setupSteps = [
-    'Analyzing recommendation requirements',
-    'Identifying target member segments', 
-    'Calculating implementation parameters',
-    'Designing member communication strategy',
-    'Projecting implementation timeline',
-    'Finalizing program configuration'
-  ];
+  // Use viewData when in modal system mode
+  const currentRecommendation = viewData?.recommendation || recommendation;
+  const currentProgram = viewData?.program || program;
+  const currentAction = viewData?.action || action;
 
-  // Debug logging for modal state
+  // Reset state when modal opens or recommendation changes
   useEffect(() => {
-    console.log('Recommendation Modal State Change - Modal isOpen:', isOpen, 'Recommendation:', recommendation, 'Program Data:', programData);
-  }, [isOpen, recommendation, programData]);
+    if ((isModal || isOpen) && currentRecommendation) {
+      setIsProcessing(false);
+      setIsComplete(false);
+      setCustomizations({
+        title: currentRecommendation.implementationDetails?.title || currentRecommendation.title || '',
+        description: currentRecommendation.implementationDetails?.description || currentRecommendation.description || '',
+        targetAudience: currentRecommendation.implementationDetails?.audience || 'All Members',
+        budget: currentRecommendation.implementationDetails?.budget || '',
+        timeline: currentRecommendation.implementationDetails?.timeline || '30 days',
+        notes: ''
+      });
+      setRejectionReason('');
+      setValidationErrors({});
+    }
+  }, [isOpen, isModal, currentRecommendation]);
 
-  // Reset modal state when opened
+  // Handle escape key for legacy mode
   useEffect(() => {
-    if (isOpen && recommendation) {
-      console.log('Opening implementation modal for recommendation:', recommendation);
-      setCurrentPhase('setup');
-      setSetupProgress(0);
-      setSetupStep(0);
-      setImplementationData(null);
-      setShowModifyModal(false);
+    const handleEscape = (e) => {
+      if (!isModal && e.key === 'Escape' && isOpen && !isProcessing) {
+        onClose();
+      }
+    };
+
+    if (!isModal && isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
+    }
+  }, [isOpen, onClose, isProcessing, isModal]);
+
+  // Validate form data
+  const validateForm = () => {
+    const errors = {};
+    
+    if (currentAction === 'modify') {
+      if (!customizations.title.trim()) {
+        errors.title = 'Title is required';
+      }
+      if (!customizations.description.trim()) {
+        errors.description = 'Description is required';
+      }
+      if (!customizations.targetAudience.trim()) {
+        errors.targetAudience = 'Target audience is required';
+      }
+    }
+    
+    if (currentAction === 'reject' && !rejectionReason.trim()) {
+      errors.rejectionReason = 'Rejection reason is required';
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Handle action execution
+  const handleExecuteAction = async () => {
+    if (!currentRecommendation || !currentAction) return;
+    
+    if (!validateForm()) return;
+
+    setIsProcessing(true);
+
+    try {
+      // Simulate processing time
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Execute the action
+      switch (currentAction) {
+        case 'implement':
+          await handleImplement();
+          break;
+        case 'modify':
+          await handleModify();
+          break;
+        case 'reject':
+          await handleReject();
+          break;
+        default:
+          console.error('Unknown action:', currentAction);
+      }
+
+      setIsProcessing(false);
+      setIsComplete(true);
+
+      // Auto-close after success
+      setTimeout(() => {
+        handleClose();
+      }, 2500);
+    } catch (error) {
+      console.error('Error executing action:', error);
+      setIsProcessing(false);
+      // Could show error state here
+    }
+  };
+
+  const handleImplement = async () => {
+    console.log('Implementing recommendation:', currentRecommendation.id);
+    
+    // Create a new program or modify existing based on recommendation type
+    if (currentRecommendation.title.toLowerCase().includes('program') || 
+        currentRecommendation.implementationDetails?.type) {
+      const newProgram = {
+        id: `program-${Date.now()}`,
+        title: customizations.title || currentRecommendation.implementationDetails?.title || currentRecommendation.title,
+        type: currentRecommendation.implementationDetails?.type || 'Loyalty Program',
+        status: 'Draft',
+        audience: customizations.targetAudience || currentRecommendation.implementationDetails?.audience || 'All Members',
+        description: customizations.description || currentRecommendation.implementationDetails?.description || currentRecommendation.description,
+        budget: customizations.budget,
+        timeline: customizations.timeline,
+        createdFrom: 'recommendation',
+        originalRecommendation: currentRecommendation,
+        createdAt: new Date().toISOString()
+      };
       
-      // Start the setup simulation with more detailed steps
-      const stepInterval = setInterval(() => {
-        setSetupStep(prevStep => {
-          const nextStep = prevStep + 1;
-          const progress = (nextStep / setupSteps.length) * 100;
-          
-          setSetupProgress(progress);
-          
-          if (nextStep >= setupSteps.length) {
-            clearInterval(stepInterval);
-            // Small delay before transitioning to review
-            setTimeout(() => {
-              console.log('Transitioning to review phase');
-              setCurrentPhase('review');
-              generateImplementationData();
-            }, 800);
-            return setupSteps.length;
-          }
-          return nextStep;
-        });
-      }, 700);
-
-      return () => clearInterval(stepInterval);
-    }
-  }, [isOpen, recommendation]);
-
-  // Generate the implementation data based on recommendation
-  const generateImplementationData = () => {
-    if (!recommendation) {
-      console.warn('No recommendation provided for implementation data generation');
-      return;
+      if (onProgramCreated) {
+        onProgramCreated(newProgram);
+      }
     }
     
-    console.log('Generating implementation data for:', recommendation.id, recommendation.title, recommendation.type);
-    
-    let data = {};
-    
-    // Generate implementation data based on recommendation type
-    if (isAtRiskPunchCardRecommendation()) {
-      data = generateAtRiskPunchCardImplementation();
-    } else if (isTrailEssentialsRecommendation()) {
-      data = generateTrailEssentialsImplementation();
-    } else if (recommendation.type === 'enhancement') {
-      data = generateEnhancementImplementation();
-    } else if (recommendation.type === 'targeting') {
-      data = generateTargetingImplementation();
-    } else if (recommendation.type === 'optimization') {
-      data = generateOptimizationImplementation();
-    } else if (recommendation.type === 'communication') {
-      data = generateCommunicationImplementation();
-    } else {
-      // Default implementation for other types
-      data = generateDefaultImplementation();
-    }
-    
-    console.log('Generated implementation data:', data);
-    setImplementationData(data);
-  };
-
-  // Helper function to detect At Risk Recovery Punch Card recommendations
-  const isAtRiskPunchCardRecommendation = () => {
-    return (
-      // Check recommendation ID patterns for At Risk punch card
-      (recommendation?.id && (
-        recommendation.id.includes('rec-atrisk-punchcard') || 
-        recommendation.id.includes('atrisk-punchcard') ||
-        recommendation.id.startsWith('atrisk-') ||
-        recommendation.id === 'rec-atrisk-punchcard-new'
-      )) ||
-      // Check recommendation title for At Risk keywords
-      (recommendation?.title && (
-        recommendation.title.toLowerCase().includes('at risk') && 
-        recommendation.title.toLowerCase().includes('punch card')
-      )) ||
-      // Check if this targets the At Risk segment specifically
-      (recommendation?.segment && recommendation.segment.toLowerCase() === 'at risk') ||
-      // Check if program audience is At Risk
-      (programData?.audience && programData.audience.toLowerCase().includes('at risk'))
-    );
-  };
-
-  // Helper function to detect Trail Essentials recommendations
-  const isTrailEssentialsRecommendation = () => {
-    return (
-      // Check recommendation ID patterns
-      (recommendation?.id && (
-        recommendation.id.includes('rec-p2-') || 
-        recommendation.id.includes('rec-c2-') ||
-        recommendation.id.startsWith('p2-') ||
-        recommendation.id.startsWith('c2-')
-      )) ||
-      // Check program title
-      (programData?.title && programData.title.toLowerCase().includes('trail essentials')) ||
-      // Check recommendation title for Trail Essentials keywords
-      (recommendation?.title && (
-        recommendation.title.toLowerCase().includes('trail essentials') ||
-        (recommendation.title.toLowerCase().includes('punch card') && 
-         recommendation.title.toLowerCase().includes('optimization'))
-      )) ||
-      // Check if this is the Trail Essentials program (ID 2)
-      (programData?.id === 2) ||
-      // Check if program needs attention and has negative ROI (Trail Essentials characteristics)
-      (programData?.needsAttention && programData?.roi < 0 && !isAtRiskPunchCardRecommendation())
-    );
-  };
-
-  // At Risk Recovery Punch Card specific implementation
-  const generateAtRiskPunchCardImplementation = () => {
-    return {
-      title: 'At Risk Recovery Punch Card',
-      type: 'Program Enhancement',
-      audience: 'At Risk Segment',
-      description: 'Strategic punch card program designed to improve recency and frequency patterns for At Risk customers through targeted weekly engagement requirements and milestone rewards.',
-      startDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      endDate: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      pointsValue: '10',
-      rules: [
-        '4-purchase punch card with $10 minimum purchase requirement',
-        'Weekly visit requirements to boost recency patterns',
-        'Milestone rewards: 100 points after 2 visits, $5 coupon after 4 visits',
-        'Targeted to At Risk segment (R:3 F:3 customers)',
-        'Progress tracking and completion analytics'
-      ],
-      rewards: [
-        '100 bonus points after 2 qualifying visits',
-        '$5 coupon completion reward after 4 visits',
-        'Weekly engagement milestone recognition',
-        'Progress tracking dashboard access',
-        'Completion celebration email with exclusive offers'
-      ],
-      tiers: [],
-      earningMechanics: [
-        'Weekly purchase requirement for punch progression',
-        'Milestone bonuses: 100 points at 2-visit mark',
-        'Completion celebration: $5 coupon reward',
-        'Engagement rewards: 50 points for feedback participation',
-        'Progress sharing: 25 points for social media engagement'
-      ],
-      programTouchpoints: [
-        'Enhanced mobile app progress tracking',
-        'Personalized email milestone celebrations',
-        'SMS reminders for weekly engagement opportunities',
-        'In-app achievement notifications',
-        'Recovery-focused member communication'
-      ],
-      projectedMetrics: {
-        participantsRecovered: '7,650',
-        revenueRecovery: '$215K',
-        additionalPurchases: '12,000',
-        averageOrderValue: '$17.90',
-        recencyImprovement: '60%',
-        frequencyImprovement: '35%',
-        monetaryImprovement: '3%',
-        responseRate: '40%',
-        timeToPositiveROI: '6 weeks',
-        programROI: '+280%'
-      },
-      problemSolved: {
-        issue: 'At Risk Recovery Punch Card',
-        impact: 'Declining frequency and recency for high value customers puts them at risk of disengaging and lowering their lifetime value.',
-        solution: 'Increase recency and frequency by targeting segment members with multi-step punch card with multiple reward levels',
-        outcome: 'Incentivize incremental increase in purchase frequency and recency with punch card requiring at least one purchase per week for the next month. Lower than average qualifying purchase amount makes this an attractive option for members to re-engage.'
-      },
-      implementationPlan: [
-        {
-          phase: 'Analysis & Planning (Days 1-14)',
-          actions: [
-            'Conduct comprehensive At Risk member behavior analysis',
-            'Design 4-purchase punch card with weekly requirements',
-            'Create recovery-focused communication templates',
-            'Set up progress tracking and analytics systems'
-          ]
-        },
-        {
-          phase: 'Pilot Launch (Days 15-45)',
-          actions: [
-            'Launch punch card program with 25% of At Risk members',
-            'Monitor weekly engagement and completion metrics',
-            'Collect member feedback and satisfaction data',
-            'Refine program elements based on early results'
-          ]
-        },
-        {
-          phase: 'Full Rollout (Days 46-120)',
-          actions: [
-            'Expand to all At Risk segment members',
-            'Implement member re-engagement campaigns',
-            'Scale successful program elements',
-            'Document recovery results and best practices'
-          ]
-        }
-      ]
-    };
-  };
-
-  // Trail Essentials specific implementation
-  const generateTrailEssentialsImplementation = () => {
-    return {
-      title: 'Trail Essentials Program Optimization',
-      type: 'Program Enhancement',
-      audience: 'Trail Essentials Participants',
-      description: 'Comprehensive program optimization to improve member experience and engagement through data-driven enhancements, simplified progression paths, and enhanced value communication.',
-      startDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      endDate: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      pointsValue: '12',
-      rules: [
-        'Streamlined 3-punch progression for better completion rates',
-        'Progressive milestone rewards at each punch level',
-        'Clear value communication throughout member journey',
-        'Bonus completion incentives for early engagement',
-        'Simplified redemption process with guided assistance'
-      ],
-      rewards: [
-        'Milestone celebration reward (300 points)',
-        'Trail gear starter kit (750 points)',
-        'Exclusive trail guide access (500 points)',
-        'Premium gear discount (25% off)',
-        'Completion bonus reward (1000 points)'
-      ],
-      tiers: [],
-      earningMechanics: [
-        'Simplified punch progression: 1 punch per qualifying purchase',
-        'Milestone bonuses: 100 points at each punch level',
-        'Completion celebration: 500 bonus points',
-        'Engagement rewards: 50 points for feedback participation',
-        'Progress sharing: 25 points for social media engagement'
-      ],
-      programTouchpoints: [
-        'Enhanced mobile app progress tracking',
-        'Personalized email milestone celebrations',
-        'SMS reminders for progression opportunities',
-        'In-app achievement notifications',
-        'Member success story sharing platform'
-      ],
-      projectedMetrics: {
-        participantsRecovered: '9,500',
-        revenueRecovery: '$185K',
-        customerSatisfactionIncrease: '+38%',
-        brandSentimentImprovement: '+32%',
-        retentionRateImprovement: '+45%',
-        programROI: '+225%',
-        timeToPositiveROI: '8 weeks',
-        churnReduction: '42%',
-        npsImprovement: '+22 points'
-      },
-      problemSolved: {
-        issue: 'Trail Essentials Program Optimization Opportunity',
-        impact: '10% completion rate indicates structure needs enhancement for better member experience',
-        solution: 'Comprehensive program optimization with simplified progression and enhanced member communication',
-        outcome: 'Improved member satisfaction and program performance through data-driven enhancements'
-      },
-      implementationPlan: [
-        {
-          phase: 'Analysis & Planning (Days 1-14)',
-          actions: [
-            'Conduct comprehensive member behavior analysis',
-            'Design simplified 3-punch program structure',
-            'Create enhanced communication templates',
-            'Set up progress tracking and analytics systems'
-          ]
-        },
-        {
-          phase: 'Pilot Launch (Days 15-45)',
-          actions: [
-            'Launch optimized program with 25% of participants',
-            'Monitor engagement and completion metrics',
-            'Collect member feedback and satisfaction data',
-            'Refine program elements based on early results'
-          ]
-        },
-        {
-          phase: 'Full Rollout (Days 46-120)',
-          actions: [
-            'Expand to all Trail Essentials members',
-            'Implement member re-engagement campaigns',
-            'Scale successful program elements',
-            'Document optimization results and best practices'
-          ]
-        }
-      ]
-    };
-  };
-
-  // Enhancement type implementation
-  const generateEnhancementImplementation = () => {
-    return {
-      title: `${programData?.title || 'Program'} Enhancement Initiative`,
-      type: 'Program Enhancement',
-      audience: programData?.audience || 'All Members',
-      description: `Strategic enhancement program to improve ${programData?.title || 'the program'} through AI-powered personalization, advanced analytics, and member experience optimization.`,
-      startDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      endDate: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      pointsValue: '12',
-      rules: [
-        'Enhanced point earning on personalized recommendations',
-        'Bonus multipliers for consistent engagement',
-        'Tiered rewards based on member activity',
-        'Special recognition for community participation'
-      ],
-      rewards: [
-        'Personalized product recommendations (300 points)',
-        'Early access to new features (500 points)',
-        'Exclusive member events (800 points)',
-        'Premium customer support (400 points)',
-        'Custom gear configuration (1000 points)'
-      ],
-      tiers: [
-        { name: 'Explorer', threshold: '500 points' },
-        { name: 'Adventurer', threshold: '2,000 points' },
-        { name: 'Elite', threshold: '5,000 points' }
-      ],
-      earningMechanics: [
-        'AI-recommended action completion: 50-200 points',
-        'Member feedback submission: 25 points',
-        'Social sharing with program hashtag: 30 points',
-        'Monthly challenge participation: 100 points',
-        'Referral bonuses: 250 points per successful referral'
-      ],
-      programTouchpoints: [
-        'Personalized mobile app dashboard',
-        'Weekly AI-powered recommendations email',
-        'In-store QR code experiences',
-        'Social media engagement campaigns',
-        'Quarterly member appreciation events'
-      ],
-      projectedMetrics: {
-        participantsRecovered: `${Math.round((programData?.participants || 1000) * 0.85).toLocaleString()}`,
-        revenueRecovery: `$${Math.round((programData?.revenue || 50000) * 0.25 / 1000)}K`,
-        customerSatisfactionIncrease: '+28%',
-        brandSentimentImprovement: '+22%',
-        retentionRateImprovement: '+35%',
-        programROI: '+240%',
-        timeToPositiveROI: '8 weeks',
-        churnReduction: '45%',
-        npsImprovement: '+18 points'
-      },
-      problemSolved: {
-        issue: 'Member Engagement Enhancement Opportunity',
-        impact: 'Opportunities identified for more personalized member experiences',
-        solution: 'AI-powered enhancement with personalized member journeys',
-        outcome: 'Increased engagement and member lifetime value through optimization'
-      },
-      implementationPlan: [
-        {
-          phase: 'Planning & Setup (Days 1-14)',
-          actions: [
-            'Deploy AI personalization engine',
-            'Set up advanced analytics dashboard',
-            'Create member segmentation models',
-            'Design new reward structures'
-          ]
-        },
-        {
-          phase: 'Pilot Launch (Days 15-45)',
-          actions: [
-            'Launch with 20% of member base',
-            'Monitor engagement metrics',
-            'Collect member feedback',
-            'Optimize recommendation algorithms'
-          ]
-        },
-        {
-          phase: 'Full Rollout (Days 46-180)',
-          actions: [
-            'Expand to all members',
-            'Launch advanced tier benefits',
-            'Implement social features',
-            'Measure long-term impact'
-          ]
-        }
-      ]
-    };
-  };
-
-  // Targeting type implementation
-  const generateTargetingImplementation = () => {
-    return {
-      title: `${programData?.title || 'Program'} Precision Targeting Initiative`,
-      type: 'Targeted Campaign',
-      audience: 'High-Value Member Segments',
-      description: `Advanced targeting program using behavioral analytics and predictive modeling to deliver personalized experiences to the most valuable ${programData?.title || 'program'} members.`,
-      startDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      endDate: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      pointsValue: '10',
-      rules: [
-        'Segment-specific point multipliers',
-        'Predictive reward recommendations',
-        'Behavioral trigger-based bonuses',
-        'Dynamic tier progression'
-      ],
-      rewards: [
-        'VIP customer service (200 points)',
-        'Exclusive product previews (600 points)',
-        'Personal shopping sessions (1500 points)',
-        'Custom product bundles (800 points)',
-        'Anniversary celebration perks (400 points)'
-      ],
-      tiers: [],
-      earningMechanics: [
-        'High-value purchase bonus: 3X points',
-        'Loyalty milestone rewards: 500 points',
-        'Cross-category purchase incentives: 2X points',
-        'Seasonal engagement bonuses: 150 points',
-        'Referral success rewards: 300 points'
-      ],
-      programTouchpoints: [
-        'Personalized email campaigns',
-        'SMS alerts for relevant offers',
-        'In-app targeted notifications',
-        'Direct mail for VIP members',
-        'Personal shopper consultations'
-      ],
-      projectedMetrics: {
-        participantsRecovered: `${Math.round((programData?.participants || 1000) * 0.35).toLocaleString()}`,
-        revenueRecovery: `$${Math.round((programData?.revenue || 50000) * 0.4 / 1000)}K`,
-        customerSatisfactionIncrease: '+32%',
-        brandSentimentImprovement: '+25%',
-        retentionRateImprovement: '+42%',
-        programROI: '+320%',
-        timeToPositiveROI: '5 weeks',
-        churnReduction: '55%',
-        npsImprovement: '+22 points'
-      },
-      problemSolved: {
-        issue: 'Member Communication Optimization Opportunity',
-        impact: 'Opportunity identified for more targeted and relevant member communications',
-        solution: 'Precision targeting with personalized member journeys',
-        outcome: 'Higher engagement and conversion from key member segments'
-      },
-      implementationPlan: [
-        {
-          phase: 'Segmentation (Days 1-10)',
-          actions: [
-            'Analyze member behavior patterns',
-            'Create predictive value models',
-            'Define high-value segments',
-            'Set up targeting infrastructure'
-          ]
-        },
-        {
-          phase: 'Campaign Launch (Days 11-30)',
-          actions: [
-            'Deploy targeted campaigns',
-            'Monitor segment response rates',
-            'A/B test messaging variations',
-            'Optimize targeting algorithms'
-          ]
-        },
-        {
-          phase: 'Scale & Optimize (Days 31-120)',
-          actions: [
-            'Expand successful campaigns',
-            'Refine segment definitions',
-            'Implement automation workflows',
-            'Measure ROI and lifetime value impact'
-          ]
-        }
-      ]
-    };
-  };
-
-  // Optimization type implementation
-  const generateOptimizationImplementation = () => {
-    return {
-      title: `${programData?.title || 'Program'} Performance Optimization`,
-      type: 'Program Optimization',
-      audience: programData?.audience || 'All Members',
-      description: `Comprehensive optimization initiative to improve ${programData?.title || 'program'} performance through data-driven enhancements, streamlined processes, and member experience improvements.`,
-      startDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      pointsValue: '8',
-      rules: [
-        'Optimized point earning rates',
-        'Streamlined redemption process',
-        'Performance-based bonus multipliers',
-        'Simplified tier advancement'
-      ],
-      rewards: [
-        'Fast-track redemptions (150 points)',
-        'Bonus point packages (300 points)',
-        'Priority processing (250 points)',
-        'Member appreciation gifts (500 points)',
-        'Exclusive optimization previews (400 points)'
-      ],
-      tiers: [],
-      earningMechanics: [
-        'Optimized purchase multipliers: 1.5X points',
-        'Quick action bonuses: 25 points',
-        'Efficiency rewards: 75 points',
-        'Feedback participation: 50 points',
-        'Process improvement suggestions: 100 points'
-      ],
-      programTouchpoints: [
-        'Streamlined mobile experience',
-        'Automated progress notifications',
-        'Real-time point balance updates',
-        'Simplified redemption interface',
-        'Performance feedback surveys'
-      ],
-      projectedMetrics: {
-        participantsRecovered: `${Math.round((programData?.participants || 1000) * 0.75).toLocaleString()}`,
-        revenueRecovery: `$${Math.round((programData?.revenue || 50000) * 0.3 / 1000)}K`,
-        customerSatisfactionIncrease: '+25%',
-        brandSentimentImprovement: '+20%',
-        retentionRateImprovement: '+30%',
-        programROI: '+200%',
-        timeToPositiveROI: '6 weeks',
-        churnReduction: '40%',
-        npsImprovement: '+15 points'
-      },
-      problemSolved: {
-        issue: 'Program Performance Enhancement Opportunity',
-        impact: 'Areas identified for improved member experience and engagement',
-        solution: 'Data-driven optimization and process improvements',
-        outcome: 'Enhanced program performance and member satisfaction'
-      },
-      implementationPlan: [
-        {
-          phase: 'Analysis (Days 1-7)',
-          actions: [
-            'Comprehensive program performance audit',
-            'Member journey mapping',
-            'Optimization opportunity assessment',
-            'Enhancement strategy development'
-          ]
-        },
-        {
-          phase: 'Implementation (Days 8-45)',
-          actions: [
-            'Deploy process improvements',
-            'Launch optimized user interfaces',
-            'Implement performance monitoring',
-            'Begin member communication campaign'
-          ]
-        },
-        {
-          phase: 'Optimization (Days 46-90)',
-          actions: [
-            'Monitor performance improvements',
-            'Fine-tune optimization parameters',
-            'Collect member feedback',
-            'Document success metrics'
-          ]
-        }
-      ]
-    };
-  };
-
-  // Communication type implementation
-  const generateCommunicationImplementation = () => {
-    return {
-      title: `${programData?.title || 'Program'} Communication Enhancement`,
-      type: 'Communication Strategy',
-      audience: programData?.audience || 'All Members',
-      description: `Strategic communication enhancement to improve member engagement through personalized messaging, multi-channel outreach, and proactive member support.`,
-      startDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      endDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      pointsValue: '5',
-      rules: [
-        'Communication preference-based delivery',
-        'Engagement milestone celebrations',
-        'Proactive support outreach',
-        'Personalized content delivery'
-      ],
-      rewards: [
-        'Communication preferences setup (50 points)',
-        'Newsletter subscription bonus (100 points)',
-        'Survey participation rewards (75 points)',
-        'Community engagement points (125 points)',
-        'Feedback contribution recognition (200 points)'
-      ],
-      tiers: [],
-      earningMechanics: [
-        'Email engagement: 10 points per click',
-        'SMS response: 15 points per reply',
-        'App notification interaction: 5 points',
-        'Community post engagement: 20 points',
-        'Support interaction rating: 25 points'
-      ],
-      programTouchpoints: [
-        'Personalized email campaigns',
-        'Smart SMS notifications',
-        'In-app messaging center',
-        'Community forum participation',
-        'Proactive customer support'
-      ],
-      projectedMetrics: {
-        participantsRecovered: `${Math.round((programData?.participants || 1000) * 0.90).toLocaleString()}`,
-        revenueRecovery: `$${Math.round((programData?.revenue || 50000) * 0.15 / 1000)}K`,
-        customerSatisfactionIncrease: '+20%',
-        brandSentimentImprovement: '+28%',
-        retentionRateImprovement: '+25%',
-        programROI: '+150%',
-        timeToPositiveROI: '4 weeks',
-        churnReduction: '35%',
-        npsImprovement: '+20 points'
-      },
-      problemSolved: {
-        issue: 'Member Communication Enhancement Opportunity',
-        impact: 'Opportunity to improve member understanding and engagement through better communication',
-        solution: 'Enhanced multi-channel communication strategy',
-        outcome: 'Improved member understanding and engagement through optimized communications'
-      },
-      implementationPlan: [
-        {
-          phase: 'Setup (Days 1-5)',
-          actions: [
-            'Audit current communication channels',
-            'Set up personalization engine',
-            'Create communication templates',
-            'Establish feedback mechanisms'
-          ]
-        },
-        {
-          phase: 'Launch (Days 6-20)',
-          actions: [
-            'Deploy personalized campaigns',
-            'Launch member preference center',
-            'Begin proactive support outreach',
-            'Monitor engagement metrics'
-          ]
-        },
-        {
-          phase: 'Optimize (Days 21-60)',
-          actions: [
-            'Refine messaging based on feedback',
-            'Optimize send times and frequency',
-            'Expand successful communication types',
-            'Measure satisfaction improvements'
-          ]
-        }
-      ]
-    };
-  };
-
-  // Default implementation for other types
-  const generateDefaultImplementation = () => {
-    return {
-      title: `${programData?.title || 'Program'} ${recommendation?.title || 'Enhancement'}`,
-      type: 'Program Enhancement',
-      audience: programData?.audience || 'All Members',
-      description: `Implementation of AI recommendation to enhance ${programData?.title || 'the program'} based on member behavior analysis and performance optimization opportunities.`,
-      startDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      endDate: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      pointsValue: '10',
-      rules: [
-        'Enhanced member experience features',
-        'Performance-based rewards',
-        'Automated program improvements',
-        'Member feedback integration'
-      ],
-      rewards: [
-        'Program enhancement credits (200 points)',
-        'Early feature access (500 points)',
-        'Member appreciation rewards (300 points)',
-        'Exclusive program previews (750 points)',
-        'Community recognition (150 points)'
-      ],
-      tiers: [],
-      earningMechanics: [
-        'Enhanced action completion: 50 points',
-        'Member feedback participation: 25 points',
-        'Program improvement suggestions: 100 points',
-        'Community engagement: 30 points',
-        'Milestone achievements: 200 points'
-      ],
-      programTouchpoints: [
-        'Enhanced mobile experience',
-        'Personalized communications',
-        'Streamlined member portal',
-        'Automated progress updates',
-        'Community engagement features'
-      ],
-      projectedMetrics: {
-        participantsRecovered: `${Math.round((programData?.participants || 1000) * 0.65).toLocaleString()}`,
-        revenueRecovery: `$${Math.round((programData?.revenue || 50000) * 0.2 / 1000)}K`,
-        customerSatisfactionIncrease: '+22%',
-        brandSentimentImprovement: '+18%',
-        retentionRateImprovement: '+28%',
-        programROI: '+180%',
-        timeToPositiveROI: '7 weeks',
-        churnReduction: '38%',
-        npsImprovement: '+16 points'
-      },
-      problemSolved: {
-        issue: recommendation?.title || 'Program Enhancement Opportunity',
-        impact: 'Opportunity identified for enhanced member experience',
-        solution: 'AI-recommended program improvements',
-        outcome: 'Improved program performance and member satisfaction'
-      },
-      implementationPlan: [
-        {
-          phase: 'Planning (Days 1-14)',
-          actions: [
-            'Detailed requirement analysis',
-            'Resource allocation and planning',
-            'Member communication strategy',
-            'Success metrics definition'
-          ]
-        },
-        {
-          phase: 'Implementation (Days 15-60)',
-          actions: [
-            'Deploy program enhancements',
-            'Launch member communication',
-            'Monitor early adoption metrics',
-            'Collect member feedback'
-          ]
-        },
-        {
-          phase: 'Optimization (Days 61-120)',
-          actions: [
-            'Analyze performance data',
-            'Optimize based on feedback',
-            'Scale successful features',
-            'Document lessons learned'
-          ]
-        }
-      ]
-    };
-  };
-
-  // Handle program creation
-  const handleCreateProgram = () => {
-    if (!implementationData) {
-      console.warn('No implementation data available for program creation');
-      return;
-    }
-
-    console.log('Creating program from implementation');
-
-    const newProgram = {
-      ...implementationData,
-      id: Date.now(),
-      status: implementationData.startDate ? 'Scheduled' : 'Draft',
-      participants: 0,
-      pointsIssued: 0,
-      redemptions: 0,
-      revenue: 0,
-      cost: 0,
-      roi: 0,
-      needsAttention: false,
-      recommendations: [],
-      isRecommendationImplementation: true,
-      originalRecommendation: recommendation
-    };
-
-    console.log('Creating recommendation-based program:', newProgram);
-
-    if (onProgramCreated) {
-      onProgramCreated(newProgram);
-    }
-
+    // Always create a notification
     if (onNotificationCreated) {
-      const notification = {
-        id: Date.now(),
+      onNotificationCreated({
+        id: `notification-${Date.now()}`,
         type: 'success',
-        title: `Enhancement Implemented: ${newProgram.title}`,
-        message: `Program optimization has been created and ${newProgram.status === 'Scheduled' ? 'scheduled for launch' : 'saved as draft'}.`,
-        time: 'Just now',
-        icon: 'CheckCircle',
-        color: COLORS.green,
-        priority: 'high'
-      };
-      onNotificationCreated(notification);
-    }
-
-    onClose();
-  };
-
-  // Handle modify action with proper backdrop management
-  const handleModifyRecommendation = () => {
-    console.log('Opening modify modal with implementation data:', implementationData);
-    
-    if (implementationData) {
-      // Manage body scroll and backdrop interactions
-      document.body.style.overflow = 'hidden';
-      setShowModifyModal(true);
+        title: 'Recommendation Implemented',
+        message: `Successfully implemented: ${currentRecommendation.title}`,
+        timestamp: new Date().toISOString(),
+        action: 'implement',
+        program: currentProgram,
+        recommendation: currentRecommendation,
+        customizations: customizations
+      });
     }
   };
 
-  // Handle modify modal close with proper cleanup
-  const handleModifyModalClose = () => {
-    console.log('Modify modal closed');
-    setShowModifyModal(false);
-    // Don't restore body scroll here since the recommendation modal is still open
-  };
-
-  // Handle program created from modify modal
-  const handleProgramCreatedFromModify = (modifiedProgram) => {
-    console.log('Program modified and created:', modifiedProgram);
+  const handleModify = async () => {
+    console.log('Modifying recommendation:', currentRecommendation.id, customizations);
     
-    // Mark as modified implementation
-    const finalProgram = {
-      ...modifiedProgram,
-      isRecommendationImplementation: true,
-      isModified: true,
-      originalRecommendation: recommendation
+    // Create modified program/campaign
+    const modifiedProgram = {
+      id: `program-${Date.now()}`,
+      title: customizations.title,
+      type: currentRecommendation.implementationDetails?.type || 'Loyalty Program',
+      status: 'Draft',
+      audience: customizations.targetAudience,
+      description: customizations.description,
+      budget: customizations.budget,
+      timeline: customizations.timeline,
+      createdFrom: 'modified-recommendation',
+      originalRecommendation: currentRecommendation,
+      modifications: customizations.notes,
+      createdAt: new Date().toISOString()
     };
     
     if (onProgramCreated) {
-      onProgramCreated(finalProgram);
+      onProgramCreated(modifiedProgram);
     }
-
+    
     if (onNotificationCreated) {
-      const notification = {
-        id: Date.now(),
-        type: 'success',
-        title: `Customized Enhancement Implemented: ${finalProgram.title}`,
-        message: `Customized program has been created and ${finalProgram.status === 'Scheduled' ? 'scheduled for launch' : 'saved as draft'}.`,
-        time: 'Just now',
-        icon: 'CheckCircle',
-        color: COLORS.green,
-        priority: 'high'
-      };
-      onNotificationCreated(notification);
+      onNotificationCreated({
+        id: `notification-${Date.now()}`,
+        type: 'info',
+        title: 'Recommendation Modified',
+        message: `Modified and implemented: ${customizations.title}`,
+        timestamp: new Date().toISOString(),
+        action: 'modify',
+        program: currentProgram,
+        recommendation: currentRecommendation,
+        customizations: customizations
+      });
     }
-    
-    // Close both modals and restore scroll
-    setShowModifyModal(false);
-    document.body.style.overflow = 'unset';
-    onClose();
   };
 
-  // Handle main modal close with proper cleanup
-  const handleMainModalClose = () => {
-    console.log('Closing recommendation modal');
+  const handleReject = async () => {
+    console.log('Rejecting recommendation:', currentRecommendation.id, rejectionReason);
     
-    // If modify modal is open, close it first
-    if (showModifyModal) {
-      setShowModifyModal(false);
+    if (onNotificationCreated) {
+      onNotificationCreated({
+        id: `notification-${Date.now()}`,
+        type: 'warning',
+        title: 'Recommendation Rejected',
+        message: `Rejected: ${currentRecommendation.title}`,
+        timestamp: new Date().toISOString(),
+        action: 'reject',
+        program: currentProgram,
+        recommendation: currentRecommendation,
+        reason: rejectionReason
+      });
     }
-    
-    // Restore body scroll
-    document.body.style.overflow = 'unset';
-    
-    // Close main modal
-    onClose();
   };
 
-  // Don't render if not open
-  if (!isOpen) {
-    return null;
-  }
+  const handleClose = () => {
+    if (isModal && onGoBack) {
+      onGoBack();
+    } else if (onClose) {
+      onClose();
+    }
+  };
 
-  return (
-    <>
-      <div>
-        {/* Dynamic z-index and backdrop management */}
-        <div 
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: showModifyModal ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.8)',
-            zIndex: showModifyModal ? 50000 : 50000,
-            backdropFilter: 'blur(4px)',
-            opacity: showModifyModal ? 0.5 : 1,
-            pointerEvents: showModifyModal ? 'none' : 'auto'
-          }}
-          onClick={showModifyModal ? undefined : handleMainModalClose}
-        />
-        
-        {/* Modal content with dynamic styling */}
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            backgroundColor: '#f5f7f8',
-            zIndex: showModifyModal ? 50001 : 50001,
+  // Get action details for UI
+  const getActionDetails = () => {
+    switch (currentAction) {
+      case 'implement':
+        return {
+          title: 'Implement Recommendation',
+          description: 'Deploy this recommendation as configured',
+          color: COLORS.evergreen,
+          icon: CheckCircle
+        };
+      case 'modify':
+        return {
+          title: 'Modify Recommendation',
+          description: 'Customize before implementation',
+          color: COLORS.blue,
+          icon: Edit
+        };
+      case 'reject':
+        return {
+          title: 'Reject Recommendation',
+          description: 'Decline this recommendation with reason',
+          color: COLORS.red,
+          icon: Trash2
+        };
+      default:
+        return {
+          title: 'Process Recommendation',
+          description: 'Take action on this recommendation',
+          color: COLORS.onyx,
+          icon: Target
+        };
+    }
+  };
+
+  const actionDetails = getActionDetails();
+  const IconComponent = actionDetails.icon;
+
+  // Render different views based on state
+  const renderCurrentView = () => {
+    if (isComplete) {
+      return renderSuccessView();
+    }
+    
+    return renderActionView();
+  };
+
+  const renderSuccessView = () => (
+    <div style={{ 
+      padding: '3rem 2rem', 
+      textAlign: 'center',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: '100%',
+      minHeight: '400px'
+    }}>
+      <div style={{
+        width: '4rem',
+        height: '4rem',
+        borderRadius: '50%',
+        backgroundColor: `${actionDetails.color}20`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: '1.5rem'
+      }}>
+        <IconComponent size={32} color={actionDetails.color} />
+      </div>
+      <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: COLORS.onyx, margin: '0 0 1rem 0' }}>
+        {currentAction === 'implement' ? 'Recommendation Implemented!' : 
+         currentAction === 'modify' ? 'Changes Saved!' : 
+         'Recommendation Rejected'}
+      </h2>
+      <p style={{ color: COLORS.onyxMedium, fontSize: '1rem', lineHeight: '1.5', maxWidth: '400px' }}>
+        {currentAction === 'implement' ? 'The recommendation has been successfully implemented and will be activated shortly.' :
+         currentAction === 'modify' ? 'Your modifications have been saved and the recommendation has been implemented.' :
+         'The recommendation has been rejected and will not be implemented.'}
+      </p>
+      
+      {currentAction !== 'reject' && (
+        <div style={{
+          marginTop: '2rem',
+          padding: '1rem',
+          backgroundColor: 'rgba(26, 76, 73, 0.05)',
+          borderRadius: '0.5rem',
+          fontSize: '0.875rem',
+          color: COLORS.onyxMedium
+        }}>
+          <Clock size={16} style={{ display: 'inline', marginRight: '0.5rem' }} />
+          Changes will be reflected in your dashboard within the next few minutes
+        </div>
+      )}
+    </div>
+  );
+
+  const renderActionView = () => (
+    <div style={{ 
+      height: '100%', 
+      overflow: 'auto',
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
+      {/* Action Header */}
+      <div style={{
+        padding: '2rem 2rem 1rem 2rem',
+        borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+        backgroundColor: 'white',
+        flexShrink: 0
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+          <div style={{
+            width: '3rem',
+            height: '3rem',
+            borderRadius: '50%',
+            backgroundColor: `${actionDetails.color}20`,
             display: 'flex',
-            flexDirection: 'column',
-            filter: showModifyModal ? 'blur(2px)' : 'none',
-            pointerEvents: showModifyModal ? 'none' : 'auto'
-          }}
-        >
-          {/* Header */}
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <IconComponent size={20} color={actionDetails.color} />
+          </div>
+          <div>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.onyx, margin: 0 }}>
+              {actionDetails.title}
+            </h2>
+            <p style={{ fontSize: '0.875rem', color: COLORS.onyxMedium, margin: '0.25rem 0 0 0' }}>
+              {actionDetails.description}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Content Area */}
+      <div style={{ flex: 1, padding: '2rem', backgroundColor: '#fafbfc' }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+          {/* Recommendation Summary */}
           <div style={{
             padding: '1.5rem',
-            borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
             backgroundColor: 'white',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            borderRadius: '1rem',
+            marginBottom: '2rem',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', marginBottom: '1rem' }}>
               <div style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '50%',
+                width: '2.5rem',
+                height: '2.5rem',
+                borderRadius: '0.5rem',
                 backgroundColor: 'rgba(26, 76, 73, 0.1)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                marginRight: '1rem'
+                flexShrink: 0
               }}>
-                <Lightbulb size={20} style={{ color: COLORS.evergreen }} />
+                <Lightbulb size={16} color={COLORS.evergreen} />
               </div>
-              <div>
-                <h2 style={{ 
-                  fontSize: '1.5rem', 
-                  fontWeight: 600, 
-                  color: COLORS.onyx,
-                  margin: 0,
-                  marginBottom: '0.25rem'
-                }}>
-                  {currentPhase === 'setup' ? 'Setting Up Enhancement Plan' : 'Review Implementation Strategy'}
-                </h2>
-                <p style={{
-                  fontSize: '0.875rem',
-                  color: COLORS.onyxMedium,
-                  margin: 0
-                }}>
-                  {recommendation?.title || 'AI-Powered Program Optimization'}
+              <div style={{ flex: 1 }}>
+                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.onyx, margin: '0 0 0.5rem 0' }}>
+                  {currentRecommendation?.title}
+                </h3>
+                <p style={{ color: COLORS.onyxMedium, fontSize: '0.875rem', margin: 0, lineHeight: '1.5' }}>
+                  {currentRecommendation?.description}
                 </p>
               </div>
             </div>
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                handleMainModalClose();
-              }}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '2.5rem',
-                height: '2.5rem',
-                borderRadius: '50%',
-                color: COLORS.onyxMedium,
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                transition: 'background-color 0.2s ease'
-              }}
-              onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(0,0,0,0.05)'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-            >
-              <X size={20} />
-            </button>
+            
+            {/* Impact Metrics */}
+            {currentRecommendation?.expectedROI && (
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', 
+                gap: '1rem',
+                marginTop: '1rem',
+                padding: '1rem',
+                backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                borderRadius: '0.5rem'
+              }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', marginBottom: '0.25rem' }}>
+                    <TrendingUp size={14} color={COLORS.evergreen} />
+                    <span style={{ fontSize: '0.75rem', color: COLORS.onyxMedium, fontWeight: 500 }}>
+                      Expected ROI
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.evergreen }}>
+                    {currentRecommendation.expectedROI}
+                  </span>
+                </div>
+                {currentRecommendation.impact && (
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', marginBottom: '0.25rem' }}>
+                      <Target size={14} color={COLORS.blue} />
+                      <span style={{ fontSize: '0.75rem', color: COLORS.onyxMedium, fontWeight: 500 }}>
+                        Impact
+                      </span>
+                    </div>
+                    <span style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.blue }}>
+                      {currentRecommendation.impact}
+                    </span>
+                  </div>
+                )}
+                {currentRecommendation.effort && (
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', marginBottom: '0.25rem' }}>
+                      <Clock size={14} color={COLORS.amber} />
+                      <span style={{ fontSize: '0.75rem', color: COLORS.onyxMedium, fontWeight: 500 }}>
+                        Effort
+                      </span>
+                    </div>
+                    <span style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.amber }}>
+                      {currentRecommendation.effort}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Content */}
-          <div style={{ 
-            flex: 1, 
-            overflow: 'hidden',
-            display: 'flex',
-            justifyContent: 'center'
-          }}>
+          {/* Action-specific Forms */}
+          {currentAction === 'modify' && (
             <div style={{
-              maxWidth: '80rem',
-              width: '100%',
-              padding: '2rem 3rem',
-              overflowY: 'auto'
+              backgroundColor: 'white',
+              borderRadius: '1rem',
+              padding: '2rem',
+              marginBottom: '2rem',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
             }}>
-              {currentPhase === 'setup' ? (
-                // Setup Phase
-                <div style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minHeight: '60vh',
-                  textAlign: 'center'
-                }}>
-                  {/* Setup Animation */}
-                  <div style={{
-                    width: '140px',
-                    height: '140px',
-                    borderRadius: '50%',
-                    backgroundColor: 'rgba(26, 76, 73, 0.05)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: '2rem',
-                    position: 'relative',
-                    boxShadow: '0 8px 32px rgba(26, 76, 73, 0.1)'
-                  }}>
-                    <div style={{
-                      width: '100px',
-                      height: '100px',
-                      borderRadius: '50%',
-                      backgroundColor: COLORS.evergreen,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      animation: 'pulse 2s infinite',
-                      boxShadow: '0 4px 20px rgba(26, 76, 73, 0.3)'
-                    }}>
-                      <Brain size={40} color="white" style={{
-                        animation: 'float 3s ease-in-out infinite'
-                      }} />
-                    </div>
-                    
-                    {/* Progress Ring */}
-                    <svg 
+              <h4 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '1.5rem' }}>
+                Customization Details
+              </h4>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: COLORS.onyx, marginBottom: '0.5rem' }}>
+                    Program Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={customizations.title}
+                    onChange={(e) => setCustomizations(prev => ({ ...prev, title: e.target.value }))}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: `1px solid ${validationErrors.title ? COLORS.red : 'rgba(0, 0, 0, 0.2)'}`,
+                      borderRadius: '0.5rem',
+                      fontSize: '1rem',
+                      fontFamily: 'inherit'
+                    }}
+                    placeholder="Enter program name"
+                  />
+                  {validationErrors.title && (
+                    <span style={{ fontSize: '0.75rem', color: COLORS.red, marginTop: '0.25rem', display: 'block' }}>
+                      {validationErrors.title}
+                    </span>
+                  )}
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: COLORS.onyx, marginBottom: '0.5rem' }}>
+                    Description *
+                  </label>
+                  <textarea
+                    value={customizations.description}
+                    onChange={(e) => setCustomizations(prev => ({ ...prev, description: e.target.value }))}
+                    rows={3}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: `1px solid ${validationErrors.description ? COLORS.red : 'rgba(0, 0, 0, 0.2)'}`,
+                      borderRadius: '0.5rem',
+                      fontSize: '1rem',
+                      fontFamily: 'inherit',
+                      resize: 'vertical'
+                    }}
+                    placeholder="Describe your modifications"
+                  />
+                  {validationErrors.description && (
+                    <span style={{ fontSize: '0.75rem', color: COLORS.red, marginTop: '0.25rem', display: 'block' }}>
+                      {validationErrors.description}
+                    </span>
+                  )}
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: COLORS.onyx, marginBottom: '0.5rem' }}>
+                      Target Audience *
+                    </label>
+                    <input
+                      type="text"
+                      value={customizations.targetAudience}
+                      onChange={(e) => setCustomizations(prev => ({ ...prev, targetAudience: e.target.value }))}
                       style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '140px',
-                        height: '140px',
-                        transform: 'rotate(-90deg)'
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: `1px solid ${validationErrors.targetAudience ? COLORS.red : 'rgba(0, 0, 0, 0.2)'}`,
+                        borderRadius: '0.5rem',
+                        fontSize: '1rem',
+                        fontFamily: 'inherit'
+                      }}
+                      placeholder="e.g., VIP Members"
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: COLORS.onyx, marginBottom: '0.5rem' }}>
+                      Timeline
+                    </label>
+                    <select
+                      value={customizations.timeline}
+                      onChange={(e) => setCustomizations(prev => ({ ...prev, timeline: e.target.value }))}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid rgba(0, 0, 0, 0.2)',
+                        borderRadius: '0.5rem',
+                        fontSize: '1rem',
+                        fontFamily: 'inherit'
                       }}
                     >
-                      <circle
-                        cx="70"
-                        cy="70"
-                        r="65"
-                        stroke="rgba(26, 76, 73, 0.2)"
-                        strokeWidth="6"
-                        fill="none"
-                      />
-                      <circle
-                        cx="70"
-                        cy="70"
-                        r="65"
-                        stroke={COLORS.evergreen}
-                        strokeWidth="6"
-                        fill="none"
-                        strokeDasharray={`${2 * Math.PI * 65}`}
-                        strokeDashoffset={`${2 * Math.PI * 65 * (1 - setupProgress / 100)}`}
-                        style={{ 
-                          transition: 'stroke-dashoffset 0.5s ease',
-                          strokeLinecap: 'round'
-                        }}
-                      />
-                    </svg>
-                  </div>
-
-                  <h3 style={{
-                    fontSize: '2.25rem',
-                    fontWeight: 600,
-                    color: COLORS.onyx,
-                    marginBottom: '1rem',
-                    maxWidth: '600px'
-                  }}>
-                    AI is Optimizing Your Program
-                  </h3>
-                  
-                  <p style={{
-                    fontSize: '1.125rem',
-                    color: COLORS.onyxMedium,
-                    marginBottom: '3rem',
-                    maxWidth: '700px',
-                    lineHeight: 1.6
-                  }}>
-                    Our AI is analyzing your program and designing an optimization strategy based on member behavior patterns and performance data to enhance the member experience.
-                  </p>
-
-                  {/* Current Step Indicator */}
-                  <div style={{
-                    backgroundColor: 'white',
-                    padding: '1.5rem 2rem',
-                    borderRadius: '0.75rem',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                    marginBottom: '2rem',
-                    maxWidth: '500px',
-                    width: '100%'
-                  }}>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      marginBottom: '1rem'
-                    }}>
-                      <div style={{
-                        width: '24px',
-                        height: '24px',
-                        borderRadius: '50%',
-                        backgroundColor: COLORS.evergreen,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginRight: '0.75rem'
-                      }}>
-                        <Settings size={12} color="white" style={{
-                          animation: 'spin 2s linear infinite'
-                        }} />
-                      </div>
-                      <span style={{
-                        fontSize: '1rem',
-                        fontWeight: 600,
-                        color: COLORS.onyx
-                      }}>
-                        {setupSteps[Math.min(setupStep, setupSteps.length - 1)]}
-                      </span>
-                    </div>
-                    
-                    {/* Progress Bar */}
-                    <div style={{
-                      width: '100%',
-                      height: '8px',
-                      backgroundColor: 'rgba(0,0,0,0.1)',
-                      borderRadius: '4px',
-                      overflow: 'hidden'
-                    }}>
-                      <div style={{
-                        width: `${setupProgress}%`,
-                        height: '100%',
-                        backgroundColor: COLORS.evergreen,
-                        borderRadius: '4px',
-                        transition: 'width 0.5s ease'
-                      }} />
-                    </div>
-                    
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginTop: '0.75rem'
-                    }}>
-                      <span style={{
-                        fontSize: '0.875rem',
-                        color: COLORS.onyxMedium
-                      }}>
-                        Step {Math.min(setupStep + 1, setupSteps.length)} of {setupSteps.length}
-                      </span>
-                      <span style={{
-                        fontSize: '1rem',
-                        fontWeight: 600,
-                        color: COLORS.evergreen
-                      }}>
-                        {Math.round(setupProgress)}%
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Processing Info */}
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '2rem',
-                    opacity: 0.7
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <Target size={16} color={COLORS.onyxMedium} />
-                      <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>Analysis</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <Users size={16} color={COLORS.onyxMedium} />
-                      <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>Segmentation</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <TrendingUp size={16} color={COLORS.onyxMedium} />
-                      <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>ROI Projection</span>
-                    </div>
+                      <option value="7 days">7 days</option>
+                      <option value="14 days">14 days</option>
+                      <option value="30 days">30 days</option>
+                      <option value="60 days">60 days</option>
+                      <option value="90 days">90 days</option>
+                    </select>
                   </div>
                 </div>
-              ) : (
-                // Review Phase - Implementation details content
-                implementationData && (
-                  <div>
-                    {/* Problem & Solution Summary */}
-                    <div style={{
-                      backgroundColor: 'white',
-                      borderLeft: `4px solid ${COLORS.evergreen}`,
-                      padding: '2rem',
-                      borderRadius: '0.75rem',
-                      marginBottom: '2rem',
-                      boxShadow: '0 2px 10px rgba(0,0,0,0.08)'
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
-                        <div style={{
-                          width: '48px',
-                          height: '48px',
-                          borderRadius: '50%',
-                          backgroundColor: 'rgba(26, 76, 73, 0.1)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          flexShrink: 0
-                        }}>
-                          <Target size={24} style={{ color: COLORS.evergreen }} />
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <h3 style={{
-                            fontSize: '1.5rem',
-                            fontWeight: 600,
-                            color: COLORS.onyx,
-                            marginBottom: '1.5rem'
-                          }}>
-                            {isAtRiskPunchCardRecommendation() ? 'Segment Optimization Strategy' : 'Program Optimization Strategy'}
-                          </h3>
-                          
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-                            <div>
-                              <h4 style={{
-                                fontSize: '0.875rem',
-                                fontWeight: 600,
-                                color: COLORS.blue,
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.5px',
-                                marginBottom: '0.5rem'
-                              }}>
-                                🎯 Opportunity Identified
-                              </h4>
-                              <p style={{
-                                fontSize: '1.125rem',
-                                color: COLORS.onyx,
-                                marginBottom: '0.75rem',
-                                fontWeight: 600
-                              }}>
-                                {implementationData.problemSolved.issue}
-                              </p>
-                              <p style={{
-                                fontSize: '0.875rem',
-                                color: COLORS.onyxMedium,
-                                lineHeight: 1.5
-                              }}>
-                                {implementationData.problemSolved.impact}
-                              </p>
-                            </div>
-                            
-                            <div>
-                              <h4 style={{
-                                fontSize: '0.875rem',
-                                fontWeight: 600,
-                                color: COLORS.green,
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.5px',
-                                marginBottom: '0.5rem'
-                              }}>
-                                ✓ Enhancement Solution
-                              </h4>
-                              <p style={{
-                                fontSize: '1.125rem',
-                                color: COLORS.onyx,
-                                marginBottom: '0.75rem',
-                                fontWeight: 600
-                              }}>
-                                {implementationData.problemSolved.solution}
-                              </p>
-                              <p style={{
-                                fontSize: '0.875rem',
-                                color: COLORS.onyxMedium,
-                                lineHeight: 1.5
-                              }}>
-                                {implementationData.problemSolved.outcome}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
 
-                    {/* Projected Impact Metrics */}
-                    <div style={{
-                      backgroundColor: 'white',
-                      borderRadius: '0.75rem',
-                      boxShadow: '0 2px 10px rgba(0, 0, 0, 0.08)',
-                      padding: '2rem',
-                      marginBottom: '2rem'
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '2rem' }}>
-                        <div style={{
-                          width: '48px',
-                          height: '48px',
-                          borderRadius: '50%',
-                          backgroundColor: 'rgba(76, 175, 80, 0.1)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          marginRight: '1rem'
-                        }}>
-                          <TrendingUp size={24} style={{ color: COLORS.green }} />
-                        </div>
-                        <div>
-                          <h3 style={{
-                            fontSize: '1.5rem',
-                            fontWeight: 600,
-                            color: COLORS.onyx,
-                            margin: 0,
-                            marginBottom: '0.25rem'
-                          }}>
-                            {isAtRiskPunchCardRecommendation() ? 'Projected Impact' : 'Projected Enhancement Impact'}
-                          </h3>
-                          <p style={{
-                            fontSize: '0.875rem',
-                            color: COLORS.onyxMedium,
-                            margin: 0
-                          }}>
-                            {isAtRiskPunchCardRecommendation() ? 'Based on AI analysis of similar recommendations' : 'Based on AI analysis of similar optimization programs'}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      {/* Primary Metrics */}
-                      <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(4, 1fr)',
-                        gap: '1.5rem',
-                        marginBottom: '2rem'
-                      }}>
-                        {(isAtRiskPunchCardRecommendation() ? [
-                          { 
-                            label: 'Participating Members', 
-                            value: implementationData.projectedMetrics.participantsRecovered,
-                            subtext: `~${implementationData.projectedMetrics.responseRate} Estimated Response Rate`,
-                            icon: Users,
-                            color: COLORS.blue,
-                            highlight: false
-                          },
-                          { 
-                            label: 'Revenue Impact', 
-                            value: implementationData.projectedMetrics.revenueRecovery,
-                            subtext: 'Additional Revenue',
-                            icon: DollarSign,
-                            color: COLORS.green,
-                            highlight: false
-                          },
-                          { 
-                            label: 'Additional Purchases', 
-                            value: `Estimate ${implementationData.projectedMetrics.additionalPurchases} additional purchases`,
-                            subtext: 'Incremental Activity',
-                            icon: ShoppingBag,
-                            color: COLORS.evergreen,
-                            highlight: true
-                          },
-                          { 
-                            label: 'Average Order Value', 
-                            value: `Estimate ${implementationData.projectedMetrics.averageOrderValue} AOV`,
-                            subtext: 'Per Transaction',
-                            icon: DollarSign,
-                            color: COLORS.yellow,
-                            highlight: false
-                          }
-                        ] : [
-                          { 
-                            label: 'Members Affected', 
-                            value: implementationData.projectedMetrics.participantsRecovered,
-                            icon: Users,
-                            color: COLORS.blue,
-                            highlight: false
-                          },
-                          { 
-                            label: 'Revenue Impact', 
-                            value: implementationData.projectedMetrics.revenueRecovery,
-                            icon: DollarSign,
-                            color: COLORS.green,
-                            highlight: false
-                          },
-                          { 
-                            label: 'Program ROI', 
-                            value: implementationData.projectedMetrics.programROI,
-                            icon: TrendingUp,
-                            color: COLORS.evergreen,
-                            highlight: true
-                          },
-                          { 
-                            label: 'Time to ROI', 
-                            value: implementationData.projectedMetrics.timeToPositiveROI,
-                            icon: Clock,
-                            color: COLORS.yellow,
-                            highlight: false
-                          }
-                        ]).map((metric, index) => (
-                          <div key={index} style={{
-                            textAlign: 'center',
-                            padding: '1.5rem',
-                            backgroundColor: metric.highlight ? 'rgba(26, 76, 73, 0.05)' : 'rgba(0,0,0,0.02)',
-                            borderRadius: '0.75rem',
-                            border: metric.highlight ? `2px solid ${COLORS.evergreen}` : 'none'
-                          }}>
-                            <div style={{
-                              width: '56px',
-                              height: '56px',
-                              borderRadius: '50%',
-                              backgroundColor: `${metric.color}15`,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              margin: '0 auto 1rem'
-                            }}>
-                              <metric.icon size={28} color={metric.color} />
-                            </div>
-                            <div style={{
-                              fontSize: metric.highlight ? '2rem' : '1.75rem',
-                              fontWeight: 700,
-                              color: metric.highlight ? COLORS.evergreen : COLORS.onyx,
-                              marginBottom: '0.5rem'
-                            }}>
-                              {metric.value}
-                            </div>
-                            <div style={{
-                              fontSize: '0.875rem',
-                              color: COLORS.onyxMedium,
-                              fontWeight: 500
-                            }}>
-                              {metric.label}
-                            </div>
-                            {metric.subtext && (
-                              <div style={{
-                                fontSize: '0.75rem',
-                                color: COLORS.onyxMedium,
-                                marginTop: '0.25rem'
-                              }}>
-                                {metric.subtext}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Secondary Metrics */}
-                      <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(3, 1fr)',
-                        gap: '1rem'
-                      }}>
-                        {(isAtRiskPunchCardRecommendation() ? [
-                          {
-                            label: 'Recency Improvement',
-                            value: implementationData.projectedMetrics.recencyImprovement,
-                            change: 'improvement'
-                          },
-                          {
-                            label: 'Frequency Improvement',
-                            value: implementationData.projectedMetrics.frequencyImprovement,
-                            change: 'improvement'
-                          },
-                          {
-                            label: 'Monetary Improvement',
-                            value: implementationData.projectedMetrics.monetaryImprovement,
-                            change: 'improvement'
-                          }
-                        ] : [
-                          {
-                            label: 'Member Satisfaction',
-                            value: implementationData.projectedMetrics.customerSatisfactionIncrease,
-                            change: 'increase'
-                          },
-                          {
-                            label: 'Brand Sentiment (NPS)',
-                            value: implementationData.projectedMetrics.npsImprovement || implementationData.projectedMetrics.brandSentimentImprovement,
-                            change: 'improvement'
-                          },
-                          {
-                            label: 'Member Retention',
-                            value: implementationData.projectedMetrics.churnReduction || implementationData.projectedMetrics.retentionRateImprovement,
-                            change: 'improvement'
-                          }
-                        ]).map((metric, index) => (
-                          <div key={index} style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            padding: '1rem',
-                            backgroundColor: 'rgba(76, 175, 80, 0.05)',
-                            borderRadius: '0.5rem',
-                            border: '1px solid rgba(76, 175, 80, 0.2)'
-                          }}>
-                            <span style={{
-                              fontSize: '0.875rem',
-                              color: COLORS.onyx,
-                              fontWeight: 500
-                            }}>
-                              {metric.label}
-                            </span>
-                            <div style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '0.25rem'
-                            }}>
-                              <ArrowUpRight size={16} style={{ color: COLORS.green }} />
-                              <span style={{
-                                fontSize: '0.875rem',
-                                fontWeight: 600,
-                                color: COLORS.green
-                              }}>
-                                {metric.value}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Simplified Program Configuration Summary */}
-                    <div style={{
-                      backgroundColor: 'white',
-                      borderRadius: '0.75rem',
-                      boxShadow: '0 2px 10px rgba(0, 0, 0, 0.08)',
-                      overflow: 'hidden',
-                      marginBottom: '2rem'
-                    }}>
-                      <div style={{
-                        padding: '1.5rem',
-                        backgroundColor: 'rgba(0,0,0,0.02)',
-                        borderBottom: '1px solid rgba(0,0,0,0.05)'
-                      }}>
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                          <Award size={24} style={{ color: COLORS.evergreen, marginRight: '0.75rem' }} />
-                          <h3 style={{
-                            fontSize: '1.25rem',
-                            fontWeight: 600,
-                            color: COLORS.onyx,
-                            margin: 0
-                          }}>
-                            Enhancement Configuration
-                          </h3>
-                        </div>
-                      </div>
-
-                      <div style={{ padding: '2rem' }}>
-                        <div style={{
-                          display: 'grid',
-                          gridTemplateColumns: 'repeat(2, 1fr)',
-                          gap: '2rem',
-                          marginBottom: '2rem'
-                        }}>
-                          <div>
-                            <h4 style={{
-                              fontSize: '0.875rem',
-                              fontWeight: 600,
-                              color: COLORS.onyxMedium,
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.5px',
-                              marginBottom: '1rem'
-                            }}>
-                              Program Details
-                            </h4>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <span style={{ color: COLORS.onyxMedium, fontSize: '0.875rem' }}>Title:</span>
-                                <span style={{ fontWeight: 600, color: COLORS.onyx, fontSize: '0.875rem' }}>{implementationData.title}</span>
-                              </div>
-                              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <span style={{ color: COLORS.onyxMedium, fontSize: '0.875rem' }}>Type:</span>
-                                <span style={{ fontWeight: 600, color: COLORS.onyx, fontSize: '0.875rem' }}>{implementationData.type}</span>
-                              </div>
-                              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <span style={{ color: COLORS.onyxMedium, fontSize: '0.875rem' }}>Audience:</span>
-                                <span style={{ fontWeight: 600, color: COLORS.onyx, fontSize: '0.875rem' }}>{implementationData.audience}</span>
-                              </div>
-                              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <span style={{ color: COLORS.onyxMedium, fontSize: '0.875rem' }}>Duration:</span>
-                                <span style={{ fontWeight: 600, color: COLORS.onyx, fontSize: '0.875rem' }}>
-                                  {implementationData.startDate} to {implementationData.endDate}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div>
-                            <h4 style={{
-                              fontSize: '0.875rem',
-                              fontWeight: 600,
-                              color: COLORS.onyxMedium,
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.5px',
-                              marginBottom: '1rem'
-                            }}>
-                              Enhancement Description
-                            </h4>
-                            <div style={{
-                              padding: '1rem',
-                              backgroundColor: 'rgba(26, 76, 73, 0.05)',
-                              borderRadius: '0.5rem',
-                              borderLeft: `3px solid ${COLORS.evergreen}`
-                            }}>
-                              <p style={{
-                                fontSize: '0.875rem',
-                                color: COLORS.onyx,
-                                lineHeight: 1.6,
-                                margin: 0
-                              }}>
-                                {implementationData.description}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )
-              )}
-            </div>
-          </div>
-
-          {/* Footer */}
-          {currentPhase === 'review' && (
-            <div style={{
-              padding: '1.5rem',
-              borderTop: '1px solid rgba(0, 0, 0, 0.1)',
-              backgroundColor: 'white',
-              display: 'flex',
-              justifyContent: 'center',
-              boxShadow: '0 -2px 4px rgba(0,0,0,0.1)'
-            }}>
-              <div style={{
-                maxWidth: '80rem',
-                width: '100%',
-                paddingLeft: '3rem',
-                paddingRight: '3rem',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-              }}>
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleMainModalClose();
-                  }}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    borderRadius: '0.5rem',
-                    backgroundColor: 'transparent',
-                    border: '1px solid rgba(0,0,0,0.15)',
-                    color: COLORS.onyxMedium,
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = 'rgba(0,0,0,0.05)';
-                    e.target.style.borderColor = 'rgba(0,0,0,0.2)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = 'transparent';
-                    e.target.style.borderColor = 'rgba(0,0,0,0.15)';
-                  }}
-                >
-                  Review Later
-                </button>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{
-                      fontSize: '0.75rem',
-                      color: COLORS.onyxMedium,
-                      marginBottom: '0.25rem'
-                    }}>
-                      {isAtRiskPunchCardRecommendation() ? 'Projected Revenue Impact' : 'Projected Program ROI'}
-                    </div>
-                    <div style={{
-                      fontSize: '1.5rem',
-                      fontWeight: 700,
-                      color: COLORS.green
-                    }}>
-                      {isAtRiskPunchCardRecommendation() ? 
-                        implementationData?.projectedMetrics?.revenueRecovery : 
-                        implementationData?.projectedMetrics?.programROI}
-                    </div>
-                  </div>
-                  
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      console.log('Modify button clicked');
-                      handleModifyRecommendation();
-                    }}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: COLORS.onyx, marginBottom: '0.5rem' }}>
+                    Budget (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={customizations.budget}
+                    onChange={(e) => setCustomizations(prev => ({ ...prev, budget: e.target.value }))}
                     style={{
-                      padding: '0.75rem 1.5rem',
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid rgba(0, 0, 0, 0.2)',
                       borderRadius: '0.5rem',
-                      backgroundColor: 'white',
-                      color: COLORS.evergreen,
-                      fontSize: '0.875rem',
-                      fontWeight: 600,
-                      border: `1px solid ${COLORS.evergreen}`,
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      transition: 'all 0.2s ease'
+                      fontSize: '1rem',
+                      fontFamily: 'inherit'
                     }}
-                    onMouseEnter={(e) => {
-                      e.target.style.backgroundColor = 'rgba(26, 76, 73, 0.05)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.backgroundColor = 'white';
-                    }}
-                  >
-                    <Edit size={16} />
-                    Modify & Customize
-                  </button>
-                  
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      console.log('Implement enhancement button clicked');
-                      handleCreateProgram();
-                    }}
+                    placeholder="e.g., $10,000"
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: COLORS.onyx, marginBottom: '0.5rem' }}>
+                    Additional Notes
+                  </label>
+                  <textarea
+                    value={customizations.notes}
+                    onChange={(e) => setCustomizations(prev => ({ ...prev, notes: e.target.value }))}
+                    rows={3}
                     style={{
-                      padding: '0.875rem 2rem',
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid rgba(0, 0, 0, 0.2)',
                       borderRadius: '0.5rem',
-                      backgroundColor: COLORS.evergreen,
-                      color: 'white',
-                      fontSize: '0.875rem',
-                      fontWeight: 600,
-                      border: 'none',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      transition: 'all 0.2s ease',
-                      boxShadow: '0 4px 12px rgba(26, 76, 73, 0.3)'
+                      fontSize: '1rem',
+                      fontFamily: 'inherit',
+                      resize: 'vertical'
                     }}
-                    onMouseEnter={(e) => {
-                      e.target.style.backgroundColor = '#155a56';
-                      e.target.style.transform = 'translateY(-2px)';
-                      e.target.style.boxShadow = '0 6px 20px rgba(26, 76, 73, 0.4)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.backgroundColor = COLORS.evergreen;
-                      e.target.style.transform = 'translateY(0)';
-                      e.target.style.boxShadow = '0 4px 12px rgba(26, 76, 73, 0.3)';
-                    }}
-                  >
-                    <CheckCircle size={16} />
-                    Implement Enhancement
-                  </button>
+                    placeholder="Any specific requirements or constraints"
+                  />
                 </div>
               </div>
             </div>
           )}
-        </div>
 
-        {/* CSS Styles */}
-        <style jsx>{`
-          @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+          {currentAction === 'reject' && (
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '1rem',
+              padding: '2rem',
+              marginBottom: '2rem',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+            }}>
+              <h4 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '1.5rem' }}>
+                Rejection Details
+              </h4>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: COLORS.onyx, marginBottom: '0.5rem' }}>
+                  Reason for Rejection *
+                </label>
+                <textarea
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                  rows={4}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: `1px solid ${validationErrors.rejectionReason ? COLORS.red : 'rgba(0, 0, 0, 0.2)'}`,
+                    borderRadius: '0.5rem',
+                    fontSize: '1rem',
+                    fontFamily: 'inherit',
+                    resize: 'vertical'
+                  }}
+                  placeholder="Please provide a detailed reason for rejecting this recommendation..."
+                />
+                {validationErrors.rejectionReason && (
+                  <span style={{ fontSize: '0.75rem', color: COLORS.red, marginTop: '0.25rem', display: 'block' }}>
+                    {validationErrors.rejectionReason}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div style={{ 
+            display: 'flex', 
+            gap: '1rem', 
+            justifyContent: 'flex-end',
+            paddingTop: '1rem',
+            borderTop: '1px solid rgba(0, 0, 0, 0.1)',
+            backgroundColor: 'white',
+            padding: '1.5rem',
+            borderRadius: '1rem',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+          }}>
+            <button
+              onClick={handleClose}
+              disabled={isProcessing}
+              style={{
+                padding: '0.75rem 1.5rem',
+                borderRadius: '0.5rem',
+                border: '1px solid rgba(0, 0, 0, 0.2)',
+                backgroundColor: 'white',
+                color: COLORS.onyx,
+                cursor: isProcessing ? 'not-allowed' : 'pointer',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                opacity: isProcessing ? 0.6 : 1,
+                transition: 'all 0.2s ease'
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleExecuteAction}
+              disabled={isProcessing}
+              style={{
+                padding: '0.75rem 1.5rem',
+                borderRadius: '0.5rem',
+                border: 'none',
+                backgroundColor: actionDetails.color,
+                color: 'white',
+                cursor: isProcessing ? 'not-allowed' : 'pointer',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                opacity: isProcessing ? 0.6 : 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              {isProcessing ? (
+                <>
+                  <div style={{ 
+                    width: '16px', 
+                    height: '16px', 
+                    border: '2px solid rgba(255,255,255,0.3)', 
+                    borderTopColor: 'white', 
+                    borderRadius: '50%', 
+                    animation: 'spin 1s linear infinite' 
+                  }} />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  {currentAction === 'implement' ? (
+                    <>
+                      <CheckCircle size={16} />
+                      Implement
+                    </>
+                  ) : currentAction === 'modify' ? (
+                    <>
+                      <Edit size={16} />
+                      Save Changes
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={16} />
+                      Reject
+                    </>
+                  )}
+                  <ArrowRight size={16} />
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Loading overlay */}
+      {isProcessing && (
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(255, 255, 255, 0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{
+              width: '3rem',
+              height: '3rem',
+              border: `3px solid ${actionDetails.color}20`,
+              borderTopColor: actionDetails.color,
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite',
+              marginBottom: '1rem'
+            }} />
+            <p style={{ color: COLORS.onyx, fontSize: '1rem', fontWeight: 500 }}>
+              Processing your request...
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  // For legacy mode (when not using modal system)
+  if (!isModal) {
+    if (!isOpen || !currentRecommendation) return null;
+    
+    return (
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+          zIndex: 15700,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '2rem',
+          backdropFilter: 'blur(4px)'
+        }}
+        onClick={(e) => {
+          if (e.target === e.currentTarget && !isProcessing) {
+            onClose();
           }
+        }}
+      >
+        <div
+          style={{
+            width: 'min(90vw, 600px)',
+            maxHeight: '85vh',
+            backgroundColor: 'white',
+            borderRadius: '1rem',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            position: 'relative',
+            zIndex: 15701
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Legacy Header */}
+          <div style={{
+            padding: '2rem',
+            borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+            backgroundColor: 'white',
+            position: 'relative',
+            zIndex: 15702
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div style={{
+                  width: '3rem',
+                  height: '3rem',
+                  borderRadius: '50%',
+                  backgroundColor: `${actionDetails.color}20`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <IconComponent size={20} color={actionDetails.color} />
+                </div>
+                <div>
+                  <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.onyx, margin: 0 }}>
+                    {actionDetails.title}
+                  </h2>
+                  <p style={{ fontSize: '0.875rem', color: COLORS.onyxMedium, margin: '0.25rem 0 0 0' }}>
+                    {actionDetails.description}
+                  </p>
+                </div>
+              </div>
+              {!isProcessing && (
+                <button
+                  onClick={onClose}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '2.5rem',
+                    height: '2.5rem',
+                    borderRadius: '50%',
+                    color: COLORS.onyxMedium,
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <X size={20} />
+                </button>
+              )}
+            </div>
+          </div>
           
+          {renderCurrentView()}
+        </div>
+      </div>
+    );
+  }
+
+  // For modal system mode
+  return (
+    <div style={{ 
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      position: 'relative'
+    }}>
+      {renderCurrentView()}
+      
+      {/* CSS for spin animation */}
+      <style>
+        {`
           @keyframes spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
           }
-          
-          @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-          }
-          
-          /* Force modify modal to appear on top */
-          [data-modal-type="modify"] {
-            z-index: 60000 !important;
-          }
-          
-          [data-modal-type="modify"] * {
-            z-index: inherit !important;
-          }
-        `}</style>
-      </div>
-
-      {/* Modify Modal with proper z-index stacking */}
-      {showModifyModal && implementationData && (
-        <div 
-          data-modal-type="modify"
-          style={{ 
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 60000,
-            pointerEvents: 'auto'
-          }}
-        >
-          <FullScreenLoyaltyProgramModal
-            isOpen={showModifyModal}
-            onClose={handleModifyModalClose}
-            onProgramCreated={handleProgramCreatedFromModify}
-            onNotificationCreated={onNotificationCreated}
-            prepopulatedData={implementationData}
-            isModifyMode={true}
-            style={{ zIndex: 60001 }}
-          />
-        </div>
-      )}
-    </>
+        `}
+      </style>
+    </div>
   );
 };
 

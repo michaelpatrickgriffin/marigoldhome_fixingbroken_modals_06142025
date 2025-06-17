@@ -3,7 +3,6 @@
 
 import React, { useState } from 'react';
 import { ArrowRight, AlertTriangle, MoreVertical, Lightbulb, Brain, Award } from 'lucide-react';
-import '../../styles/CardStyles.css'; // ✅ ADDED: Import card styles
 
 const ProgramCard = ({ program, onClick }) => {
   const [showQuickActions, setShowQuickActions] = useState(false);
@@ -206,7 +205,7 @@ const ProgramCard = ({ program, onClick }) => {
           {program.type} • {program.audience}
         </p>
           
-        {/* ✅ FIXED: Action Message Container with fallback text */}
+        {/* Fixed Action Message Container */}
         <div style={{
           marginTop: '1rem',
           minHeight: '5rem',
@@ -243,47 +242,12 @@ const ProgramCard = ({ program, onClick }) => {
                   color: 'rgba(0, 0, 0, 0.7)',
                   lineHeight: 1.4
                 }}>
-                  {program.attentionReason || 'This program needs immediate attention - optimization required'}
+                  {program.attentionReason}
                 </div>
               </div>
             </div>
           )}
         </div>
-
-        {/* AI Insights Toggle Button */}
-        {insights.length > 0 && (
-          <div style={{
-            marginTop: 'auto'
-          }}>
-            <button
-              onClick={toggleInsights}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                fontSize: '0.8125rem',
-                color: 'rgba(0, 0, 0, 0.6)',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 0,
-                width: '100%',
-                justifyContent: 'flex-start'
-              }}
-            >
-              <Brain size={14} style={{ color: '#1A4C49' }} />
-              <span>AI Insights</span>
-              <ArrowRight 
-                size={12} 
-                style={{ 
-                  color: 'rgba(0, 0, 0, 0.4)',
-                  transform: showInsights ? 'rotate(90deg)' : 'rotate(0deg)',
-                  transition: 'transform 0.2s'
-                }} 
-              />
-            </button>
-          </div>
-        )}
 
         {/* Expandable Insights Section */}
         {showInsights && insights.length > 0 && (
@@ -353,20 +317,41 @@ const ProgramCard = ({ program, onClick }) => {
         {hasNoData ? (
           <div style={{
             textAlign: 'center',
-            padding: '1.5rem 0',
-            color: 'rgba(0, 0, 0, 0.6)'
+            padding: '2rem 1rem',
+            background: 'linear-gradient(135deg, rgba(26, 76, 73, 0.03) 0%, rgba(77, 152, 146, 0.05) 100%)',
+            borderRadius: '0.75rem',
+            border: '1px dashed rgba(26, 76, 73, 0.2)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '0.75rem'
           }}>
-            <Award size={24} style={{ 
-              marginBottom: '0.5rem',
-              color: 'rgba(0, 0, 0, 0.3)'
-            }} />
             <div style={{
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              marginBottom: '0.25rem'
+              width: '3rem',
+              height: '3rem',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, rgba(26, 76, 73, 0.1) 0%, rgba(77, 152, 146, 0.15) 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}>
-              {program.status === 'Scheduled' ? 
-                'Scheduled to launch soon' : 'Awaiting enrollment'}
+              <Award size={20} style={{ color: '#1A4C49' }} />
+            </div>
+            <div>
+              <p style={{
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                color: 'rgba(0, 0, 0, 0.87)',
+                marginBottom: '0.25rem'
+              }}>
+                Program Launching Soon
+              </p>
+              <span style={{
+                fontSize: '0.75rem',
+                color: 'rgba(0, 0, 0, 0.6)'
+              }}>
+                {program.status === 'Scheduled' ? 'Ready to launch' : 'Setting up program'}
+              </span>
             </div>
           </div>
         ) : (
@@ -392,7 +377,7 @@ const ProgramCard = ({ program, onClick }) => {
                 color: 'rgba(0, 0, 0, 0.87)',
                 lineHeight: 1.2
               }}>
-                {redemptionRate}%
+                {redemptionRate ? `${redemptionRate}%` : 'N/A'}
               </div>
             </div>
             
@@ -412,7 +397,7 @@ const ProgramCard = ({ program, onClick }) => {
                 color: 'rgba(0, 0, 0, 0.87)',
                 lineHeight: 1.2
               }}>
-                {program.retentionRate}%
+                {program.retentionRate ? `${program.retentionRate}%` : 'N/A'}
               </div>
             </div>
             
@@ -432,7 +417,7 @@ const ProgramCard = ({ program, onClick }) => {
                 color: 'rgba(0, 0, 0, 0.87)',
                 lineHeight: 1.2
               }}>
-                {program.repeatPurchase || program.repeatPurchaseRate || 'N/A'}
+                {program.repeatPurchaseRate ? `${program.repeatPurchaseRate}%` : 'N/A'}
               </div>
             </div>
             
@@ -452,7 +437,7 @@ const ProgramCard = ({ program, onClick }) => {
                 color: 'rgba(0, 0, 0, 0.87)',
                 lineHeight: 1.2
               }}>
-                {program.avgOrderValue || 'N/A'}
+                {program.avgOrderValue ? `${program.avgOrderValue}` : 'N/A'}
               </div>
             </div>
             
@@ -469,10 +454,10 @@ const ProgramCard = ({ program, onClick }) => {
               <div style={{
                 fontSize: '1rem',
                 fontWeight: 600,
-                color: program.roi >= 0 ? '#4CAF50' : '#F44336',
+                color: program.roi > 0 ? '#4CAF50' : program.roi < 0 ? '#F44336' : 'rgba(0, 0, 0, 0.87)',
                 lineHeight: 1.2
               }}>
-                {program.roi}%
+                {hasNoData ? 'N/A' : `${program.roi}%`}
               </div>
             </div>
             
@@ -492,7 +477,7 @@ const ProgramCard = ({ program, onClick }) => {
                 color: 'rgba(0, 0, 0, 0.87)',
                 lineHeight: 1.2
               }}>
-                ${program.revenue ? program.revenue.toLocaleString() : '0'}
+                ${program.revenue?.toLocaleString() || '0'}
               </div>
             </div>
           </div>
@@ -524,10 +509,14 @@ const ProgramCard = ({ program, onClick }) => {
                 {program.recommendations.length} AI recommendation{program.recommendations.length !== 1 ? 's' : ''}
               </span>
             </>
-          ) : hasNoData ? (
-            <span>Awaiting enrollment data</span>
+          ) : program.cost ? (
+            <span>
+              Budget: ${program.cost.toLocaleString()}
+            </span>
           ) : (
-            <span>View program details</span>
+            <span>
+              {program.needsAttention ? 'Attention required' : hasNoData ? 'Awaiting data' : 'View details'}
+            </span>
           )}
         </div>
         

@@ -1,0 +1,296 @@
+/* src/styles/ModalFixes.css */
+/* Immediate fixes for existing modal z-index issues */
+
+/* Apply these fixes immediately to resolve modal display problems */
+
+/* Fix ActionModals.js - Currently using z-index: 200-201 (navigation layer) */
+.action-modal-backdrop {
+  z-index: 15000 !important; /* Use modal backdrop from standards */
+}
+
+.action-modal-content {
+  z-index: 15001 !important; /* Use modal content from standards */
+}
+
+/* Fix ProfileSwitch.css - Currently using z-index: 200-201 */
+.profile-switch-overlay {
+  z-index: 15000 !important; /* Move to proper modal layer */
+}
+
+.profile-switch-modal {
+  z-index: 15001 !important; /* Move to proper modal layer */
+}
+
+/* Fix AIResponseModal.css - Currently using z-index: 300 */
+.ai-response-modal-overlay {
+  z-index: 20100 !important; /* Use AI response modal from standards */
+}
+
+.ai-response-modal-container {
+  z-index: 20101 !important; /* Above the AI modal overlay */
+}
+
+/* Fix LoyaltyModalStyles.css - Currently using z-index: 10500-10501 */
+.loyalty-modal-overlay {
+  z-index: 15600 !important; /* Use loyalty creation modal from standards */
+}
+
+.loyalty-modal-container {
+  z-index: 15601 !important; /* Above the loyalty modal overlay */
+}
+
+/* Ensure these common modal patterns use proper z-index */
+.modal-backdrop,
+.modal-overlay {
+  z-index: 15000 !important;
+}
+
+.modal-content,
+.modal-container,
+.modal-dialog {
+  z-index: 15001 !important;
+}
+
+.modal-header {
+  z-index: 15002 !important;
+}
+
+/* Fix any remaining inline style conflicts */
+[style*="z-index: 200"],
+[style*="z-index: 201"],
+[style*="z-index: 300"],
+[style*="z-index: 400"] {
+  z-index: 15000 !important;
+}
+
+/* Specific fixes for components mentioned in the codebase */
+
+/* DetailView modal fixes */
+.detail-view-backdrop {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  z-index: 15400 !important; /* Use detail modal z-index */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.detail-view-content {
+  z-index: 15401 !important;
+  position: relative !important;
+}
+
+.detail-view-header {
+  z-index: 15402 !important;
+  position: relative !important;
+}
+
+/* RecommendationImplementationModal fixes */
+.recommendation-modal-backdrop {
+  z-index: 15700 !important; /* Use recommendation modal from standards */
+}
+
+.recommendation-modal-content {
+  z-index: 15701 !important;
+}
+
+.recommendation-modal-header {
+  z-index: 15702 !important;
+}
+
+/* RFMSegmentDetailModal fixes */
+.rfm-modal-backdrop {
+  z-index: 15400 !important; /* Use detail modal z-index */
+}
+
+.rfm-modal-content {
+  z-index: 15401 !important;
+}
+
+/* ActionButton menu fixes */
+.action-button-menu {
+  z-index: 1002 !important; /* Keep above menu items but below modals */
+}
+
+.action-button {
+  z-index: 1002 !important;
+}
+
+/* Header search expansion fix */
+.header-search-expanded {
+  z-index: 400 !important; /* Use navigation z-index from standards */
+}
+
+/* Ensure proper layering hierarchy is maintained */
+
+/* Base Layer (0-99): Normal content, cards, main UI */
+.dashboard-card,
+.kpi-card,
+.chart-container {
+  z-index: 1;
+}
+
+.card-hover,
+.elevated-card {
+  z-index: 10;
+}
+
+/* Dropdown Layer (100-199): Dropdowns, tooltips, small overlays */
+.dropdown-menu,
+.tooltip,
+.popover {
+  z-index: 100;
+}
+
+/* Navigation Layer (200-399): Sidebars, navigation panels */
+.sidebar {
+  z-index: 300;
+}
+
+.header {
+  z-index: 350;
+}
+
+.navigation-menu {
+  z-index: 400;
+}
+
+/* Panel Layer (1000-1999): Side panels */
+.notification-panel {
+  z-index: 1100;
+}
+
+.profile-panel {
+  z-index: 1200;
+}
+
+/* Modal Layer (15000-15999): Full-screen modals, dialogs */
+/* This is where all modals should be */
+
+/* Critical Layer (16000-16999): Critical alerts, error messages */
+.alert-modal,
+.error-modal,
+.confirmation-modal {
+  z-index: 16000;
+}
+
+/* System Layer (20000+): AI assistants, system-level overlays */
+.ai-assistant {
+  z-index: 20000;
+}
+
+.ai-response-modal {
+  z-index: 20100;
+}
+
+/* Loading overlays */
+.loading-overlay {
+  z-index: 19000;
+}
+
+/* Debug overlays (development only) */
+.debug-overlay {
+  z-index: 99999;
+}
+
+/* Responsive fixes for mobile */
+@media (max-width: 768px) {
+  /* On mobile, ensure modals are even higher to avoid conflicts */
+  .modal-backdrop,
+  .modal-overlay {
+    z-index: 16000 !important;
+  }
+  
+  .modal-content,
+  .modal-container {
+    z-index: 16001 !important;
+  }
+}
+
+/* Print mode - remove all z-index for printing */
+@media print {
+  * {
+    z-index: auto !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .modal-content,
+  .modal-container {
+    border: 3px solid !important;
+  }
+}
+
+/* Emergency fix class - apply to any modal that's still appearing incorrectly */
+.force-modal-front {
+  z-index: 21000 !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+}
+
+.force-modal-front .modal-content {
+  z-index: 21001 !important;
+}
+
+/* Animation fixes - ensure z-index is maintained during transitions */
+.modal-enter,
+.modal-enter-active,
+.modal-exit,
+.modal-exit-active {
+  z-index: inherit !important;
+}
+
+/* Focus trap fixes for modals */
+.modal-focus-trap {
+  position: relative;
+  z-index: inherit;
+}
+
+/* Backdrop blur effect fix */
+.modal-backdrop-blur {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* Fix for modals appearing inline instead of overlay */
+.modal-container {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Ensure modal content doesn't get flattened */
+.modal-content {
+  position: relative !important;
+  max-width: 90vw !important;
+  max-height: 85vh !important;
+  overflow: hidden !important;
+}
+
+/* Fix scroll behavior in modals */
+.modal-scrollable {
+  overflow-y: auto !important;
+  max-height: calc(85vh - 100px) !important;
+}
+
+/* Fix for header appearing over modals */
+.app-header {
+  z-index: 350 !important; /* Ensure it stays below modals */
+}
+
+.app-sidebar {
+  z-index: 300 !important; /* Ensure it stays below modals */
+}

@@ -58,11 +58,6 @@
   color: #333;
 }
 
-.quick-actions-dropdown button:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-  border-radius: 0.25rem;
-}
-
 /* ===== BADGE STYLES ===== */
 .card-badge {
   display: inline-flex;
@@ -92,11 +87,10 @@
   border-color: rgba(201, 202, 203, 0.3);
 }
 
-/* ✅ FIXED: Needs Attention badge with proper contrast */
 .badge-attention {
-  background-color: rgba(244, 67, 54, 0.1);
-  color: #F44336;
-  border-color: rgba(244, 67, 54, 0.2);
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 /* ===== ANIMATIONS ===== */

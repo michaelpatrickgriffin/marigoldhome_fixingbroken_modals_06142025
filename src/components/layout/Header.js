@@ -1,5 +1,5 @@
-// src/components/layout/Header.js
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+// src/components/layout/Header.js - FIXED Z-INDEX CONFLICTS
+import React, { useEffect, useState, useRef } from 'react';
 import { Bell, HelpCircle, Bot, ChevronDown, Search, Sparkles } from 'lucide-react';
 import { COLORS } from '../../styles/ColorStyles';
 import MarigoldAICopilot from './MarigoldAICopilot';
@@ -19,107 +19,30 @@ const Header = ({
   const [showAIChatbot, setShowAIChatbot] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isMobile, setIsMobile] = useState(false);
-  
   const helpDropdownRef = useRef(null);
   const searchRef = useRef(null);
   const searchInputRef = useRef(null);
-  const resizeTimeoutRef = useRef(null);
-  const pulseTimeoutRef = useRef(null);
-
-  // Debounced resize handler to prevent errors
-  const handleResize = useCallback(() => {
-    if (resizeTimeoutRef.current) {
-      clearTimeout(resizeTimeoutRef.current);
-    }
-    
-    resizeTimeoutRef.current = setTimeout(() => {
-      try {
-        const newIsMobile = window.innerWidth < 768;
-        if (newIsMobile !== isMobile) {
-          setIsMobile(newIsMobile);
-          // Close dropdowns when switching to mobile
-          if (newIsMobile) {
-            setShowHelpDropdown(false);
-            setIsSearchExpanded(false);
-            setSearchQuery('');
-          }
-        }
-      } catch (error) {
-        console.debug('Resize handler error (suppressed):', error);
-      }
-    }, 150);
-  }, [isMobile]);
-
-  // Enhanced resize handling with ResizeObserver error suppression
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    // Suppress ResizeObserver loop errors
-    const handleResizeObserverError = (event) => {
-      if (event.message && event.message.includes('ResizeObserver loop completed with undelivered notifications')) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        return true;
-      }
-      if (event.message && event.message.includes('ResizeObserver loop limit exceeded')) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        return true;
-      }
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('error', handleResizeObserverError);
-    
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('error', handleResizeObserverError);
-      if (resizeTimeoutRef.current) {
-        clearTimeout(resizeTimeoutRef.current);
-      }
-    };
-  }, [handleResize]);
 
   // Trigger pulse animation when critical notifications are present
   useEffect(() => {
     if (hasCriticalNotifications && notificationCount > 0) {
       setShouldPulse(true);
-      if (pulseTimeoutRef.current) {
-        clearTimeout(pulseTimeoutRef.current);
-      }
-      pulseTimeoutRef.current = setTimeout(() => {
+      const timer = setTimeout(() => {
         setShouldPulse(false);
       }, 10000);
+      return () => clearTimeout(timer);
     } else {
       setShouldPulse(false);
     }
-    
-    return () => {
-      if (pulseTimeoutRef.current) {
-        clearTimeout(pulseTimeoutRef.current);
-      }
-    };
   }, [hasCriticalNotifications, notificationCount]);
 
-  // Enhanced click outside handler
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      try {
-        if (helpDropdownRef.current && !helpDropdownRef.current.contains(event.target)) {
-          setShowHelpDropdown(false);
-        }
-        if (searchRef.current && !searchRef.current.contains(event.target)) {
-          setIsSearchExpanded(false);
-          setSearchQuery('');
-        }
-      } catch (error) {
-        console.warn('Click outside handler error:', error);
-        // Fallback - close all dropdowns
+      if (helpDropdownRef.current && !helpDropdownRef.current.contains(event.target)) {
         setShowHelpDropdown(false);
+      }
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
         setIsSearchExpanded(false);
         setSearchQuery('');
       }
@@ -132,24 +55,43 @@ const Header = ({
   // Focus search input when expanded
   useEffect(() => {
     if (isSearchExpanded && searchInputRef.current) {
-      const timer = setTimeout(() => {
-        try {
-          searchInputRef.current?.focus();
-        } catch (error) {
-          console.warn('Focus error:', error);
-        }
+      setTimeout(() => {
+        searchInputRef.current.focus();
       }, 100);
-      
-      return () => clearTimeout(timer);
     }
   }, [isSearchExpanded]);
 
-  // Clean up timeouts on unmount
+  // Close dropdowns on window resize to prevent positioning issues
   useEffect(() => {
-    return () => {
-      if (resizeTimeoutRef.current) clearTimeout(resizeTimeoutRef.current);
-      if (pulseTimeoutRef.current) clearTimeout(pulseTimeoutRef.current);
+    let resizeTimeout;
+    const handleResize = () => {
+      // Debounce resize handling to prevent loops
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        setShowHelpDropdown(false);
+        setIsSearchExpanded(false);
+      }, 100);
     };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(resizeTimeout);
+    };
+  }, []);
+
+  // Suppress ResizeObserver errors in development
+  useEffect(() => {
+    const handleError = (event) => {
+      if (event.message && event.message.includes('ResizeObserver loop completed')) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        return true;
+      }
+    };
+
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
   }, []);
 
   // Handle help option selection
@@ -157,8 +99,10 @@ const Header = ({
     setShowHelpDropdown(false);
     
     if (type === 'traditional') {
+      // Open help center in new tab
       window.open('/help', '_blank');
     } else if (type === 'ai') {
+      // Open the AI chatbot
       setShowAIChatbot(true);
     }
   };
@@ -170,7 +114,7 @@ const Header = ({
 
   // Handle search expansion
   const handleSearchClick = () => {
-    if (!isSearchExpanded && !isMobile) {
+    if (!isSearchExpanded) {
       setIsSearchExpanded(true);
     }
   };
@@ -179,6 +123,7 @@ const Header = ({
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
+      // For now, open AI chatbot with the search query
       setShowAIChatbot(true);
       setIsSearchExpanded(false);
       setSearchQuery('');
@@ -198,8 +143,7 @@ const Header = ({
     cursor: 'pointer',
     color: COLORS.onyxMedium,
     position: 'relative',
-    transition: 'all 0.2s ease-in-out',
-    flexShrink: 0
+    transition: 'all 0.2s ease-in-out'
   };
 
   // Active/hover state modifications
@@ -231,15 +175,15 @@ const Header = ({
     display: 'flex',
     alignItems: 'center',
     height: '2.25rem',
-    width: isMobile ? '2.25rem' : (isSearchExpanded ? '320px' : '2.25rem'),
+    width: '2.25rem',
     transition: 'all 0.3s ease-in-out'
   });
 
   // Search box style (the actual expanding element)
   const getSearchBoxStyle = () => ({
-    position: isSearchExpanded && !isMobile ? 'absolute' : 'relative',
-    top: isSearchExpanded && !isMobile ? '0' : 'auto',
-    right: isSearchExpanded && !isMobile ? '0' : 'auto',
+    position: isSearchExpanded ? 'absolute' : 'relative',
+    top: isSearchExpanded ? '0' : 'auto',
+    right: isSearchExpanded ? '0' : 'auto',
     display: 'flex',
     alignItems: 'center',
     height: '2.25rem',
@@ -247,9 +191,9 @@ const Header = ({
     border: '1px solid rgba(0, 0, 0, 0.1)',
     background: 'white',
     transition: 'all 0.3s ease-in-out',
-    width: isSearchExpanded && !isMobile ? '320px' : '2.25rem',
-    boxShadow: isSearchExpanded && !isMobile ? '0 2px 8px rgba(0, 0, 0, 0.1)' : 'none',
-    zIndex: isSearchExpanded && !isMobile ? 9998 : 'auto'
+    width: isSearchExpanded ? '320px' : '2.25rem',
+    boxShadow: isSearchExpanded ? '0 2px 8px rgba(0, 0, 0, 0.1)' : 'none',
+    zIndex: isSearchExpanded ? 400 : 'auto' // FIXED: Use consistent z-index from standards
   });
 
   // Avatar style (circular but consistent with icon family)
@@ -267,8 +211,7 @@ const Header = ({
     boxShadow: '0 1px 3px rgba(26, 76, 73, 0.15)',
     transition: 'all 0.2s ease-in-out',
     fontSize: '0.875rem',
-    fontWeight: '600',
-    flexShrink: 0
+    fontWeight: '600'
   });
 
   return (
@@ -278,12 +221,11 @@ const Header = ({
         boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
         marginLeft: (isMenuOpen && isMenuPinned) ? '280px' : '0',
         transition: 'margin-left 0.3s ease-in-out',
-        overflow: 'visible', // Allow dropdowns to extend beyond header
-        position: 'relative',
-        zIndex: 40 // Lower than sidebar (50) but above main content
+        position: 'relative', // FIXED: Ensure proper stacking context
+        zIndex: 350 // FIXED: Use z-header from standards
       }}>
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center" style={{ minWidth: 0 }}>
+          <div className="flex items-center">
             {/* Hamburger menu button */}
             {(!isMenuOpen || !isMenuPinned) && (
               <button 
@@ -323,8 +265,7 @@ const Header = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                marginRight: '1rem',
-                flexShrink: 0
+                marginRight: '1rem'
               }}>
                 <span style={{ color: 'white', fontSize: '20px', fontWeight: 'bold', fontFamily: 'sans-serif' }}>M</span>
               </div>
@@ -332,82 +273,78 @@ const Header = ({
           </div>
           
           {/* Right side icons - consistent spacing */}
-          <div className="flex items-center" style={{ gap: '0.5rem', flexShrink: 0 }}>
-            {/* Intelligent Search - hide on mobile if needed */}
-            {!isMobile && (
+          <div className="flex items-center" style={{ gap: '0.5rem' }}>
+            {/* Intelligent Search */}
+            <div 
+              ref={searchRef}
+              style={getSearchContainerStyle()}
+            >
               <div 
-                ref={searchRef}
-                style={getSearchContainerStyle()}
+                style={getSearchBoxStyle()}
+                onClick={handleSearchClick}
               >
-                <div 
-                  style={getSearchBoxStyle()}
-                  onClick={handleSearchClick}
-                >
-                  {!isSearchExpanded ? (
-                    // Collapsed search button
-                    <div style={{
-                      width: '100%',
-                      height: '100%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      color: COLORS.onyxMedium
+                {!isSearchExpanded ? (
+                  // Collapsed search button
+                  <div style={{
+                    width: '100%',
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    color: COLORS.onyxMedium
+                  }}>
+                    <Search size={20} />
+                  </div>
+                ) : (
+                  // Expanded search form
+                  <form onSubmit={handleSearchSubmit} style={{ width: '100%', display: 'flex', alignItems: 'center' }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      paddingLeft: '0.75rem',
+                      color: COLORS.evergreen 
                     }}>
-                      <Search size={20} />
+                      <Sparkles size={16} />
                     </div>
-                  ) : (
-                    // Expanded search form
-                    <form onSubmit={handleSearchSubmit} style={{ width: '100%', display: 'flex', alignItems: 'center' }}>
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        paddingLeft: '0.75rem',
-                        color: COLORS.evergreen,
-                        flexShrink: 0
-                      }}>
-                        <Sparkles size={16} />
-                      </div>
-                      <input
-                        ref={searchInputRef}
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Ask me anything about your marketing..."
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Ask me anything about your marketing..."
+                      style={{
+                        flex: 1,
+                        border: 'none',
+                        outline: 'none',
+                        padding: '0.5rem 0.75rem',
+                        fontSize: '0.875rem',
+                        background: 'transparent',
+                        color: COLORS.onyx,
+                        minWidth: 0
+                      }}
+                    />
+                    {searchQuery && (
+                      <button
+                        type="submit"
                         style={{
-                          flex: 1,
+                          padding: '0.25rem 0.5rem',
+                          marginRight: '0.5rem',
+                          background: COLORS.evergreen,
+                          color: 'white',
                           border: 'none',
-                          outline: 'none',
-                          padding: '0.5rem 0.75rem',
-                          fontSize: '0.875rem',
-                          background: 'transparent',
-                          color: COLORS.onyx,
-                          minWidth: 0
+                          borderRadius: '0.25rem',
+                          fontSize: '0.75rem',
+                          cursor: 'pointer'
                         }}
-                      />
-                      {searchQuery && (
-                        <button
-                          type="submit"
-                          style={{
-                            padding: '0.25rem 0.5rem',
-                            marginRight: '0.5rem',
-                            background: COLORS.evergreen,
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '0.25rem',
-                            fontSize: '0.75rem',
-                            cursor: 'pointer',
-                            flexShrink: 0
-                          }}
-                        >
-                          Ask
-                        </button>
-                      )}
-                    </form>
-                  )}
-                </div>
+                      >
+                        Ask
+                      </button>
+                    )}
+                  </form>
+                )}
               </div>
-            )}
+            </div>
 
             {/* Notification bell */}
             <div className="relative">
@@ -475,28 +412,21 @@ const Header = ({
               {currentProfile?.avatar || 'AM'}
             </div>
 
-            {/* Help dropdown - positioned at far right with MAXIMUM z-index */}
-            <div 
-              className="relative" 
-              ref={helpDropdownRef} 
-              style={{ 
-                position: 'relative',
-                zIndex: 10000 // Maximum z-index for container
-              }}
-            >
+            {/* Help dropdown - positioned at far right */}
+            <div className="relative" ref={helpDropdownRef} style={{ position: 'relative' }}>
               <button 
                 style={getHelpButtonStyle()}
                 onClick={handleHelpButtonClick}
                 onMouseEnter={(e) => {
                   if (!showHelpDropdown) {
-                    e.currentTarget.style.background = 'rgba(26, 76, 73, 0.05)';
-                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    e.target.style.background = 'rgba(26, 76, 73, 0.05)';
+                    e.target.style.transform = 'translateY(-1px)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!showHelpDropdown) {
-                    e.currentTarget.style.background = 'none';
-                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.target.style.background = 'none';
+                    e.target.style.transform = 'translateY(0)';
                   }
                 }}
               >
@@ -510,25 +440,20 @@ const Header = ({
                 />
               </button>
 
-              {/* Help dropdown menu - MAXIMUM Z-INDEX to appear above everything */}
+              {/* Help dropdown menu - FIXED Z-INDEX */}
               {showHelpDropdown && (
                 <div 
                   style={{
-                    position: 'fixed', // Changed to fixed for better positioning
-                    top: '4rem', // Position below header
-                    right: '1.5rem', // Align with right edge
+                    position: 'absolute',
+                    top: 'calc(100% + 0.5rem)',
+                    right: '0',
                     minWidth: '220px',
                     backgroundColor: 'white',
                     borderRadius: '0.75rem',
-                    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1)',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)',
                     border: '1px solid rgba(0, 0, 0, 0.08)',
-                    zIndex: 99999, // MAXIMUM z-index
-                    overflow: 'hidden',
-                    // Create new stacking context
-                    isolation: 'isolate',
-                    // Ensure it renders on top
-                    transform: 'translateZ(0)',
-                    willChange: 'transform'
+                    zIndex: 400, // FIXED: Use navigation z-index from standards
+                    overflow: 'hidden'
                   }}
                 >
                   {/* Traditional Help Option */}
@@ -594,7 +519,7 @@ const Header = ({
         </div>
       </header>
 
-      {/* AI Chatbot - Rendered conditionally */}
+      {/* AI Chatbot - FIXED Z-INDEX */}
       {showAIChatbot && (
         <div style={{
           position: 'fixed',
@@ -602,7 +527,7 @@ const Header = ({
           left: 0,
           right: 0,
           bottom: 0,
-          zIndex: 100,
+          zIndex: 20000, // FIXED: Use AI assistant z-index from standards
           pointerEvents: 'none'
         }}>
           <MarigoldAICopilot 
@@ -613,7 +538,7 @@ const Header = ({
         </div>
       )}
 
-      {/* CSS for animations and z-index management */}
+      {/* CSS for animations */}
       <style jsx>{`
         .notification-badge.pulse-critical {
           animation: pulseCritical 2s infinite;
@@ -629,18 +554,6 @@ const Header = ({
           100% {
             box-shadow: 0 0 0 0 rgba(244, 67, 54, 0);
           }
-        }
-
-        /* Prevent animation in reduced motion mode */
-        @media (prefers-reduced-motion: reduce) {
-          .notification-badge.pulse-critical {
-            animation: none;
-          }
-        }
-
-        /* Ensure header and dropdowns stay above all content */
-        header {
-          isolation: isolate;
         }
       `}</style>
     </>
