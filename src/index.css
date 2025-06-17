@@ -1,277 +1,5 @@
-/* index.css with restored card styles and modal fixes */
+/* src/index.css - Complete file with all RFM and dashboard styles restored */
 
-/* Essential slide animations */
-@keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideInDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes overlayFadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes fullModalSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(100%);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes cardSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(15px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes dropdownSlideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes brainPulse {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.8;
-    transform: scale(1.05);
-  }
-}
-
-@keyframes attentionPulse {
-  0%, 100% {
-    box-shadow: 0 4px 20px rgba(255, 193, 7, 0.2), 0 0 0 1px rgba(255, 193, 7, 0.3);
-  }
-  50% {
-    box-shadow: 0 6px 25px rgba(255, 193, 7, 0.3), 0 0 0 2px rgba(255, 193, 7, 0.4);
-  }
-}
-
-/* KPI Modal Animation Styles - ✅ FIXED: Updated z-index for proper layering */
-.kpi-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  z-index: 100002; /* ✅ FIXED: Updated from 1000 to 100002 (matches KpiAnalyticsModal) */
-  animation: overlayFadeIn 0.3s ease-out forwards;
-}
-
-.kpi-modal-container {
-  background: white;
-  width: 100%;
-  max-width: 100%;
-  height: 90vh;
-  border-radius: 1rem 1rem 0 0;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
-  animation: slideUpModal 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  z-index: 100003; /* ✅ FIXED: Container above overlay */
-}
-
-@keyframes slideUpModal {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideDownModal {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    transform: translateY(100%);
-  }
-}
-
-.kpi-modal-container.closing {
-  animation: slideDownModal 0.3s cubic-bezier(0.4, 0, 1, 1) forwards;
-}
-
-.kpi-modal-overlay.closing {
-  animation: overlayFadeOut 0.2s ease-in forwards;
-  animation-delay: 0.1s;
-}
-
-@keyframes overlayFadeOut {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
-
-/* Applied animation classes */
-.slide-in-left {
-  animation: slideInLeft 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.slide-in-right {
-  animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.slide-in-up {
-  animation: slideInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.slide-in-down, .slide-down {
-  animation: slideInDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.slide-in {
-  animation: cardSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.overlay-fade-in {
-  animation: overlayFadeIn 0.2s ease-out;
-}
-
-.full-modal-slide-in {
-  animation: fullModalSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.brain-pulse {
-  animation: brainPulse 2s ease-in-out infinite;
-}
-
-/* Quick actions dropdown animation */
-.quick-actions-dropdown {
-  animation: dropdownSlideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  transform-origin: top right;
-}
-
-/* Tab transition container */
-.tab-transition-container {
-  position: relative;
-  overflow: hidden;
-}
-
-/* Staggered card animations */
-.card:nth-child(1) { animation-delay: 0ms; }
-.card:nth-child(2) { animation-delay: 50ms; }
-.card:nth-child(3) { animation-delay: 100ms; }
-.card:nth-child(4) { animation-delay: 150ms; }
-.card:nth-child(5) { animation-delay: 200ms; }
-.card:nth-child(6) { animation-delay: 250ms; }
-
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  .slide-in-left,
-  .slide-in-right,
-  .slide-in-up,
-  .slide-in-down,
-  .slide-in,
-  .overlay-fade-in,
-  .full-modal-slide-in,
-  .brain-pulse {
-    animation: none;
-  }
-}
-
-.mt-2 {
-  margin-top: 0.5rem;
-}
-
-.mt-4 {
-  margin-top: 1rem;
-}
-
-.mb-2 {
-  margin-bottom: 0.5rem;
-}  
-
-/* Campaign and Program Cards - Material UI Theme */
-.program-card, .campaign-card {
-  background: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-  border: none;
-  overflow: hidden;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  position: relative;
-}
-
-.program-card:hover, .campaign-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.08);
-}
-
-/* src/index.css */
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -285,6 +13,7 @@ body {
   box-sizing: border-box;
 }
 
+/* ===== UTILITY CLASSES ===== */
 .hover\:bg-gray-50:hover {
   background-color: rgba(249, 250, 251, 1);
 }
@@ -293,7 +22,6 @@ body {
   background-color: rgba(243, 244, 246, 1);
 }
 
-/* Utility classes */
 .flex {
   display: flex;
 }
@@ -391,8 +119,22 @@ body {
   border-radius: 0.5rem;
 }
 
+.rounded-xl {
+  border-radius: 0.75rem;
+}
+
 .rounded-full {
   border-radius: 9999px;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.text-xs {
+  font-size: 0.75rem;
+  line-height: 1rem;
 }
 
 .text-lg {
@@ -403,8 +145,56 @@ body {
   font-weight: 500;
 }
 
+.font-semibold {
+  font-weight: 600;
+}
+
+.text-gray-900 {
+  color: rgb(17 24 39);
+}
+
+.text-gray-600 {
+  color: rgb(75 85 99);
+}
+
+.text-gray-500 {
+  color: rgb(107 114 128);
+}
+
 .bg-white {
-  background-color: #ffffff;
+  background-color: rgb(255 255 255);
+}
+
+.bg-gray-50 {
+  background-color: rgb(249 250 251);
+}
+
+.border {
+  border-width: 1px;
+}
+
+.border-gray-200 {
+  border-color: rgb(229 231 235);
+}
+
+.shadow-sm {
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.shadow {
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+
+.mt-2 {
+  margin-top: 0.5rem;
+}
+
+.mt-4 {
+  margin-top: 1rem;
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem;
 }
 
 .min-h-screen {
@@ -444,8 +234,35 @@ body {
   margin-left: 1rem;
 }
 
-/* ===== RESTORED KPI CARD STYLES ===== */
-/* UPDATED KPI Card Styles - Matching RFM Dashboard */
+.space-y-4 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 1rem;
+}
+
+.space-y-6 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 1.5rem;
+}
+
+/* ===== CAMPAIGN AND PROGRAM CARDS ===== */
+.program-card, .campaign-card {
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  border: none;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+}
+
+.program-card:hover, .campaign-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.08);
+}
+
+/* ===== KPI CARD STYLES ===== */
 .kpi-card-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -468,7 +285,6 @@ body {
   width: 100%;
 }
 
-/* ✅ RESTORED: Card base styling to match RFM dashboard */
 .kpi-card {
   background: white;
   border-radius: 0.75rem;
@@ -487,17 +303,15 @@ body {
   box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
 }
 
-/* ✅ RESTORED: Content layout */
 .kpi-card-content {
   display: flex;
-  align-items: flex-start; /* Align icon to top of content like in RFM */
+  align-items: flex-start;
 }
 
-/* ✅ RESTORED: Icon container styling */
 .kpi-icon-container {
   height: 3rem;
   width: 3rem;
-  border-radius: 12px; /* More square-like as in RFM dashboard */
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -510,11 +324,10 @@ body {
   transform: scale(1.05);
 }
 
-/* ✅ RESTORED: Text container styling */
 .kpi-text-container {
   display: flex;
   flex-direction: column;
-  width: 100%; /* Ensure the text container takes full width */
+  width: 100%;
 }
 
 .kpi-title {
@@ -531,7 +344,7 @@ body {
   font-weight: 700;
   color: rgba(0, 0, 0, 0.87);
   line-height: 1.2;
-  margin-bottom: 0; /* Remove bottom margin to align with change indicator */
+  margin-bottom: 0;
 }
 
 .kpi-change-container {
@@ -564,7 +377,7 @@ body {
   margin-top: 0.25rem;
 }
 
-/* ✅ RESTORED: Icon background colors */
+/* KPI Icon Background Colors */
 .kpi-icon-bg-revenue {
   background-color: rgba(76, 175, 80, 0.12);
   color: #4CAF50;
@@ -588,6 +401,668 @@ body {
 .kpi-icon-bg-audience {
   background-color: rgba(244, 67, 54, 0.12);
   color: #F44336;
+}
+
+/* ===== RFM KPI CARDS ===== */
+.rfm-kpi-cards-container {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.rfm-kpi-card {
+  background: white;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  will-change: transform;
+  position: relative;
+  isolation: isolate;
+}
+
+.rfm-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.rfm-kpi-card:active {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.rfm-kpi-card-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  width: 100%;
+  height: 100%;
+}
+
+.rfm-kpi-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.rfm-kpi-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.rfm-kpi-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #333333;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.2;
+}
+
+.rfm-kpi-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.rfm-kpi-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #333333;
+  line-height: 1;
+  margin: 0;
+}
+
+.rfm-kpi-change {
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.rfm-kpi-change.positive {
+  color: #81C784;
+}
+
+.rfm-kpi-change.negative {
+  color: #E57373;
+}
+
+.rfm-kpi-period {
+  font-size: 0.75rem;
+  color: #666666;
+  margin: 0 0 0.5rem 0;
+}
+
+.rfm-kpi-secondary {
+  font-size: 0.75rem;
+  color: #666666;
+  font-weight: 500;
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* ===== RFM SEGMENT CARDS ===== */
+.rfm-segment-card {
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease-in-out;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.rfm-segment-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.rfm-segment-card-header {
+  padding: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.rfm-segment-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.rfm-segment-champion {
+  background-color: rgba(76, 175, 80, 0.1);
+  color: #388E3C;
+  border-left: 3px solid #4CAF50;
+}
+
+.rfm-segment-loyal {
+  background-color: rgba(33, 150, 243, 0.1);
+  color: #1976D2;
+  border-left: 3px solid #2196F3;
+}
+
+.rfm-segment-potential {
+  background-color: rgba(156, 39, 176, 0.1);
+  color: #7B1FA2;
+  border-left: 3px solid #9C27B0;
+}
+
+.rfm-segment-atrisk {
+  background-color: rgba(255, 152, 0, 0.1);
+  color: #F57C00;
+  border-left: 3px solid #FF9800;
+}
+
+.rfm-segment-cantlose {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: #D32F2F;
+  border-left: 3px solid #F44336;
+}
+
+.rfm-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  padding: 0 1.25rem 1.25rem;
+}
+
+.rfm-metric-item {
+  padding: 0.75rem;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 0.5rem;
+}
+
+.rfm-metric-label {
+  font-size: 0.75rem;
+  color: #666;
+  margin-bottom: 0.25rem;
+}
+
+.rfm-metric-value {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.rfm-metric-secondary {
+  font-size: 0.75rem;
+  color: #666;
+  margin-top: 0.25rem;
+}
+
+.rfm-recommendation-card {
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem;
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease-in-out;
+}
+
+.rfm-recommendation-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.rfm-recommendation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.rfm-recommendation-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.rfm-recommendation-description {
+  font-size: 0.875rem;
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+.rfm-recommendation-priority {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.rfm-priority-high {
+  background-color: rgba(76, 175, 80, 0.1);
+  color: #388E3C;
+}
+
+.rfm-priority-medium {
+  background-color: rgba(33, 150, 243, 0.1);
+  color: #1976D2;
+}
+
+.rfm-priority-low {
+  background-color: rgba(255, 152, 0, 0.1);
+  color: #F57C00;
+}
+
+/* ===== DASHBOARD TOGGLE ===== */
+.dashboard-toggle {
+  display: flex;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 0.5rem;
+  padding: 0.25rem;
+}
+
+.dashboard-toggle-button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  border: none;
+  background: none;
+}
+
+.dashboard-toggle-button.active {
+  background-color: white;
+  color: #1A4C49;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-toggle-button:not(.active) {
+  color: #666;
+}
+
+.dashboard-toggle-button:not(.active):hover {
+  color: #333;
+}
+
+/* ===== DASHBOARD VIEW TRANSITIONS ===== */
+.dashboard-view-container {
+  position: relative;
+  min-height: 300px;
+}
+
+.dashboard-view {
+  transition: all 0.5s ease;
+  width: 100%;
+}
+
+/* Standard view animations - also used for Overview */
+.standard-view-enter {
+  opacity: 0;
+  transform: translateX(-15px);
+  position: absolute;
+  width: 100%;
+}
+
+.standard-view-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 0.5s, transform 0.5s;
+}
+
+.standard-view-exit {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.standard-view-exit-active {
+  opacity: 0;
+  transform: translateX(15px);
+  transition: opacity 0.5s, transform 0.5s;
+}
+
+/* Marketing view animations */
+.marketing-view-enter {
+  opacity: 0;
+  transform: translateX(-15px);
+  position: absolute;
+  width: 100%;
+}
+
+.marketing-view-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 0.5s, transform 0.5s;
+}
+
+.marketing-view-exit {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.marketing-view-exit-active {
+  opacity: 0;
+  transform: translateX(15px);
+  transition: opacity 0.5s, transform 0.5s;
+}
+
+/* RFM view animations */
+.rfm-view-enter {
+  opacity: 0;
+  transform: translateX(15px);
+  position: absolute;
+  width: 100%;
+}
+
+.rfm-view-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 0.5s, transform 0.5s;
+}
+
+.rfm-view-exit {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.rfm-view-exit-active {
+  opacity: 0;
+  transform: translateX(-15px);
+  transition: opacity 0.5s, transform 0.5s;
+}
+
+/* ===== MODAL ANIMATIONS AND LAYOUT ===== */
+/* KPI Modal Animations */
+.kpi-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 100001;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: overlayFadeIn 0.2s ease-out;
+}
+
+.kpi-modal-container {
+  width: 100%;
+  max-width: 100%;
+  height: 85vh;
+  background-color: white;
+  border-radius: 1rem 1rem 0 0;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  animation: slideUpModal 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 100003;
+}
+
+@keyframes slideUpModal {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDownModal {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+.kpi-modal-container.closing {
+  animation: slideDownModal 0.3s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+.kpi-modal-overlay.closing {
+  animation: overlayFadeOut 0.2s ease-in forwards;
+  animation-delay: 0.1s;
+}
+
+@keyframes overlayFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* General Modal Animations */
+.slide-in-left {
+  animation: slideInLeft 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.slide-in-right {
+  animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.slide-in-up {
+  animation: slideInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.slide-in-down, .slide-down {
+  animation: slideInDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.slide-in {
+  animation: cardSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.overlay-fade-in {
+  animation: overlayFadeIn 0.2s ease-out;
+}
+
+.full-modal-slide-in {
+  animation: fullModalSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.brain-pulse {
+  animation: brainPulse 2s ease-in-out infinite;
+}
+
+/* Animation Keyframes */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cardSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes overlayFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fullModalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes brainPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+/* Quick actions dropdown animation */
+.quick-actions-dropdown {
+  animation: dropdownSlideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top right;
+}
+
+@keyframes dropdownSlideDown {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Staggered card animations */
+.card:nth-child(1) { animation-delay: 0ms; }
+.card:nth-child(2) { animation-delay: 50ms; }
+.card:nth-child(3) { animation-delay: 100ms; }
+.card:nth-child(4) { animation-delay: 150ms; }
+.card:nth-child(5) { animation-delay: 200ms; }
+.card:nth-child(6) { animation-delay: 250ms; }
+
+/* ===== FIXED MODAL SYSTEM - SIMPLIFIED APPROACH ===== */
+/* Standard modal backdrop */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  z-index: 100001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Prevent body scroll when modal is open */
+body.modal-open,
+body:has([style*="position: fixed"][style*="z-index: 100001"]) {
+  overflow: hidden !important;
+}
+
+/* ===== RESIZE OBSERVER ERROR PREVENTION ===== */
+/* Prevent ResizeObserver errors from modal animations */
+.modal-content,
+[style*="z-index: 100001"] * {
+  /* Prevent layout thrashing during transitions */
+  contain: layout style paint;
+  /* Use GPU acceleration for smooth transitions */
+  will-change: transform, opacity;
+}
+
+/* Ensure modals don't trigger continuous layout recalculations */
+[style*="z-index: 100001"] {
+  /* Create isolated rendering context */
+  isolation: isolate;
+  /* Force GPU layer for better performance */
+  transform: translateZ(0);
+  /* Prevent subpixel rendering issues */
+  backface-visibility: hidden;
+}
+
+/* ===== CLEAN MODAL STYLING ===== */
+.kpi-modal-overlay,
+.profile-switch-overlay {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+/* Ensure tooltips and dropdowns work inside modals */
+[style*="z-index: 100001"] .tooltip,
+[style*="z-index: 100001"] .dropdown-menu {
+  z-index: 100010;
+}
+
+/* ===== MODAL TRANSITION PERFORMANCE ===== */
+/* Ensure smooth transitions without layout thrashing */
+[style*="z-index: 100001"] {
+  /* Optimize rendering performance */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Prevent flickering during modal transitions */
+[style*="z-index: 100001"] * {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 /* ===== MODAL INTERACTION IMPROVEMENTS ===== */
@@ -617,15 +1092,99 @@ body {
   z-index: 1;
 }
 
-/* Prevent body scroll when any modal is open */
-body.modal-open {
-  overflow: hidden !important;
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 1200px) {
+  .rfm-kpi-cards-container {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+  }
+  
+  .rfm-kpi-card {
+    padding: 1rem;
+  }
+  
+  .rfm-kpi-title {
+    font-size: 0.75rem;
+  }
+  
+  .rfm-kpi-value {
+    font-size: 1.25rem;
+  }
 }
 
-/* ===== ACCESSIBILITY IMPROVEMENTS ===== */
+@media (max-width: 768px) {
+  .rfm-kpi-cards-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+  
+  .rfm-kpi-card {
+    padding: 0.75rem;
+  }
+  
+  .rfm-kpi-card-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+  
+  .rfm-kpi-icon-container {
+    align-self: center;
+  }
+
+  .modal-backdrop {
+    padding: 1rem;
+  }
+
+  .px-6 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .py-6 {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .rfm-kpi-cards-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== ACCESSIBILITY ===== */
+/* Focus management for modals */
+[style*="z-index: 100001"] button:focus,
+[style*="z-index: 100001"] input:focus,
+[style*="z-index: 100001"] select:focus {
+  outline: 2px solid #1A4C49;
+  outline-offset: 2px;
+}
+
 /* Focus trap for modals */
 .modal-container:focus-within {
   outline: none;
+}
+
+.rfm-kpi-card:focus {
+  outline: 2px solid #1A4C49;
+  outline-offset: 2px;
+}
+
+.rfm-segment-card:focus {
+  outline: 2px solid #1A4C49;
+  outline-offset: 2px;
+}
+
+.dashboard-toggle-button:focus {
+  outline: 2px solid #1A4C49;
+  outline-offset: 2px;
+}
+
+.focus-visible:focus {
+  outline: 2px solid #1A4C49;
+  outline-offset: 2px;
 }
 
 /* High contrast mode support */
@@ -638,159 +1197,113 @@ body.modal-open {
   }
 }
 
-/* Add this to your index.css or create a new CSS file */
-/* Modal Breakout Fix - Ensures modals escape parent container constraints */
-
-/* ===== CRITICAL MODAL CONTAINER FIXES ===== */
-/* Override parent container constraints for full-screen modals */
-
-/* Ensure main containers don't constrain modals */
-main, .max-w-7xl, .dashboard-view-container, .dashboard-view {
-  /* Remove contain constraint that prevents modals from breaking out */
-  contain: none !important;
-}
-
-/* Ensure modals can break out of any parent overflow constraints */
-.full-modal-slide-in,
-[style*="position: fixed"][style*="z-index: 100001"],
-[style*="position: fixed"][style*="z-index: 100002"],
-[style*="position: fixed"][style*="z-index: 100005"] {
-  /* Force modals to render at viewport level */
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  /* Create new stacking context */
-  isolation: isolate !important;
-  /* Force GPU acceleration for better rendering */
-  transform: translateZ(0) !important;
-  /* Ensure it renders above everything */
-  z-index: 100001 !important;
-}
-
-/* Specifically target RFM modal */
-div[style*="z-index: 100001"]:has(h2:contains("Segment Analysis")),
-div[style*="backgroundColor: #f5f7f8"][style*="position: fixed"] {
-  /* Ensure full viewport coverage */
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  max-width: none !important;
-  max-height: none !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  /* Override any parent transforms */
-  transform: none !important;
-  /* Ensure proper z-index */
-  z-index: 100001 !important;
-}
-
-/* Prevent any parent from clipping modals */
-body, html {
-  /* Ensure no overflow issues */
-  overflow-x: hidden;
-}
-
-/* When modal is open, prevent main content scroll */
-body.modal-open,
-body:has(.full-modal-slide-in) {
-  overflow: hidden !important;
-  position: relative !important;
-}
-
-/* Ensure modal backdrop covers entire viewport */
-.full-modal-slide-in::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: -1;
-  pointer-events: none;
-}
-
-/* ===== PARENT CONTAINER OVERRIDES ===== */
-/* Remove constraints that might clip modals */
-
-/* Remove max-width constraints when modal is open */
-body:has(.full-modal-slide-in) .max-w-7xl {
-  max-width: none !important;
-}
-
-/* Remove any padding/margin that might affect modal positioning */
-body:has(.full-modal-slide-in) main {
-  padding: 0 !important;
-  margin: 0 !important;
-  max-width: none !important;
-}
-
-/* Ensure sidebar doesn't affect modal positioning */
-body:has(.full-modal-slide-in) .flex.justify-center {
-  margin-left: 0 !important;
-}
-
-/* ===== MODAL CONTENT FIXES ===== */
-/* Ensure modal content renders properly */
-
-/* Modal header should span full width */
-.full-modal-slide-in .modal-header,
-.full-modal-slide-in > div > div:first-child {
-  width: 100% !important;
-  max-width: none !important;
-}
-
-/* Modal content should be properly contained */
-.full-modal-slide-in > div {
-  width: 100% !important;
-  height: 100% !important;
-  max-width: none !important;
-  max-height: none !important;
-}
-
-/* ===== ACCESSIBILITY FIXES ===== */
-/* Ensure focus remains within modal */
-body:has(.full-modal-slide-in) *:not(.full-modal-slide-in *) {
-  /* Prevent focus on background elements */
-  pointer-events: none !important;
-}
-
-.full-modal-slide-in * {
-  /* Restore pointer events within modal */
-  pointer-events: auto !important;
-}
-
-/* ===== RESPONSIVE FIXES ===== */
-/* Ensure modals work on all screen sizes */
-@media (max-width: 768px) {
-  .full-modal-slide-in {
-    width: 100vw !important;
-    height: 100vh !important;
-    max-width: none !important;
-    max-height: none !important;
+/* ===== REDUCED MOTION SUPPORT ===== */
+@media (prefers-reduced-motion: reduce) {
+  .slide-in-left,
+  .slide-in-right,
+  .slide-in-up,
+  .slide-in-down,
+  .slide-in,
+  .overlay-fade-in,
+  .brain-pulse,
+  .rfm-kpi-card,
+  .rfm-segment-card,
+  .rfm-recommendation-card,
+  .dashboard-toggle-button {
+    animation: none;
+    transition: none;
+  }
+  
+  .rfm-kpi-card:hover,
+  .rfm-segment-card:hover {
+    transform: none;
   }
 }
 
-/* ===== DEBUG HELPERS (remove in production) ===== */
-/* Uncomment for debugging modal positioning issues */
-/*
-.full-modal-slide-in {
-  border: 3px solid red !important;
-  box-shadow: inset 0 0 0 3px blue !important;
+/* ===== CUSTOM ANIMATIONS ===== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
-.full-modal-slide-in > div {
-  border: 2px solid green !important;
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
-*/
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+/* ===== LOADING STATES ===== */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ===== CUSTOM SCROLLBAR ===== */
+/* Webkit browsers */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    background: white !important;
+    color: black !important;
+  }
+}

@@ -1,4 +1,4 @@
-// App.js - Complete clean file
+// App.js - Complete clean file with FIXED layout order and error handling
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
@@ -22,6 +22,14 @@ import MarketingDashboard from './components/dashboard/MarketingDashboard';
 import NarrativeMarketingDashboard from './components/dashboard/NarrativeMarketingDashboard';
 import UnifiedInsightsAndRecommendations from './components/dashboard/UnifiedInsightsAndRecommendations';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
+
+// ✅ RESTORED: Import campaign and program card components
+import CampaignCard from './components/campaigns/CampaignCard';
+import ProgramCard from './components/loyalty/ProgramCard';
+
+// ✅ FIX: Import modal error suppression
+import './utils/modalErrorSuppression';
+
 import './styles/DashboardToggle.css';
 import './styles/OverviewDashboardStyles.css';
 import './styles/AIDashboard.css';
@@ -641,6 +649,96 @@ const App = () => {
                                 <MembershipChart data={membershipData} />
                                 <CampaignPerformanceChart />
                               </div>
+
+                              {/* ✅ FIXED: Campaign Cards Section - MOVED TO BOTTOM */}
+                              <div style={{ marginBottom: '1.5rem' }}>
+                                <div style={{ 
+                                  display: 'flex', 
+                                  justifyContent: 'space-between', 
+                                  alignItems: 'center', 
+                                  marginBottom: '1rem' 
+                                }}>
+                                  <h3 style={{ 
+                                    fontSize: '1.125rem', 
+                                    fontWeight: 600, 
+                                    color: COLORS.onyx, 
+                                    margin: 0 
+                                  }}>
+                                    Active Campaigns
+                                  </h3>
+                                  <button 
+                                    onClick={() => setActiveTab('campaigns')}
+                                    style={{
+                                      fontSize: '0.875rem',
+                                      color: COLORS.evergreen,
+                                      background: 'none',
+                                      border: 'none',
+                                      cursor: 'pointer',
+                                      fontWeight: 500
+                                    }}
+                                  >
+                                    View All →
+                                  </button>
+                                </div>
+                                <div style={{ 
+                                  display: 'grid', 
+                                  gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
+                                  gap: '1rem' 
+                                }}>
+                                  {campaigns.slice(0, 3).map(campaign => (
+                                    <CampaignCard 
+                                      key={campaign.id} 
+                                      campaign={campaign} 
+                                      onClick={handleCampaignClick} 
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* ✅ FIXED: Program Cards Section - MOVED TO BOTTOM */}
+                              <div style={{ marginBottom: '1.5rem' }}>
+                                <div style={{ 
+                                  display: 'flex', 
+                                  justifyContent: 'space-between', 
+                                  alignItems: 'center', 
+                                  marginBottom: '1rem' 
+                                }}>
+                                  <h3 style={{ 
+                                    fontSize: '1.125rem', 
+                                    fontWeight: 600, 
+                                    color: COLORS.onyx, 
+                                    margin: 0 
+                                  }}>
+                                    Loyalty Programs
+                                  </h3>
+                                  <button 
+                                    onClick={() => setActiveTab('loyalty')}
+                                    style={{
+                                      fontSize: '0.875rem',
+                                      color: COLORS.evergreen,
+                                      background: 'none',
+                                      border: 'none',
+                                      cursor: 'pointer',
+                                      fontWeight: 500
+                                    }}
+                                  >
+                                    View All →
+                                  </button>
+                                </div>
+                                <div style={{ 
+                                  display: 'grid', 
+                                  gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
+                                  gap: '1rem' 
+                                }}>
+                                  {loyaltyPrograms.slice(0, 3).map(program => (
+                                    <ProgramCard 
+                                      key={program.id} 
+                                      program={program} 
+                                      onClick={handleProgramClick} 
+                                    />
+                                  ))}
+                                </div>
+                              </div>
                             </>
                           ) : (
                             <RFMDashboard 
@@ -684,7 +782,7 @@ const App = () => {
 
       {/* Modal Overlays */}
       
-      {/* Campaign Detail View */}
+      {/* ✅ FIXED: Campaign Detail View - Pass selectedCampaign properly */}
       {selectedCampaign && (
         <DetailView
           item={selectedCampaign}
@@ -695,7 +793,7 @@ const App = () => {
         />
       )}
 
-      {/* Program Detail View */}
+      {/* ✅ FIXED: Program Detail View - Pass selectedProgram properly */}
       {selectedProgram && (
         <DetailView
           item={selectedProgram}
