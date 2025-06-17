@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import { ArrowRight, AlertTriangle, MoreVertical, Lightbulb, Brain, Mail } from 'lucide-react';
+import '../../styles/CardStyles.css'; // ✅ ADDED: Import card styles
 
 const CampaignCard = ({ campaign, onClick }) => {
   const [showQuickActions, setShowQuickActions] = useState(false);
@@ -47,63 +48,45 @@ const CampaignCard = ({ campaign, onClick }) => {
         });
       } else if (openRate < 15) {
         insights.push({
+          type: 'negative',
+          text: `Low open rate at ${openRate}% - consider improving subject line`
+        });
+      }
+      
+      if (clickRate > 15) {
+        insights.push({
+          type: 'positive',
+          text: `Good click-through rate at ${clickRate}%`
+        });
+      } else if (clickRate < 5) {
+        insights.push({
           type: 'negative', 
-          text: `Low open rate at ${openRate}% - subject line optimization needed`
+          text: `Low click-through rate at ${clickRate}% - review content and CTAs`
         });
       }
       
-      if (clickRate > 3) {
+      if (campaign.roi > 300) {
         insights.push({
           type: 'positive',
-          text: `High engagement with ${clickRate}% click rate`
+          text: `Excellent ROI at ${campaign.roi}% - consider scaling similar campaigns`
         });
-      } else if (clickRate < 2) {
+      } else if (campaign.roi < 50) {
         insights.push({
           type: 'negative',
-          text: `Low click rate at ${clickRate}% - content optimization needed`
-        });
-      }
-      
-      if (campaign.roi > 500) {
-        insights.push({
-          type: 'positive',
-          text: `Excellent ROI at ${campaign.roi}% - consider scaling`
-        });
-      } else if (campaign.roi < 100) {
-        insights.push({
-          type: 'negative',
-          text: `Low ROI at ${campaign.roi}% - requires optimization`
-        });
-      }
-
-      // Revenue insights
-      if (campaign.revenue > 100000) {
-        insights.push({
-          type: 'positive',
-          text: `Strong revenue generation driving significant impact`
-        });
-      }
-
-      if (conversionRate > 5) {
-        insights.push({
-          type: 'positive',
-          text: `High conversion rate indicates excellent audience targeting`
+          text: `ROI needs improvement at ${campaign.roi}%`
         });
       }
     }
     
-    return insights.slice(0, 3); // Limit to 3 insights
+    return insights.slice(0, 2); // Limit to top 2 insights
   };
 
   const insights = generateInsights();
 
   return (
     <div 
-      className="card campaign-card slide-in"
-      onClick={() => {
-        onClick(campaign);
-        setShowQuickActions(false);
-      }}
+      className="card"
+      onClick={() => onClick(campaign)}
       style={{
         position: 'relative',
         display: 'flex',
@@ -199,7 +182,7 @@ const CampaignCard = ({ campaign, onClick }) => {
           {campaign.type} • {campaign.audience}
         </p>
           
-        {/* Fixed Action Message Container - SAME as Program Card */}
+        {/* ✅ FIXED: Action Message Container with fallback text */}
         <div style={{
           marginTop: '1rem',
           minHeight: '5rem',
@@ -236,7 +219,7 @@ const CampaignCard = ({ campaign, onClick }) => {
                   color: 'rgba(0, 0, 0, 0.7)',
                   lineHeight: 1.4
                 }}>
-                  {campaign.attentionReason}
+                  {campaign.attentionReason || 'This campaign needs immediate attention - optimization required'}
                 </div>
               </div>
             </div>
@@ -244,105 +227,86 @@ const CampaignCard = ({ campaign, onClick }) => {
         </div>
 
         {/* Expandable Insights Section */}
-        {showInsights && insights.length > 0 && (
-          <div className="insights-section slide-down" style={{
-            marginTop: '1rem',
-            padding: '0.75rem',
-            backgroundColor: 'rgba(26, 76, 73, 0.02)',
-            borderRadius: '0.5rem',
-            border: '1px solid rgba(26, 76, 73, 0.1)'
+        {insights.length > 0 && (
+          <div style={{
+            marginTop: 'auto',
+            paddingTop: '1rem'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
-              <Brain 
-                size={14} 
+            <button
+              onClick={toggleInsights}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.8125rem',
+                color: 'rgba(0, 0, 0, 0.6)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0,
+                width: '100%',
+                justifyContent: 'flex-start'
+              }}
+            >
+              <Brain size={14} style={{ color: '#1A4C49' }} />
+              <span>AI Insights</span>
+              <ArrowRight 
+                size={12} 
                 style={{ 
-                  color: '#1A4C49', 
-                  marginRight: '0.5rem' 
+                  color: 'rgba(0, 0, 0, 0.4)',
+                  transform: showInsights ? 'rotate(90deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s'
                 }} 
               />
-              <span style={{ 
-                fontSize: '0.75rem', 
-                fontWeight: 600, 
-                color: 'rgba(0, 0, 0, 0.87)'
+            </button>
+            
+            {showInsights && (
+              <div style={{
+                marginTop: '0.75rem',
+                padding: '0.75rem',
+                backgroundColor: 'rgba(26, 76, 73, 0.05)',
+                borderRadius: '0.5rem',
+                border: '1px solid rgba(26, 76, 73, 0.1)'
               }}>
-                AI Insights
-              </span>
-            </div>
-            {insights.map((insight, index) => (
-              <div key={index} style={{ 
-                display: 'flex', 
-                alignItems: 'flex-start', 
-                marginBottom: index < insights.length - 1 ? '0.5rem' : 0 
-              }}>
-                <div style={{
-                  width: '0.75rem',
-                  height: '0.75rem',
-                  borderRadius: '50%',
-                  backgroundColor: insight.type === 'positive' ? 
-                    'rgba(76, 175, 80, 0.15)' : 'rgba(244, 67, 54, 0.15)',
-                  border: `2px solid ${insight.type === 'positive' ? '#4CAF50' : '#F44336'}`,
-                  marginRight: '0.5rem',
-                  marginTop: '0.125rem',
-                  flexShrink: 0
-                }} />
-                <span style={{ 
-                  fontSize: '0.75rem', 
-                  color: 'rgba(0, 0, 0, 0.6)',
-                  lineHeight: 1.4
-                }}>
-                  {insight.text}
-                </span>
+                {insights.map((insight, index) => (
+                  <div key={index} style={{
+                    fontSize: '0.75rem',
+                    color: insight.type === 'positive' ? '#4CAF50' : '#F44336',
+                    marginBottom: index < insights.length - 1 ? '0.5rem' : 0,
+                    lineHeight: 1.4
+                  }}>
+                    • {insight.text}
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
         )}
       </div>
-
-      {/* Fixed Metrics Section - Bottom Aligned SAME as Program Card */}
-      <div style={{
-        flex: 1,
-        padding: '0 1.5rem',
-        backgroundColor: 'white',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'flex-end',
-        minHeight: '120px'
+      
+      {/* Performance Metrics Section */}
+      <div style={{ 
+        borderTop: '1px solid rgba(0, 0, 0, 0.06)',
+        backgroundColor: 'rgba(0, 0, 0, 0.01)',
+        padding: '1rem 1.5rem 0.75rem'
       }}>
         {hasNoData ? (
           <div style={{
             textAlign: 'center',
-            padding: '2rem 1rem',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '0.75rem'
+            padding: '1.5rem 0',
+            color: 'rgba(0, 0, 0, 0.6)'
           }}>
+            <Mail size={24} style={{ 
+              marginBottom: '0.5rem',
+              color: 'rgba(0, 0, 0, 0.3)'
+            }} />
             <div style={{
-              width: '3rem',
-              height: '3rem',
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, rgba(26, 76, 73, 0.1) 0%, rgba(77, 152, 146, 0.15) 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              marginBottom: '0.25rem'
             }}>
-              <Mail size={20} style={{ color: '#1A4C49' }} />
-            </div>
-            <div>
-              <p style={{
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                color: 'rgba(0, 0, 0, 0.87)',
-                marginBottom: '0.25rem'
-              }}>
-                Awaiting Campaign Launch
-              </p>
-              <span style={{
-                fontSize: '0.75rem',
-                color: 'rgba(0, 0, 0, 0.6)'
-              }}>
-                {campaign.status === 'Scheduled' ? 'Scheduled to launch soon' : 'Ready to send'}
-              </span>
+              {campaign.status === 'Scheduled' ? 
+                'Scheduled to launch soon' : 'Ready to send'}
             </div>
           </div>
         ) : (
@@ -445,10 +409,10 @@ const CampaignCard = ({ campaign, onClick }) => {
               <div style={{
                 fontSize: '1rem',
                 fontWeight: 600,
-                color: campaign.roi > 0 ? '#4CAF50' : campaign.roi < 0 ? '#F44336' : 'rgba(0, 0, 0, 0.87)',
+                color: campaign.roi >= 100 ? '#4CAF50' : campaign.roi >= 50 ? '#FF9800' : '#F44336',
                 lineHeight: 1.2
               }}>
-                {hasNoData ? 'N/A' : `${campaign.roi}%`}
+                {campaign.roi}%
               </div>
             </div>
             
