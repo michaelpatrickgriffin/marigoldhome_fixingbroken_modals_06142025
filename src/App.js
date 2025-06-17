@@ -73,6 +73,8 @@ const App = () => {
   const [selectedKpi, setSelectedKpi] = useState(null);
   const [showSplitTestModal, setShowSplitTestModal] = useState(false);
   const [successToast, setSuccessToast] = useState(null);
+  const [campaignFilter, setCampaignFilter] = useState('all');
+const [programFilter, setProgramFilter] = useState('all');
   
   // Profile and notification state
   const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
@@ -83,7 +85,7 @@ const App = () => {
   const [dashboardView, setDashboardView] = useState('overview');
   const [showRFMInfo, setShowRFMInfo] = useState(false);
   const [hasShownPulse, setHasShownPulse] = useState(false);
-  const [currentProfile, setCurrentProfile] = useState(userProfiles[0]);
+  const [currentProfile, setCurrentProfile] = useState(userProfiles[3]);
   const [selectedBrand, setSelectedBrand] = useState(brandData[0]);
   
   // AI Assistant state
@@ -668,7 +670,7 @@ const App = () => {
                                     Active Campaigns
                                   </h3>
                                   <button 
-                                    onClick={() => setActiveTab('campaigns')}
+                                    onClick={() => setShowCampaignModal(true)}
                                     style={{
                                       fontSize: '0.875rem',
                                       color: COLORS.evergreen,
@@ -713,7 +715,7 @@ const App = () => {
                                     Loyalty Programs
                                   </h3>
                                   <button 
-                                    onClick={() => setActiveTab('loyalty')}
+                                    onClick={() => setShowLoyaltyModal(true)}
                                     style={{
                                       fontSize: '0.875rem',
                                       color: COLORS.evergreen,
@@ -818,6 +820,8 @@ const App = () => {
           isOpen={showCampaignModal}
           onClose={() => setShowCampaignModal(false)}
           campaigns={campaigns}
+          filter={campaignFilter}           // ✅ ADD THIS
+          setFilter={setCampaignFilter}     // ✅ ADD THIS
           onCampaignClick={handleCampaignClick}
           onCampaignCreated={handleCampaignCreated}
         />
@@ -829,6 +833,8 @@ const App = () => {
           isOpen={showLoyaltyModal}
           onClose={() => setShowLoyaltyModal(false)}
           programs={loyaltyPrograms}
+          filter={programFilter}            // ✅ ADD THIS
+          setFilter={setProgramFilter}      // ✅ ADD THIS
           onProgramClick={handleProgramClick}
           onProgramCreated={handleLoyaltyProgramCreated}
         />
