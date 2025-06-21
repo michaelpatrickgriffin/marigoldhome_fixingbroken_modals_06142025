@@ -1277,35 +1277,3 @@ export const getChangeColor = (kpiData) => {
     return isPositive ? '#E57373' : '#81C784'; // Red for positive, green for negative
   }
 };
-// ===== MISSING EXPORTS FOR DASHBOARD COMPONENTS =====
-
-// Export rfmData - Dashboard components expect this array format
-export const rfmData = rfmKpiData.map(kpi => ({
-  segment: kpi.title,
-  customerCount: parseInt(kpi.value.replace(/[K,]/g, '')) * (kpi.value.includes('K') ? 1000 : 1),
-  value: kpi.value,
-  change: kpi.change,
-  icon: kpi.icon,
-  iconBg: kpi.iconBg,
-  iconColor: kpi.iconColor,
-  changeColor: kpi.changeColor,
-  secondaryText: kpi.secondaryText,
-  segmentKey: kpi.segment,
-  isPositiveGrowthGood: kpi.isPositiveGrowthGood
-}));
-
-// Export rfmDetailData - Modal components expect this object format  
-export const rfmDetailData = {
-  "champions": segmentDataMap["champions"],
-  "loyal customers": segmentDataMap["loyal customers"], 
-  "potential loyalists": segmentDataMap["potential loyalists"],
-  "at risk": segmentDataMap["at risk"],
-  "can't lose": segmentDataMap["can't lose"],
-  
-  // Additional key formats for compatibility
-  "Champions": segmentDataMap["champions"],
-  "Loyal Customers": segmentDataMap["loyal customers"],
-  "Potential Loyalists": segmentDataMap["potential loyalists"],
-  "At Risk": segmentDataMap["at risk"],
-  "Can't Lose": segmentDataMap["can't lose"]
-};

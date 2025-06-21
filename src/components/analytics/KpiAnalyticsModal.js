@@ -1,267 +1,226 @@
-// src/components/analytics/KpiAnalyticsModal.js - Updated for Modal System
-import React, { useState, useEffect } from 'react';
-import { Lightbulb, X, TrendingUp, TrendingDown, BarChart3, PieChart, LineChart, Calendar, Filter, Download, Share2, ArrowUpRight, ArrowDownRight, Target, DollarSign, Users, Percent, Clock, Award, Zap, AlertCircle, CheckCircle, Info } from 'lucide-react';
-import { COLORS } from '../../styles/ColorStyles';
+// src/components/analytics/KpiAnalyticsModal.js - FIXED HOOKS VERSION
 
+import React, { useState, useEffect } from 'react';
+import { X, Download, Filter } from 'lucide-react';
+import { COLORS } from '../../styles/ColorStyles';
+import RevenueAnalyticsContent from './RevenueAnalyticsContent';
+import CustomerAnalyticsContent from './CustomerAnalyticsContent';
+import EngagementAnalyticsContent from './EngagementAnalyticsContent';
+import ConversionAnalyticsContent from './ConversionAnalyticsContent';
+import AudienceAnalyticsContent from './AudienceAnalyticsContent';
+
+// KPI Analytics Modal Component
 const KpiAnalyticsModal = ({ 
   isOpen, 
   onClose, 
-  kpi, 
-  comparisonPeriod = 'last_30_days',
-  // New modal system props
-  onNavigate,
-  onGoBack,
-  currentView = 'main',
-  viewData = {},
-  canGoBack = false,
-  modalId,
-  isModal = false
+  kpiType,
+  dateRange,
+  setDateRange 
 }) => {
-  const [selectedPeriod, setSelectedPeriod] = useState(comparisonPeriod);
+  // ✅ FIXED: All hooks at top level - no conditional hooks
   const [activeTab, setActiveTab] = useState('overview');
-  const [isLoading, setIsLoading] = useState(false);
-  const [chartType, setChartType] = useState('line');
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [comparisonPeriod, setComparisonPeriod] = useState('previous_period');
+  const [segment, setSegment] = useState('all');
+  const [granularity, setGranularity] = useState('daily');
+  const [isVisible, setIsVisible] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
 
-  // Use viewData when in modal system mode
-  const currentKpi = viewData?.kpi || kpi;
-
-  // Mock KPI data generation
-  const generateKpiData = (kpiName, period) => {
-    const baseValue = Math.floor(Math.random() * 100000) + 10000;
-    const trend = Math.random() > 0.5 ? 'up' : 'down';
-    const changePercent = (Math.random() * 20).toFixed(1);
-    
-    return {
-      name: kpiName || 'Revenue',
-      value: `$${baseValue.toLocaleString()}`,
-      rawValue: baseValue,
-      change: `${trend === 'up' ? '+' : '-'}${changePercent}%`,
-      trend: trend,
-      period: period,
-      data: Array.from({ length: 30 }, (_, i) => ({
-        date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        value: baseValue + (Math.random() - 0.5) * baseValue * 0.3
-      })),
-      breakdown: [
-        { category: 'Direct Sales', value: baseValue * 0.4, percentage: 40 },
-        { category: 'Email Campaigns', value: baseValue * 0.3, percentage: 30 },
-        { category: 'Social Media', value: baseValue * 0.2, percentage: 20 },
-        { category: 'Other', value: baseValue * 0.1, percentage: 10 }
-      ],
-      segments: [
-        { name: 'VIP Customers', value: baseValue * 0.35, change: '+15%', trend: 'up' },
-        { name: 'Regular Customers', value: baseValue * 0.45, change: '+8%', trend: 'up' },
-        { name: 'New Customers', value: baseValue * 0.20, change: '-5%', trend: 'down' }
-      ],
-      insights: [
-        {
-          type: 'positive',
-          title: 'Strong Growth Trajectory',
-          description: 'KPI has shown consistent growth over the selected period with strong performance in key segments.'
-        },
-        {
-          type: 'warning',
-          title: 'Seasonal Variance Detected',
-          description: 'Performance shows weekly patterns that could be optimized with targeted campaigns.'
-        },
-        {
-          type: 'info',
-          title: 'Benchmark Comparison',
-          description: 'Current performance is 15% above industry average for similar businesses.'
-        }
-      ]
-    };
-  };
-
-  const [kpiData, setKpiData] = useState(() => generateKpiData(currentKpi?.name, selectedPeriod));
-
-  // Update data when KPI or period changes
+  // Animation effect
   useEffect(() => {
-    if (currentKpi) {
-      setIsLoading(true);
-      setTimeout(() => {
-        setKpiData(generateKpiData(currentKpi.name, selectedPeriod));
-        setIsLoading(false);
-      }, 500);
+    if (isOpen) {
+      setIsClosing(false);
+      const timer = setTimeout(() => {
+        setIsVisible(true);
+      }, 50);
+      return () => clearTimeout(timer);
+    } else {
+      setIsVisible(false);
     }
-  }, [currentKpi, selectedPeriod]);
+  }, [isOpen]);
 
-  // Handle period change
-  const handlePeriodChange = (newPeriod) => {
-    setSelectedPeriod(newPeriod);
-  };
-
-  // Handle drill-down navigation
-  const handleDrillDown = (type, data) => {
-    if (onNavigate) {
-      onNavigate('drill-down', {
-        type,
-        data,
-        kpi: currentKpi,
-        kpiData: kpiData,
-        selectedPeriod
-      });
-    }
-  };
-
-  // Handle export
-  const handleExport = () => {
-    console.log('Exporting KPI data:', kpiData);
-    // In a real app, this would trigger a download
-  };
-
-  // Handle close
+  // Handle close with animation
   const handleClose = () => {
-    if (isModal && onGoBack) {
-      onGoBack();
-    } else if (onClose) {
-      onClose();
-    }
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsVisible(false);
+      setTimeout(() => {
+        onClose();
+      }, 100);
+    }, 200);
   };
 
-  // Render different views based on currentView
-  const renderCurrentView = () => {
-    switch (currentView) {
-      case 'drill-down':
-        return (
-          <DrillDownView
-            type={viewData.type}
-            data={viewData.data}
-            kpi={viewData.kpi}
-            kpiData={viewData.kpiData}
-            selectedPeriod={viewData.selectedPeriod}
-            onGoBack={() => onNavigate('main')}
-          />
-        );
-      case 'comparison':
-        return (
-          <ComparisonView
-            kpi={currentKpi}
-            kpiData={kpiData}
-            selectedPeriod={selectedPeriod}
-            onGoBack={() => onNavigate('main')}
-          />
-        );
-      case 'forecast':
-        return (
-          <ForecastView
-            kpi={currentKpi}
-            kpiData={kpiData}
-            selectedPeriod={selectedPeriod}
-            onGoBack={() => onNavigate('main')}
-          />
-        );
+  // Get the appropriate title based on KPI type
+  const getTitle = () => {
+    switch(kpiType) {
+      case 'revenue':
+        return 'Revenue Analysis';
+      case 'customers':
+        return 'Customer Analysis';
+      case 'engagement':
+        return 'Engagement Analysis';
+      case 'conversion':
+        return 'Conversion Analysis';
+      case 'audience':
+        return 'Audience Breakdown';
       default:
-        return renderMainView();
+        return 'KPI Analysis';
     }
   };
 
-  // Main view with tabs
-  const renderMainView = () => {
-    const tabs = [
-      { id: 'overview', label: 'Overview', icon: BarChart3 },
-      { id: 'trends', label: 'Trends', icon: TrendingUp },
-      { id: 'breakdown', label: 'Breakdown', icon: PieChart },
-      { id: 'insights', label: 'Insights', icon: Lightbulb }
-    ];
-
-    const getTabContent = () => {
-      switch (activeTab) {
-        case 'overview':
-          return <OverviewTab kpiData={kpiData} onDrillDown={handleDrillDown} />;
-        case 'trends':
-          return <TrendsTab kpiData={kpiData} chartType={chartType} setChartType={setChartType} />;
-        case 'breakdown':
-          return <BreakdownTab kpiData={kpiData} onDrillDown={handleDrillDown} />;
-        case 'insights':
-          return <InsightsTab kpiData={kpiData} onNavigate={onNavigate} />;
-        default:
-          return <OverviewTab kpiData={kpiData} onDrillDown={handleDrillDown} />;
-      }
+  // Get the appropriate content component based on KPI type
+  const renderContent = () => {
+    const commonProps = {
+      activeTab,
+      onTabChange: setActiveTab,
+      comparisonPeriod,
+      segment,
+      granularity
     };
 
-    return (
-      <>
-        {/* Header */}
-        <div style={{
-          padding: '1.5rem 2rem',
+    switch(kpiType) {
+      case 'revenue':
+        return <RevenueAnalyticsContent {...commonProps} />;
+      case 'customers':
+        return <CustomerAnalyticsContent {...commonProps} />;
+      case 'engagement':
+        return <EngagementAnalyticsContent {...commonProps} />;
+      case 'conversion':
+        return <ConversionAnalyticsContent {...commonProps} />;
+      case 'audience':
+        return <AudienceAnalyticsContent {...commonProps} />;
+      default:
+        return <div style={{ padding: '2rem', textAlign: 'center', color: COLORS.onyxMedium }}>
+          Select a KPI to analyze
+        </div>;
+    }
+  };
+
+  // Early return if not open - but after all hooks have been called
+  if (!isOpen) return null;
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100%',
+        height: '100%',
+        backgroundColor: '#f5f7f8',
+        zIndex: 70000, // ✅ FIXED: Proper z-index above other modals
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        opacity: isVisible && !isClosing ? 1 : 0,
+        transition: 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+      }}
+    >
+      <div
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          transform: isVisible && !isClosing 
+            ? 'translateY(0) scale(1)' 
+            : isClosing 
+              ? 'translateY(100%) scale(0.98)'
+              : 'translateY(100%) scale(0.98)',
+          transition: isClosing 
+            ? 'all 0.3s cubic-bezier(0.4, 0, 1, 1)'
+            : 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+          transformOrigin: 'center bottom'
+        }}
+      >
+        {/* Modal Header */}
+        <div style={{ 
+          padding: '1.5rem',
           borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
           backgroundColor: 'white',
-          flexShrink: 0
+          zIndex: 70001
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div style={{ flex: 1 }}>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: COLORS.onyx, margin: '0 0 0.5rem 0' }}>
-                {currentKpi?.name || 'KPI Analysis'}
+          <div style={{
+            maxWidth: '80rem',
+            width: '100%',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingLeft: '1.5rem',
+            paddingRight: '1.5rem'
+          }}>
+            <div>
+              <h2 style={{ 
+                fontSize: '1.5rem', 
+                fontWeight: 600, 
+                color: COLORS.onyx,
+                margin: 0,
+                marginBottom: '0.25rem'
+              }}>
+                {getTitle()}
               </h2>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '1rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ fontSize: '2rem', fontWeight: 700, color: COLORS.onyx }}>
-                    {kpiData.value}
-                  </span>
-                  <span style={{ 
-                    fontSize: '1rem', 
-                    fontWeight: 500,
-                    color: kpiData.trend === 'up' ? COLORS.evergreen : COLORS.red,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.25rem'
-                  }}>
-                    {kpiData.trend === 'up' ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
-                    {kpiData.change}
-                  </span>
-                </div>
-              </div>
-              <p style={{ fontSize: '0.875rem', color: COLORS.onyxMedium, margin: 0 }}>
-                Performance analysis for the selected period
+              <p style={{ 
+                fontSize: '0.875rem', 
+                color: COLORS.onyxMedium,
+                margin: 0
+              }}>
+                {dateRange === 'last_30_days' ? 'Last 30 Days' : 
+                 dateRange === 'last_quarter' ? 'Last Quarter' : 
+                 dateRange === 'ytd' ? 'Year to Date' : 
+                 'Last 30 Days'} • Columbia Sportswear
               </p>
             </div>
             
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              {/* Period Selector */}
-              <select
-                value={selectedPeriod}
-                onChange={(e) => handlePeriodChange(e.target.value)}
-                style={{
-                  padding: '0.5rem 1rem',
-                  borderRadius: '0.5rem',
-                  border: '1px solid rgba(0, 0, 0, 0.1)',
-                  fontSize: '0.875rem',
-                  backgroundColor: 'white',
-                  color: COLORS.onyx,
-                  cursor: 'pointer'
-                }}
-              >
-                <option value="last_7_days">Last 7 Days</option>
-                <option value="last_30_days">Last 30 Days</option>
-                <option value="last_90_days">Last 90 Days</option>
-                <option value="last_year">Last Year</option>
-              </select>
-              
-              {/* Action Buttons */}
-              <button
-                onClick={handleExport}
-                style={{
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <button 
+                onClick={() => setFilterOpen(!filterOpen)}
+                style={{ 
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.5rem 1rem',
-                  backgroundColor: 'white',
-                  border: '1px solid rgba(0, 0, 0, 0.1)',
-                  borderRadius: '0.5rem',
-                  color: COLORS.onyx,
+                  justifyContent: 'center',
+                  padding: '0.5rem 0.75rem',
                   fontSize: '0.875rem',
+                  fontWeight: 500,
+                  color: filterOpen ? 'white' : COLORS.onyxMedium,
+                  backgroundColor: filterOpen ? COLORS.evergreen : 'transparent',
+                  border: `1px solid ${filterOpen ? COLORS.evergreen : 'rgba(0,0,0,0.1)'}`,
+                  borderRadius: '0.375rem',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease'
                 }}
               >
-                <Download size={16} />
+                <Filter size={16} style={{ marginRight: '0.5rem' }} />
+                Filters
+              </button>
+              
+              <button 
+                style={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '0.5rem 0.75rem',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  color: COLORS.onyxMedium,
+                  backgroundColor: 'transparent',
+                  border: '1px solid rgba(0,0,0,0.1)',
+                  borderRadius: '0.375rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <Download size={16} style={{ marginRight: '0.5rem' }} />
                 Export
               </button>
               
-              <button
+              <button 
                 onClick={handleClose}
-                style={{
+                style={{ 
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -269,626 +228,216 @@ const KpiAnalyticsModal = ({
                   height: '2.5rem',
                   borderRadius: '50%',
                   color: COLORS.onyxMedium,
-                  background: 'none',
+                  backgroundColor: 'transparent',
                   border: 'none',
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease'
+                  transition: 'background-color 0.2s ease'
                 }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(0,0,0,0.05)'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
               >
                 <X size={20} />
               </button>
             </div>
           </div>
         </div>
-
-        {/* Navigation Tabs */}
+        
+        {/* Filter Panel - Only visible when filters are open */}
+        {filterOpen && (
+          <div style={{ 
+            padding: '1rem',
+            backgroundColor: 'rgba(0,0,0,0.02)',
+            borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+            display: 'flex',
+            justifyContent: 'center',
+            zIndex: 70001
+          }}>
+            <div style={{
+              maxWidth: '80rem',
+              width: '100%',
+              paddingLeft: '1.5rem',
+              paddingRight: '1.5rem',
+              display: 'flex',
+              gap: '2rem'
+            }}>
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  fontSize: '0.75rem', 
+                  fontWeight: 500, 
+                  color: COLORS.onyxMedium,
+                  marginBottom: '0.5rem'
+                }}>
+                  Date Range
+                </label>
+                <select 
+                  value={dateRange}
+                  onChange={(e) => setDateRange(e.target.value)}
+                  style={{ 
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '0.375rem',
+                    border: '1px solid rgba(0,0,0,0.1)',
+                    fontSize: '0.875rem',
+                    minWidth: '180px'
+                  }}
+                >
+                  <option value="last_30_days">Last 30 Days</option>
+                  <option value="last_quarter">Last Quarter</option>
+                  <option value="ytd">Year to Date</option>
+                  <option value="last_year">Last Year</option>
+                  <option value="custom">Custom Range</option>
+                </select>
+              </div>
+              
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  fontSize: '0.75rem', 
+                  fontWeight: 500, 
+                  color: COLORS.onyxMedium,
+                  marginBottom: '0.5rem'
+                }}>
+                  Compare To
+                </label>
+                <select 
+                  value={comparisonPeriod}
+                  onChange={(e) => setComparisonPeriod(e.target.value)}
+                  style={{ 
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '0.375rem',
+                    border: '1px solid rgba(0,0,0,0.1)',
+                    fontSize: '0.875rem',
+                    minWidth: '180px'
+                  }}
+                >
+                  <option value="previous_period">Previous Period</option>
+                  <option value="previous_year">Previous Year</option>
+                  <option value="none">No Comparison</option>
+                </select>
+              </div>
+              
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  fontSize: '0.75rem', 
+                  fontWeight: 500, 
+                  color: COLORS.onyxMedium,
+                  marginBottom: '0.5rem'
+                }}>
+                  Segment
+                </label>
+                <select 
+                  value={segment}
+                  onChange={(e) => setSegment(e.target.value)}
+                  style={{ 
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '0.375rem',
+                    border: '1px solid rgba(0,0,0,0.1)',
+                    fontSize: '0.875rem',
+                    minWidth: '180px'
+                  }}
+                >
+                  <option value="all">All Segments</option>
+                  <option value="outdoor_enthusiasts">Outdoor Enthusiasts</option>
+                  <option value="casual_hikers">Casual Hikers</option>
+                  <option value="winter_sports">Winter Sports</option>
+                  <option value="loyalty_members">Loyalty Members</option>
+                </select>
+              </div>
+              
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  fontSize: '0.75rem', 
+                  fontWeight: 500, 
+                  color: COLORS.onyxMedium,
+                  marginBottom: '0.5rem'
+                }}>
+                  Granularity
+                </label>
+                <select 
+                  value={granularity}
+                  onChange={(e) => setGranularity(e.target.value)}
+                  style={{ 
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '0.375rem',
+                    border: '1px solid rgba(0,0,0,0.1)',
+                    fontSize: '0.875rem',
+                    minWidth: '180px'
+                  }}
+                >
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="quarterly">Quarterly</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Tabs */}
         <div style={{
-          display: 'flex',
           borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+          display: 'flex',
+          justifyContent: 'center',
           backgroundColor: 'white',
-          flexShrink: 0,
-          paddingLeft: '2rem'
+          zIndex: 70001
         }}>
-          {tabs.map(tab => {
-            const IconComponent = tab.icon;
-            return (
+          <div style={{
+            maxWidth: '80rem',
+            width: '100%',
+            paddingLeft: '1.5rem',
+            paddingRight: '1.5rem',
+            display: 'flex',
+            gap: '2rem'
+          }}>
+            {['Overview', 'Trends', 'Breakdown', 'Recommendations'].map((tab) => (
               <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                key={tab}
+                onClick={() => setActiveTab(tab.toLowerCase())}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '1rem 1.5rem',
-                  color: activeTab === tab.id ? COLORS.evergreen : COLORS.onyxMedium,
+                  padding: '1rem 0',
+                  color: activeTab === tab.toLowerCase() ? COLORS.evergreen : COLORS.onyxMedium,
+                  fontWeight: activeTab === tab.toLowerCase() ? 600 : 500,
                   fontSize: '0.875rem',
-                  fontWeight: activeTab === tab.id ? 600 : 500,
+                  borderBottom: activeTab === tab.toLowerCase() ? `2px solid ${COLORS.evergreen}` : '2px solid transparent',
                   background: 'none',
                   border: 'none',
-                  borderBottom: activeTab === tab.id ? `2px solid ${COLORS.evergreen}` : '2px solid transparent',
                   cursor: 'pointer',
+                  borderRadius: 0,
                   transition: 'all 0.2s ease'
                 }}
               >
-                <IconComponent size={16} />
-                {tab.label}
+                {tab}
               </button>
-            );
-          })}
+            ))}
+          </div>
         </div>
-
-        {/* Tab Content */}
+        
+        {/* Modal Body - Dynamic content based on KPI type */}
         <div style={{ 
           flex: 1, 
-          overflow: 'auto',
-          backgroundColor: '#fafbfc'
-        }}>
-          {isLoading ? (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: '400px'
-            }}>
-              <div style={{
-                width: '3rem',
-                height: '3rem',
-                border: '3px solid rgba(26, 76, 73, 0.2)',
-                borderTopColor: COLORS.evergreen,
-                borderRadius: '50%',
-                animation: 'spin 1s linear infinite'
-              }} />
-            </div>
-          ) : (
-            getTabContent()
-          )}
-        </div>
-      </>
-    );
-  };
-
-  // For legacy mode (when not using modal system)
-  if (!isModal) {
-    if (!isOpen || !currentKpi) return null;
-    
-    return (
-      <div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          width: '100%',
-          height: '100%',
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          zIndex: 15500,
+          overflowY: 'auto',
           display: 'flex',
-          alignItems: 'center',
           justifyContent: 'center',
-          padding: '2rem',
-          backdropFilter: 'blur(4px)'
-        }}
-        onClick={(e) => {
-          if (e.target === e.currentTarget) {
-            onClose();
-          }
-        }}
-      >
-        <div
-          style={{
-            width: '90vw',
-            maxWidth: '1400px',
-            height: '85vh',
-            backgroundColor: 'white',
-            borderRadius: '1rem',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-            position: 'relative',
-            zIndex: 15501
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {renderMainView()}
+          position: 'relative',
+          zIndex: 70000
+        }}>
+          <div style={{
+            maxWidth: '80rem',
+            width: '100%',
+            paddingLeft: '1.5rem',
+            paddingRight: '1.5rem',
+            paddingTop: '1.5rem',
+            paddingBottom: '1.5rem'
+          }}>
+            {renderContent()}
+          </div>
         </div>
       </div>
-    );
-  }
-
-  // For modal system mode
-  return (
-    <div style={{ 
-      height: '100%',
-      display: 'flex',
-      flexDirection: 'column'
-    }}>
-      {renderCurrentView()}
-      
-      {/* CSS for spin animation */}
-      <style>
-        {`
-          @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-        `}
-      </style>
     </div>
   );
 };
-
-// Tab Components
-const OverviewTab = ({ kpiData, onDrillDown }) => (
-  <div style={{ padding: '2rem' }}>
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
-      {/* Performance Summary */}
-      <div style={{
-        backgroundColor: 'white',
-        borderRadius: '1rem',
-        padding: '2rem',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-      }}>
-        <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '1.5rem' }}>
-          Performance Summary
-        </h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>Current Value</span>
-            <span style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.onyx }}>
-              {kpiData.value}
-            </span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>Period Change</span>
-            <span style={{ 
-              fontSize: '1rem', 
-              fontWeight: 500,
-              color: kpiData.trend === 'up' ? COLORS.evergreen : COLORS.red 
-            }}>
-              {kpiData.change}
-            </span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>Trend</span>
-            <span style={{ 
-              fontSize: '0.875rem', 
-              fontWeight: 500,
-              color: kpiData.trend === 'up' ? COLORS.evergreen : COLORS.red,
-              textTransform: 'capitalize'
-            }}>
-              {kpiData.trend}ward
-            </span>
-          </div>
-        </div>
-        <button
-          onClick={() => onDrillDown('performance', kpiData)}
-          style={{
-            marginTop: '1rem',
-            padding: '0.5rem 1rem',
-            backgroundColor: COLORS.evergreen,
-            color: 'white',
-            border: 'none',
-            borderRadius: '0.5rem',
-            fontSize: '0.875rem',
-            cursor: 'pointer'
-          }}
-        >
-          View Details
-        </button>
-      </div>
-
-      {/* Quick Stats */}
-      <div style={{
-        backgroundColor: 'white',
-        borderRadius: '1rem',
-        padding: '2rem',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-      }}>
-        <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '1.5rem' }}>
-          Quick Stats
-        </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
-          <div style={{ textAlign: 'center', padding: '1rem', backgroundColor: 'rgba(26, 76, 73, 0.05)', borderRadius: '0.5rem' }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: 600, color: COLORS.onyx }}>
-              {Math.floor(kpiData.rawValue / 1000)}K
-            </div>
-            <div style={{ fontSize: '0.75rem', color: COLORS.onyxMedium }}>
-              Daily Avg
-            </div>
-          </div>
-          <div style={{ textAlign: 'center', padding: '1rem', backgroundColor: 'rgba(0, 123, 191, 0.05)', borderRadius: '0.5rem' }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: 600, color: COLORS.onyx }}>
-              {Math.floor(Math.random() * 50) + 20}
-            </div>
-            <div style={{ fontSize: '0.75rem', color: COLORS.onyxMedium }}>
-              Peak Days
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    {/* Segment Performance */}
-    <div style={{
-      backgroundColor: 'white',
-      borderRadius: '1rem',
-      padding: '2rem',
-      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-    }}>
-      <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '1.5rem' }}>
-        Performance by Segment
-      </h3>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        {kpiData.segments.map((segment, index) => (
-          <div 
-            key={index}
-            onClick={() => onDrillDown('segment', segment)}
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '1rem',
-              backgroundColor: 'rgba(0, 0, 0, 0.02)',
-              borderRadius: '0.5rem',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(26, 76, 73, 0.05)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.02)';
-            }}
-          >
-            <div>
-              <div style={{ fontSize: '1rem', fontWeight: 500, color: COLORS.onyx }}>
-                {segment.name}
-              </div>
-              <div style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>
-                ${segment.value.toLocaleString()}
-              </div>
-            </div>
-            <div style={{ 
-              fontSize: '0.875rem', 
-              fontWeight: 500,
-              color: segment.trend === 'up' ? COLORS.evergreen : COLORS.red,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.25rem'
-            }}>
-              {segment.trend === 'up' ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
-              {segment.change}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  </div>
-);
-
-const TrendsTab = ({ kpiData, chartType, setChartType }) => (
-  <div style={{ padding: '2rem' }}>
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-      <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.onyx, margin: 0 }}>
-        Trend Analysis
-      </h3>
-      <div style={{ display: 'flex', gap: '0.5rem' }}>
-        {['line', 'bar', 'area'].map(type => (
-          <button
-            key={type}
-            onClick={() => setChartType(type)}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: chartType === type ? COLORS.evergreen : 'white',
-              color: chartType === type ? 'white' : COLORS.onyx,
-              border: '1px solid rgba(0, 0, 0, 0.1)',
-              borderRadius: '0.5rem',
-              fontSize: '0.875rem',
-              cursor: 'pointer',
-              textTransform: 'capitalize'
-            }}
-          >
-            {type}
-          </button>
-        ))}
-      </div>
-    </div>
-    
-    <div style={{
-      backgroundColor: 'white',
-      borderRadius: '1rem',
-      padding: '2rem',
-      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-      height: '400px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center'
-    }}>
-      <div style={{ textAlign: 'center', color: COLORS.onyxMedium }}>
-        <BarChart3 size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
-        <p>Interactive {chartType} chart would be displayed here</p>
-        <p style={{ fontSize: '0.875rem' }}>
-          Showing {kpiData.data.length} data points over the selected period
-        </p>
-      </div>
-    </div>
-  </div>
-);
-
-const BreakdownTab = ({ kpiData, onDrillDown }) => (
-  <div style={{ padding: '2rem' }}>
-    <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '2rem' }}>
-      Performance Breakdown
-    </h3>
-    
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
-      {kpiData.breakdown.map((item, index) => (
-        <div 
-          key={index}
-          onClick={() => onDrillDown('breakdown', item)}
-          style={{
-            backgroundColor: 'white',
-            borderRadius: '1rem',
-            padding: '2rem',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <h4 style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.onyx, margin: 0 }}>
-              {item.category}
-            </h4>
-            <ArrowUpRight size={16} color={COLORS.onyxMedium} />
-          </div>
-          <div style={{ marginBottom: '1rem' }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: COLORS.onyx }}>
-              ${item.value.toLocaleString()}
-            </div>
-            <div style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>
-              {item.percentage}% of total
-            </div>
-          </div>
-          <div style={{
-            width: '100%',
-            height: '4px',
-            backgroundColor: 'rgba(0, 0, 0, 0.1)',
-            borderRadius: '2px',
-            overflow: 'hidden'
-          }}>
-            <div style={{
-              width: `${item.percentage}%`,
-              height: '100%',
-              backgroundColor: COLORS.evergreen,
-              transition: 'width 0.3s ease'
-            }} />
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-);
-
-const InsightsTab = ({ kpiData, onNavigate }) => (
-  <div style={{ padding: '2rem' }}>
-    <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '2rem' }}>
-      AI-Powered Insights
-    </h3>
-    
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      {kpiData.insights.map((insight, index) => {
-        const icons = {
-          positive: CheckCircle,
-          warning: AlertCircle,
-          info: Info
-        };
-        const colors = {
-          positive: COLORS.evergreen,
-          warning: COLORS.amber,
-          info: COLORS.blue
-        };
-        const IconComponent = icons[insight.type];
-        
-        return (
-          <div 
-            key={index}
-            style={{
-              backgroundColor: 'white',
-              borderRadius: '1rem',
-              padding: '2rem',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-              borderLeft: `4px solid ${colors[insight.type]}`
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
-              <div style={{
-                width: '2.5rem',
-                height: '2.5rem',
-                borderRadius: '50%',
-                backgroundColor: `${colors[insight.type]}20`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0
-              }}>
-                <IconComponent size={16} color={colors[insight.type]} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <h4 style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.onyx, margin: '0 0 0.5rem 0' }}>
-                  {insight.title}
-                </h4>
-                <p style={{ fontSize: '0.875rem', color: COLORS.onyxMedium, lineHeight: '1.5', margin: 0 }}>
-                  {insight.description}
-                </p>
-              </div>
-            </div>
-          </div>
-        );
-      })}
-      
-      {/* Action Buttons */}
-      <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-        <button
-          onClick={() => onNavigate && onNavigate('comparison')}
-          style={{
-            padding: '0.75rem 1.5rem',
-            backgroundColor: COLORS.evergreen,
-            color: 'white',
-            border: 'none',
-            borderRadius: '0.5rem',
-            fontSize: '0.875rem',
-            cursor: 'pointer'
-          }}
-        >
-          Compare with Benchmarks
-        </button>
-        <button
-          onClick={() => onNavigate && onNavigate('forecast')}
-          style={{
-            padding: '0.75rem 1.5rem',
-            backgroundColor: COLORS.blue,
-            color: 'white',
-            border: 'none',
-            borderRadius: '0.5rem',
-            fontSize: '0.875rem',
-            cursor: 'pointer'
-          }}
-        >
-          View Forecast
-        </button>
-      </div>
-    </div>
-  </div>
-);
-
-// Drill-down views
-const DrillDownView = ({ type, data, kpi, kpiData, selectedPeriod, onGoBack }) => (
-  <div style={{ padding: '2rem', height: '100%', overflow: 'auto' }}>
-    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-      <button
-        onClick={onGoBack}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '2rem',
-          height: '2rem',
-          borderRadius: '50%',
-          backgroundColor: COLORS.evergreen,
-          color: 'white',
-          border: 'none',
-          cursor: 'pointer'
-        }}
-      >
-        ←
-      </button>
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: COLORS.onyx, margin: 0 }}>
-        {type === 'segment' ? `${data.name} Details` : 
-         type === 'breakdown' ? `${data.category} Analysis` : 
-         `${kpi.name} Deep Dive`}
-      </h2>
-    </div>
-    
-    <div style={{
-      backgroundColor: 'white',
-      borderRadius: '1rem',
-      padding: '2rem',
-      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-    }}>
-      <p style={{ color: COLORS.onyxMedium, lineHeight: '1.5' }}>
-        Detailed analysis for {type === 'segment' ? data.name : type === 'breakdown' ? data.category : kpi.name} would be displayed here.
-        This could include deeper metrics, historical comparisons, and actionable insights.
-      </p>
-    </div>
-  </div>
-);
-
-const ComparisonView = ({ kpi, kpiData, selectedPeriod, onGoBack }) => (
-  <div style={{ padding: '2rem', height: '100%', overflow: 'auto' }}>
-    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-      <button
-        onClick={onGoBack}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '2rem',
-          height: '2rem',
-          borderRadius: '50%',
-          backgroundColor: COLORS.evergreen,
-          color: 'white',
-          border: 'none',
-          cursor: 'pointer'
-        }}
-      >
-        ←
-      </button>
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: COLORS.onyx, margin: 0 }}>
-        Benchmark Comparison
-      </h2>
-    </div>
-    
-    <div style={{
-      backgroundColor: 'white',
-      borderRadius: '1rem',
-      padding: '2rem',
-      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-    }}>
-      <p style={{ color: COLORS.onyxMedium, lineHeight: '1.5' }}>
-        Benchmark comparison for {kpi.name} would be displayed here.
-        This includes industry averages, competitor analysis, and performance rankings.
-      </p>
-    </div>
-  </div>
-);
-
-const ForecastView = ({ kpi, kpiData, selectedPeriod, onGoBack }) => (
-  <div style={{ padding: '2rem', height: '100%', overflow: 'auto' }}>
-    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-      <button
-        onClick={onGoBack}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '2rem',
-          height: '2rem',
-          borderRadius: '50%',
-          backgroundColor: COLORS.evergreen,
-          color: 'white',
-          border: 'none',
-          cursor: 'pointer'
-        }}
-      >
-        ←
-      </button>
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: COLORS.onyx, margin: 0 }}>
-        Performance Forecast
-      </h2>
-    </div>
-    
-    <div style={{
-      backgroundColor: 'white',
-      borderRadius: '1rem',
-      padding: '2rem',
-      boxShadow: '0 2: 8px rgba(0, 0, 0, 0.1)'
-    }}>
-      <p style={{ color: COLORS.onyxMedium, lineHeight: '1.5' }}>
-        AI-powered forecast for {kpi.name} would be displayed here.
-        This includes predictive analytics, trend projections, and confidence intervals.
-      </p>
-    </div>
-  </div>
-);
 
 export default KpiAnalyticsModal;

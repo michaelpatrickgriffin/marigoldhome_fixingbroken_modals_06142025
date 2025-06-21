@@ -1,594 +1,432 @@
-// src/components/campaigns/CampaignList.js - Updated for Modal System
-import React, { useState, useEffect } from 'react';
-import { Mail, Users, Calendar, TrendingUp, TrendingDown, MoreHorizontal, Play, Pause, Edit, Trash2, Copy, BarChart3, Target, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+// src/components/campaigns/CampaignList.js
+import React, { useState } from 'react';
+import { X } from 'lucide-react';
 import { COLORS } from '../../styles/ColorStyles';
-import { useCommonModals } from '../common/ModalManager';
-import DetailView from '../common/DetailView';
-import SplitCampaignCreationModal from './SplitCampaignCreationModal';
+import CampaignCard from './CampaignCard';
+import CampaignDetailView from './CampaignDetailView';
 
-export const CampaignList = ({ 
-  campaigns = [], 
-  onCampaignSelect, 
-  onCampaignEdit,
-  onCampaignDuplicate,
-  onCampaignDelete 
-}) => {
-  const [hoveredCampaign, setHoveredCampaign] = useState(null);
-  const [sortBy, setSortBy] = useState('date');
-  const [filterBy, setFilterBy] = useState('all');
-  
-  // Use the new modal system
-  const { openDetailModal, openCampaignModal, openConfirmationModal } = useCommonModals();
+// Campaign List Component
+export const CampaignList = ({ campaigns, onViewAllClick, onCampaignClick }) => {
+  const [selectedCampaign, setSelectedCampaign] = useState(null);
 
-  // Handle campaign selection using modal system
   const handleCampaignClick = (campaign) => {
-    console.log('Opening campaign detail modal for:', campaign.name);
-    
-    openDetailModal(campaign, {
-      component: DetailView,
-      props: {
-        program: campaign,
-        onProgramCreated: (updatedCampaign) => {
-          if (onCampaignEdit) {
-            onCampaignEdit(updatedCampaign);
-          }
-        }
-      }
-    });
-    
-    // Call legacy handler if provided
-    if (onCampaignSelect) {
-      onCampaignSelect(campaign);
-    }
+    setSelectedCampaign(campaign);
+    // We're no longer calling the parent onCampaignClick here
+    // This prevents duplicate modals from being shown
   };
 
-  // Handle campaign editing using modal system
-  const handleEditCampaign = (campaign, e) => {
-    e.stopPropagation(); // Prevent triggering campaign click
-    
-    openCampaignModal(campaign, {
-      component: SplitCampaignCreationModal,
-      fullscreen: true,
-      props: {
-        campaign: campaign, // Pass existing campaign for editing
-        onCampaignCreated: (updatedCampaign) => {
-          if (onCampaignEdit) {
-            onCampaignEdit(updatedCampaign);
-          }
-        }
-      }
-    });
+  const handleImplementRecommendation = (campaign, recommendation) => {
+    console.log(`Implementing recommendation: ${recommendation.title} for campaign: ${campaign.title}`);
+    // Here you would update your data or call an API
+    // Example: updateCampaignWithRecommendation(campaign.id, recommendation.id, 'implemented');
   };
 
-  // Handle campaign duplication
-  const handleDuplicateCampaign = (campaign, e) => {
-    e.stopPropagation();
-    
-    const duplicatedCampaign = {
-      ...campaign,
-      id: `campaign-${Date.now()}`,
-      name: `${campaign.name} (Copy)`,
-      status: 'Draft',
-      createdAt: new Date().toISOString()
-    };
-    
-    if (onCampaignDuplicate) {
-      onCampaignDuplicate(duplicatedCampaign);
-    }
+  const handleModifyRecommendation = (campaign, recommendation) => {
+    console.log(`Modifying recommendation: ${recommendation.title} for campaign: ${campaign.title}`);
+    // Here you would show a modification dialog
+    // Example: setShowModificationModal({ campaign, recommendation });
   };
 
-  // Handle campaign deletion with confirmation
-  const handleDeleteCampaign = (campaign, e) => {
-    e.stopPropagation();
-    
-    openConfirmationModal(
-      'Delete Campaign',
-      `Are you sure you want to delete "${campaign.name}"? This action cannot be undone.`,
-      () => {
-        if (onCampaignDelete) {
-          onCampaignDelete(campaign.id);
-        }
-      }
-    );
+  const handleRejectRecommendation = (campaign, recommendation) => {
+    console.log(`Rejecting recommendation: ${recommendation.title} for campaign: ${campaign.title}`);
+    // Here you would update your data or call an API
+    // Example: updateCampaignWithRecommendation(campaign.id, recommendation.id, 'rejected');
   };
-
-  // Sort campaigns
-  const sortedCampaigns = React.useMemo(() => {
-    const filtered = campaigns.filter(campaign => {
-      if (filterBy === 'all') return true;
-      return campaign.status.toLowerCase() === filterBy.toLowerCase();
-    });
-
-    return filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'name':
-          return a.name.localeCompare(b.name);
-        case 'status':
-          return a.status.localeCompare(b.status);
-        case 'performance':
-          return (b.openRate || 0) - (a.openRate || 0);
-        case 'date':
-        default:
-          return new Date(b.createdAt || b.launchDate || 0) - new Date(a.createdAt || a.launchDate || 0);
-      }
-    });
-  }, [campaigns, sortBy, filterBy]);
-
-  // Get status color
-  const getStatusColor = (status) => {
-    switch (status.toLowerCase()) {
-      case 'active':
-      case 'sent':
-        return COLORS.evergreen;
-      case 'draft':
-        return COLORS.amber;
-      case 'scheduled':
-        return COLORS.blue;
-      case 'paused':
-        return COLORS.onyxMedium;
-      case 'completed':
-        return COLORS.purple;
-      default:
-        return COLORS.onyxMedium;
-    }
-  };
-
-  // Get status icon
-  const getStatusIcon = (status) => {
-    switch (status.toLowerCase()) {
-      case 'active':
-        return Play;
-      case 'sent':
-        return CheckCircle;
-      case 'draft':
-        return Edit;
-      case 'scheduled':
-        return Clock;
-      case 'paused':
-        return Pause;
-      case 'completed':
-        return CheckCircle;
-      default:
-        return AlertCircle;
-    }
-  };
-
-  if (campaigns.length === 0) {
-    return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '3rem',
-        textAlign: 'center',
-        backgroundColor: 'white',
-        borderRadius: '1rem',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-      }}>
-        <Mail size={48} color={COLORS.onyxMedium} style={{ marginBottom: '1rem', opacity: 0.5 }} />
-        <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.onyx, margin: '0 0 0.5rem 0' }}>
-          No campaigns yet
-        </h3>
-        <p style={{ color: COLORS.onyxMedium, marginBottom: '2rem' }}>
-          Create your first campaign to get started with engaging your customers.
-        </p>
-        <button
-          onClick={() => openCampaignModal(null, {
-            component: SplitCampaignCreationModal,
-            fullscreen: true
-          })}
-          style={{
-            padding: '0.75rem 1.5rem',
-            backgroundColor: COLORS.evergreen,
-            color: 'white',
-            border: 'none',
-            borderRadius: '0.5rem',
-            fontSize: '0.875rem',
-            cursor: 'pointer'
-          }}
-        >
-          Create Campaign
-        </button>
-      </div>
-    );
-  }
 
   return (
-    <div>
-      {/* Filters and Sort */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '2rem',
-        gap: '1rem',
-        flexWrap: 'wrap'
-      }}>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          {/* Status Filter */}
-          <select
-            value={filterBy}
-            onChange={(e) => setFilterBy(e.target.value)}
-            style={{
-              padding: '0.5rem 1rem',
-              borderRadius: '0.5rem',
-              border: '1px solid rgba(0, 0, 0, 0.1)',
-              fontSize: '0.875rem',
-              backgroundColor: 'white',
-              color: COLORS.onyx,
-              cursor: 'pointer'
+    <section className="mb-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.onyx }}>
+          Messaging
+        </h2>
+        <button 
+          style={{ 
+            fontSize: '0.875rem', 
+            fontWeight: 500, 
+            color: COLORS.evergreen,
+            display: 'flex',
+            alignItems: 'center',
+            background: 'none',
+            border: 'none',
+            padding: 0,
+            cursor: 'pointer'
+          }}
+          onClick={onViewAllClick}
+        >
+          View All Campaigns
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '0.25rem' }}><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </div>
+      
+      <div className="grid grid-cols-3 gap-4">
+        {campaigns.slice(0, 3).map(campaign => (
+          <div 
+            key={campaign.id}
+            style={{ 
+              overflow: 'hidden',
+              borderRadius: '0.75rem',
+              background: 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04)',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              position: 'relative'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px)';
+              e.currentTarget.style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04)';
             }}
           >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="draft">Draft</option>
-            <option value="scheduled">Scheduled</option>
-            <option value="sent">Sent</option>
-            <option value="paused">Paused</option>
-          </select>
-
-          {/* Sort By */}
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            style={{
-              padding: '0.5rem 1rem',
-              borderRadius: '0.5rem',
-              border: '1px solid rgba(0, 0, 0, 0.1)',
-              fontSize: '0.875rem',
-              backgroundColor: 'white',
-              color: COLORS.onyx,
-              cursor: 'pointer'
-            }}
-          >
-            <option value="date">Sort by Date</option>
-            <option value="name">Sort by Name</option>
-            <option value="status">Sort by Status</option>
-            <option value="performance">Sort by Performance</option>
-          </select>
-        </div>
-
-        <div style={{ fontSize: '0.875rem', color: COLORS.onyxMedium }}>
-          {sortedCampaigns.length} campaign{sortedCampaigns.length !== 1 ? 's' : ''}
-        </div>
+            <CampaignCard 
+              key={campaign.id} 
+              campaign={campaign}
+              onClick={handleCampaignClick}
+            />
+          </div>
+        ))}
       </div>
 
-      {/* Campaign Grid */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
-        gap: '2rem'
-      }}>
-        {sortedCampaigns.map((campaign) => {
-          const StatusIcon = getStatusIcon(campaign.status);
-          const statusColor = getStatusColor(campaign.status);
-          
-          return (
-            <div
-              key={campaign.id}
-              onClick={() => handleCampaignClick(campaign)}
-              onMouseEnter={() => setHoveredCampaign(campaign.id)}
-              onMouseLeave={() => setHoveredCampaign(null)}
-              style={{
-                backgroundColor: 'white',
-                borderRadius: '1rem',
-                padding: '2rem',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                border: '1px solid rgba(0, 0, 0, 0.05)',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                position: 'relative',
-                transform: hoveredCampaign === campaign.id ? 'translateY(-4px)' : 'translateY(0)',
-                boxShadow: hoveredCampaign === campaign.id ? '0 8px 25px rgba(0, 0, 0, 0.15)' : '0 2px 8px rgba(0, 0, 0, 0.1)'
-              }}
-            >
-              {/* Status Bar */}
-              <div style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                height: '4px',
-                backgroundColor: statusColor,
-                borderRadius: '1rem 1rem 0 0'
-              }} />
-
-              {/* Header */}
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'flex-start',
-                marginBottom: '1.5rem'
-              }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                    <StatusIcon size={16} color={statusColor} />
-                    <span style={{
-                      fontSize: '0.75rem',
-                      fontWeight: 500,
-                      color: statusColor,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em'
-                    }}>
-                      {campaign.status}
-                    </span>
-                  </div>
-                  <h3 style={{
-                    fontSize: '1.125rem',
-                    fontWeight: 600,
-                    color: COLORS.onyx,
-                    margin: '0 0 0.5rem 0',
-                    lineHeight: '1.4'
-                  }}>
-                    {campaign.name}
-                  </h3>
-                  <p style={{
-                    fontSize: '0.875rem',
-                    color: COLORS.onyxMedium,
-                    margin: 0,
-                    lineHeight: '1.4'
-                  }}>
-                    {campaign.description || campaign.type || 'Email Campaign'}
-                  </p>
-                </div>
-
-                {/* Action Menu */}
-                <div style={{ position: 'relative' }}>
-                  <button
-                    onClick={(e) => e.stopPropagation()}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: '2rem',
-                      height: '2rem',
-                      borderRadius: '50%',
-                      backgroundColor: hoveredCampaign === campaign.id ? 'rgba(0, 0, 0, 0.05)' : 'transparent',
-                      border: 'none',
-                      color: COLORS.onyxMedium,
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
-                    <MoreHorizontal size={16} />
-                  </button>
-                  
-                  {/* Quick Actions */}
-                  {hoveredCampaign === campaign.id && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '100%',
-                      right: 0,
-                      marginTop: '0.5rem',
-                      backgroundColor: 'white',
-                      borderRadius: '0.5rem',
-                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                      border: '1px solid rgba(0, 0, 0, 0.1)',
-                      overflow: 'hidden',
-                      zIndex: 10
-                    }}>
-                      <button
-                        onClick={(e) => handleEditCampaign(campaign, e)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem',
-                          width: '100%',
-                          padding: '0.5rem 1rem',
-                          backgroundColor: 'transparent',
-                          border: 'none',
-                          fontSize: '0.875rem',
-                          color: COLORS.onyx,
-                          cursor: 'pointer',
-                          whiteSpace: 'nowrap'
-                        }}
-                      >
-                        <Edit size={14} />
-                        Edit
-                      </button>
-                      <button
-                        onClick={(e) => handleDuplicateCampaign(campaign, e)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem',
-                          width: '100%',
-                          padding: '0.5rem 1rem',
-                          backgroundColor: 'transparent',
-                          border: 'none',
-                          fontSize: '0.875rem',
-                          color: COLORS.onyx,
-                          cursor: 'pointer',
-                          whiteSpace: 'nowrap'
-                        }}
-                      >
-                        <Copy size={14} />
-                        Duplicate
-                      </button>
-                      <button
-                        onClick={(e) => handleDeleteCampaign(campaign, e)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem',
-                          width: '100%',
-                          padding: '0.5rem 1rem',
-                          backgroundColor: 'transparent',
-                          border: 'none',
-                          fontSize: '0.875rem',
-                          color: COLORS.red,
-                          cursor: 'pointer',
-                          whiteSpace: 'nowrap'
-                        }}
-                      >
-                        <Trash2 size={14} />
-                        Delete
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Metrics */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '1rem',
-                marginBottom: '1.5rem'
-              }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{
-                    fontSize: '1.25rem',
-                    fontWeight: 600,
-                    color: COLORS.onyx,
-                    marginBottom: '0.25rem'
-                  }}>
-                    {campaign.recipients || Math.floor(Math.random() * 10000) + 1000}
-                  </div>
-                  <div style={{
-                    fontSize: '0.75rem',
-                    color: COLORS.onyxMedium,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em'
-                  }}>
-                    Recipients
-                  </div>
-                </div>
-
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{
-                    fontSize: '1.25rem',
-                    fontWeight: 600,
-                    color: COLORS.onyx,
-                    marginBottom: '0.25rem'
-                  }}>
-                    {campaign.openRate || `${(Math.random() * 40 + 10).toFixed(1)}%`}
-                  </div>
-                  <div style={{
-                    fontSize: '0.75rem',
-                    color: COLORS.onyxMedium,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em'
-                  }}>
-                    Open Rate
-                  </div>
-                </div>
-
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{
-                    fontSize: '1.25rem',
-                    fontWeight: 600,
-                    color: COLORS.onyx,
-                    marginBottom: '0.25rem'
-                  }}>
-                    {campaign.clickRate || `${(Math.random() * 15 + 2).toFixed(1)}%`}
-                  </div>
-                  <div style={{
-                    fontSize: '0.75rem',
-                    color: COLORS.onyxMedium,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em'
-                  }}>
-                    Click Rate
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                paddingTop: '1rem',
-                borderTop: '1px solid rgba(0, 0, 0, 0.08)'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  fontSize: '0.75rem',
-                  color: COLORS.onyxMedium
-                }}>
-                  <Calendar size={12} />
-                  {campaign.launchDate ? new Date(campaign.launchDate).toLocaleDateString() : 
-                   campaign.createdAt ? new Date(campaign.createdAt).toLocaleDateString() : 
-                   'No date'}
-                </div>
-
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  fontSize: '0.75rem',
-                  color: COLORS.onyxMedium
-                }}>
-                  {campaign.type === 'email' ? <Mail size={12} /> : <Target size={12} />}
-                  {campaign.type || 'Email'}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+      {/* Campaign Detail View - using the dedicated CampaignDetailView component */}
+      {selectedCampaign && (
+        <CampaignDetailView 
+          campaign={selectedCampaign}
+          onClose={() => setSelectedCampaign(null)}
+          onImplement={handleImplementRecommendation}
+          onModify={handleModifyRecommendation}
+          onReject={handleRejectRecommendation}
+        />
+      )}
+    </section>
   );
 };
 
-// Legacy CampaignModal component - kept for backward compatibility
+// Full-screen Campaign Modal Component
 export const CampaignModal = ({ 
   isOpen, 
   onClose, 
-  campaign,
-  onSave 
+  campaigns, 
+  filter, 
+  setFilter, 
+  onCampaignClick
 }) => {
-  // This component is now handled by the modal system
-  // Keeping it for backward compatibility but functionality moved to DetailView
-  console.warn('CampaignModal is deprecated. Use DetailView through modal system instead.');
-  
+  const [selectedCampaign, setSelectedCampaign] = useState(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [displayCampaigns, setDisplayCampaigns] = useState(campaigns);
+
+  const handleCampaignClick = (campaign) => {
+    setSelectedCampaign(campaign);
+    // Similarly, removing the parent callback here
+    // to prevent duplicate modals
+  };
+
+  const handleImplementRecommendation = (campaign, recommendation) => {
+    console.log(`Implementing recommendation: ${recommendation.title} for campaign: ${campaign.title}`);
+    // Here you would update your data or call an API
+    // Example: updateCampaignWithRecommendation(campaign.id, recommendation.id, 'implemented');
+  };
+
+  const handleModifyRecommendation = (campaign, recommendation) => {
+    console.log(`Modifying recommendation: ${recommendation.title} for campaign: ${campaign.title}`);
+    // Here you would show a modification dialog
+    // Example: setShowModificationModal({ campaign, recommendation });
+  };
+
+  const handleRejectRecommendation = (campaign, recommendation) => {
+    console.log(`Rejecting recommendation: ${recommendation.title} for campaign: ${campaign.title}`);
+    // Here you would update your data or call an API
+    // Example: updateCampaignWithRecommendation(campaign.id, recommendation.id, 'rejected');
+  };
+
+  const filteredCampaigns = () => {
+    switch(filter) {
+      case 'active':
+        return campaigns.filter(campaign => campaign.status === 'Active');
+      case 'scheduled':
+        return campaigns.filter(campaign => campaign.status === 'Scheduled');
+      case 'completed':
+        return campaigns.filter(campaign => campaign.status === 'Completed');
+      default:
+        return campaigns;
+    }
+  };
+
+  // Handle filter changes with animation
+  React.useEffect(() => {
+    if (!isOpen) return;
+    
+    setIsTransitioning(true);
+    
+    // Delay to allow fade out
+    setTimeout(() => {
+      setDisplayCampaigns(filteredCampaigns());
+      setIsTransitioning(false);
+    }, 200);
+  }, [filter, isOpen]);
+
+  // Initialize display campaigns when modal opens
+  React.useEffect(() => {
+    if (isOpen) {
+      setDisplayCampaigns(filteredCampaigns());
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
-  
+
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      zIndex: 15200,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '2rem'
-    }}>
-      <div style={{
-        backgroundColor: 'white',
-        borderRadius: '1rem',
-        padding: '2rem',
-        maxWidth: '500px',
-        width: '100%'
-      }}>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '1rem' }}>
-          Campaign Details
-        </h2>
-        <p style={{ color: COLORS.onyxMedium, marginBottom: '2rem' }}>
-          This modal has been replaced by the new modal system. Please use DetailView through the modal system instead.
-        </p>
-        <button
-          onClick={onClose}
-          style={{
-            padding: '0.75rem 1.5rem',
-            backgroundColor: COLORS.evergreen,
-            color: 'white',
-            border: 'none',
-            borderRadius: '0.5rem',
-            cursor: 'pointer'
-          }}
-        >
-          Close
-        </button>
+    <div>
+      {/* Modal Overlay */}
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: '#f5f7f8',
+          zIndex: 101,
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column'
+        }}
+      >
+        {/* Modal Header */}
+        <div style={{ 
+          padding: '1.5rem',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: 'white'
+        }}>
+          <div style={{
+            maxWidth: '80rem',
+            width: '100%',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingLeft: '1.5rem',
+            paddingRight: '1.5rem'
+          }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: COLORS.onyx }}>
+              Marketing Campaigns
+            </h2>
+            <button 
+              onClick={onClose}
+              style={{ 
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '2.5rem',
+                height: '2.5rem',
+                borderRadius: '50%',
+                color: COLORS.onyxMedium,
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              <X size={20} />
+            </button>
+          </div>
+        </div>
+        
+        {/* Filter Tabs */}
+        <div style={{
+          borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+          display: 'flex',
+          justifyContent: 'center',
+          backgroundColor: 'white'
+        }}>
+          <div style={{
+            maxWidth: '80rem',
+            width: '100%',
+            paddingLeft: '1.5rem',
+            paddingRight: '1.5rem',
+            display: 'flex',
+            gap: '2rem'
+          }}>
+            <button 
+              onClick={() => setFilter('all')}
+              style={{
+                padding: '1rem 0',
+                color: filter === 'all' ? COLORS.evergreen : COLORS.onyxMedium,
+                fontWeight: filter === 'all' ? 600 : 500,
+                fontSize: '0.875rem',
+                borderBottom: filter === 'all' ? `2px solid ${COLORS.evergreen}` : '2px solid transparent',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                borderRadius: 0,
+                display: 'flex',
+                alignItems: 'center'
+              }}
+            >
+              All Campaigns
+            </button>
+            <button 
+              onClick={() => setFilter('active')}
+              style={{
+                padding: '1rem 0',
+                color: filter === 'active' ? COLORS.evergreen : COLORS.onyxMedium,
+                fontWeight: filter === 'active' ? 600 : 500,
+                fontSize: '0.875rem',
+                borderBottom: filter === 'active' ? `2px solid ${COLORS.evergreen}` : '2px solid transparent',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                borderRadius: 0,
+                display: 'flex',
+                alignItems: 'center'
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '0.375rem' }}><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              Active
+            </button>
+            <button 
+              onClick={() => setFilter('scheduled')}
+              style={{
+                padding: '1rem 0',
+                color: filter === 'scheduled' ? COLORS.evergreen : COLORS.onyxMedium,
+                fontWeight: filter === 'scheduled' ? 600 : 500,
+                fontSize: '0.875rem',
+                borderBottom: filter === 'scheduled' ? `2px solid ${COLORS.evergreen}` : '2px solid transparent',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                borderRadius: 0,
+                display: 'flex',
+                alignItems: 'center'
+              }}
+            >
+              Scheduled
+            </button>
+            <button 
+              onClick={() => setFilter('completed')}
+              style={{
+                padding: '1rem 0',
+                color: filter === 'completed' ? COLORS.evergreen : COLORS.onyxMedium,
+                fontWeight: filter === 'completed' ? 600 : 500,
+                fontSize: '0.875rem',
+                borderBottom: filter === 'completed' ? `2px solid ${COLORS.evergreen}` : '2px solid transparent',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                borderRadius: 0,
+                display: 'flex',
+                alignItems: 'center'
+              }}
+            >
+              Completed
+            </button>
+          </div>
+        </div>
+        
+        {/* Modal Body */}
+        <div style={{ 
+          flex: 1, 
+          overflowY: 'auto',
+          display: 'flex',
+          justifyContent: 'center'
+        }}>
+          <div style={{
+            maxWidth: '80rem',
+            width: '100%',
+            paddingLeft: '1.5rem',
+            paddingRight: '1.5rem',
+            paddingTop: '1.5rem',
+            paddingBottom: '1.5rem'
+          }}>
+            {/* Campaign Count Display */}
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              marginBottom: '1.5rem' 
+            }}>
+              <h3 style={{ 
+                fontSize: '1.125rem', 
+                fontWeight: 600, 
+                color: COLORS.onyx, 
+                margin: 0 
+              }}>
+                {filter === 'all' ? 'All Campaigns' : 
+                 filter === 'active' ? 'Active Campaigns' :
+                 filter === 'scheduled' ? 'Scheduled Campaigns' :
+                 'Completed Campaigns'}
+              </h3>
+              <span style={{ 
+                fontSize: '0.875rem', 
+                color: COLORS.onyxMedium, 
+                fontWeight: 500 
+              }}>
+                {displayCampaigns.length} campaigns
+              </span>
+            </div>
+            
+            {/* Grid of campaign cards */}
+            <div 
+              className="grid grid-cols-3 gap-6"
+              style={{ 
+                opacity: isTransitioning ? 0.3 : 1,
+                transform: isTransitioning ? 'translateY(10px)' : 'translateY(0)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+              }}
+            >
+              {displayCampaigns.map((campaign, index) => (
+                <div 
+                  key={campaign.id} 
+                  style={{ 
+                    overflow: 'hidden',
+                    borderRadius: '0.75rem',
+                    background: 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
+                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04)',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    position: 'relative',
+                    opacity: isTransitioning ? 0 : 1,
+                    transform: isTransitioning ? 'scale(0.95) translateY(20px)' : 'scale(1) translateY(0)',
+                    transitionDelay: isTransitioning ? '0ms' : `${index * 50}ms`,
+                    animationFillMode: 'both'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isTransitioning) {
+                      e.currentTarget.style.transform = 'translateY(-4px) scale(1)';
+                      e.currentTarget.style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isTransitioning) {
+                      e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                      e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04)';
+                    }
+                  }}
+                >
+                  <CampaignCard 
+                    campaign={campaign}
+                    onClick={handleCampaignClick}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Campaign Detail View - using the dedicated CampaignDetailView component */}
+      {selectedCampaign && (
+        <CampaignDetailView 
+          campaign={selectedCampaign}
+          onClose={() => setSelectedCampaign(null)}
+          onImplement={handleImplementRecommendation}
+          onModify={handleModifyRecommendation}
+          onReject={handleRejectRecommendation}
+        />
+      )}
     </div>
   );
 };
+
+export default CampaignList;

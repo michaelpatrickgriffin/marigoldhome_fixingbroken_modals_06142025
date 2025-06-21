@@ -1,414 +1,382 @@
-// src/components/layout/ProfilePanel.js - FIXED Z-INDEX ISSUES
-import React, { useState, useEffect } from 'react';
-import { X, User, Settings, LogOut, Bell, Shield, HelpCircle, ChevronRight, Check } from 'lucide-react';
+// src/components/layout/ProfilePanel.js
+import React, { useEffect, useState } from 'react';
+import { X, User, Settings, HelpCircle, LogOut, Bell, ArrowUpRight, Zap, TrendingUp, Layers, Award, Users, BookOpen, Calendar, ChevronDown } from 'lucide-react';
 import { COLORS } from '../../styles/ColorStyles';
-import { userProfiles } from '../../data/SampleData';
+import { profilePanelConfig, profileRecommendationsData } from '../../data/SampleData';
+import ProfileSwitchModal from './ProfileSwitchModal';
+import '../../styles/ProfileSwitch.css';
 
-const ProfilePanel = ({ 
-  isOpen, 
-  onClose, 
-  currentProfile, 
-  onProfileSwitch 
-}) => {
-  const [selectedProfile, setSelectedProfile] = useState(currentProfile);
-  const [showProfileSelector, setShowProfileSelector] = useState(false);
+// Icon mapping for menu items and recommendations
+const iconMap = {
+  'User': User,
+  'Settings': Settings,
+  'HelpCircle': HelpCircle,
+  'LogOut': LogOut,
+  'TrendingUp': TrendingUp,
+  'Users': Users,
+  'Layers': Layers,
+  'Zap': Zap,
+  'BookOpen': BookOpen,
+  'Calendar': Calendar,
+  'Award': Award,
+  'Bell': Bell
+};
 
-  // Update selected profile when current profile changes
+const ProfilePanel = ({ isOpen, onClose, currentProfile, onProfileSwitch }) => {
+  const [showProfileSwitch, setShowProfileSwitch] = useState(false);
+  const [recommendations, setRecommendations] = useState(profileRecommendationsData);
+
+  const getProfileStats = () => {
+    // Different stats based on role
+    if (currentProfile?.id === 'janet_wilson') {
+      return [
+        { label: 'Active Campaigns', value: '8' },
+        { label: 'This Month', value: '5' },
+        { label: 'Pending', value: '2' }
+      ];
+    } else {
+      return [
+        { label: 'Campaigns', value: '12' },
+        { label: 'Team Members', value: '8' },
+        { label: 'Reports', value: '4' }
+      ];
+    }
+  };
+
+  const profileStats = getProfileStats();
+
+  // Effect to prevent body scrolling when panel is open
   useEffect(() => {
-    setSelectedProfile(currentProfile);
-  }, [currentProfile]);
-
-  // Handle profile selection
-  const handleProfileSelect = (profile) => {
-    setSelectedProfile(profile);
-    onProfileSwitch(profile);
-    setShowProfileSelector(false);
-  };
-
-  // Handle logout
-  const handleLogout = () => {
-    alert('Logout functionality would be implemented here');
-    onClose();
-  };
-
-  // Handle settings
-  const handleSettings = () => {
-    alert('Settings functionality would be implemented here');
-    onClose();
-  };
+    if (isOpen) {
+      // Save the current overflow value to restore it later
+      const originalOverflow = document.body.style.overflow;
+      
+      // Prevent scrolling on the main document
+      document.body.style.overflow = 'hidden';
+      
+      // Clean up function to restore original scrolling
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
+  const dismissRecommendation = (id) => {
+    setRecommendations(prevRecs => prevRecs.filter(rec => rec.id !== id));
+  };
+
   return (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        right: 0,
-        bottom: 0,
-        width: '350px',
-        backgroundColor: 'white',
-        boxShadow: '-4px 0 20px rgba(0, 0, 0, 0.1)',
-        zIndex: 1200, // FIXED: Use profile panel z-index from standards
-        display: 'flex',
-        flexDirection: 'column',
-        transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
-        transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-      }}
-    >
-      {/* Header */}
-      <div style={{
-        padding: '2rem',
-        borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
-        backgroundColor: 'white',
-        position: 'relative',
-        zIndex: 1201 // FIXED: Above panel content
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.onyx, margin: 0 }}>
-            Profile
-          </h2>
-          <button
-            onClick={onClose}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '2rem',
-              height: '2rem',
-              borderRadius: '50%',
-              color: COLORS.onyxMedium,
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor = 'transparent';
-            }}
-          >
-            <X size={18} />
-          </button>
-        </div>
+    <>
+      {/* Backdrop */}
+      <div 
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.25)',
+          zIndex: 90,
+          backdropFilter: 'blur(2px)'
+        }}
+        onClick={onClose}
+      />
 
-        {/* Current Profile Display */}
-        <div style={{
+      {/* Full Sidebar */}
+      <div 
+        style={{
+          position: 'fixed',
+          top: 0,
+          right: 0,
+          width: '360px',
+          height: '100%',
+          backgroundColor: 'white',
+          boxShadow: '-5px 0 25px rgba(0, 0, 0, 0.1)',
+          zIndex: 100,
           display: 'flex',
-          alignItems: 'center',
-          gap: '1rem',
-          padding: '1rem',
-          backgroundColor: '#f8f9fa',
-          borderRadius: '0.75rem',
-          border: '1px solid rgba(0, 0, 0, 0.05)'
+          flexDirection: 'column',
+          overflow: 'hidden'
+        }}
+      >
+        {/* Header with user profile and metrics - PINNED */}
+        <div style={{ 
+          borderBottom: '1px solid rgba(0,0,0,0.08)'
         }}>
-          <div style={{
-            width: '3rem',
-            height: '3rem',
-            borderRadius: '50%',
-            backgroundColor: COLORS.evergreen,
+          {/* Header with profile and close button on the same row */}
+          <div style={{ 
+            padding: '1.5rem',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-            fontSize: '1.125rem',
-            fontWeight: 'bold'
+            justifyContent: 'space-between',
+            alignItems: 'center'
           }}>
-            {selectedProfile?.avatar || 'U'}
-          </div>
-          <div style={{ flex: 1 }}>
-            <h3 style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.onyx, margin: '0 0 0.25rem 0' }}>
-              {selectedProfile?.name || 'User'}
-            </h3>
-            <p style={{ fontSize: '0.875rem', color: COLORS.onyxMedium, margin: 0 }}>
-              {selectedProfile?.role || 'Marketing Manager'}
-            </p>
-          </div>
-          <button
-            onClick={() => setShowProfileSelector(!showProfileSelector)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '2rem',
-              height: '2rem',
-              borderRadius: '50%',
-              color: COLORS.onyxMedium,
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor = 'transparent';
-            }}
-          >
-            <ChevronRight 
-              size={16} 
-              style={{ 
-                transition: 'transform 0.2s ease',
-                transform: showProfileSelector ? 'rotate(90deg)' : 'rotate(0deg)'
-              }} 
-            />
-          </button>
-        </div>
-
-        {/* Profile Selector */}
-        {showProfileSelector && (
-          <div style={{
-            marginTop: '1rem',
-            backgroundColor: 'white',
-            borderRadius: '0.75rem',
-            border: '1px solid rgba(0, 0, 0, 0.1)',
-            overflow: 'hidden'
-          }}>
-            {userProfiles.map(profile => (
-              <button
-                key={profile.id}
-                onClick={() => handleProfileSelect(profile)}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  padding: '0.75rem 1rem',
-                  backgroundColor: selectedProfile?.id === profile.id ? `${COLORS.evergreen}10` : 'transparent',
-                  border: 'none',
-                  borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  textAlign: 'left'
-                }}
-                onMouseEnter={(e) => {
-                  if (selectedProfile?.id !== profile.id) {
-                    e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.03)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (selectedProfile?.id !== profile.id) {
-                    e.target.style.backgroundColor = 'transparent';
-                  }
-                }}
-              >
-                <div style={{
-                  width: '2rem',
-                  height: '2rem',
+            {/* Profile info moved to the left side of the header - NOW CLICKABLE */}
+            <button
+              onClick={() => setShowProfileSwitch(true)}
+              className="profile-clickable-area"
+            >
+              <div 
+                style={{ 
+                  width: '3rem',
+                  height: '3rem',
                   borderRadius: '50%',
                   backgroundColor: COLORS.evergreen,
+                  color: 'white',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: 'white',
-                  fontSize: '0.875rem',
-                  fontWeight: 'bold'
-                }}>
-                  {profile.avatar}
+                  marginRight: '0.75rem',
+                  fontWeight: 'bold',
+                  fontSize: '1rem'
+                }}
+              >
+                {currentProfile?.avatar || 'AM'}
+              </div>
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <p style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '0.125rem', margin: 0 }}>
+                    {currentProfile?.name || 'Alex Morgan'}
+                  </p>
+                  <ChevronDown size={16} style={{ color: COLORS.onyxMedium, marginLeft: '0.25rem' }} />
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '0.875rem', fontWeight: 500, color: COLORS.onyx }}>
-                    {profile.name}
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: COLORS.onyxMedium }}>
-                    {profile.role}
-                  </div>
-                </div>
-                {selectedProfile?.id === profile.id && (
-                  <Check size={16} color={COLORS.evergreen} />
-                )}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Menu Items */}
-      <div style={{
-        flex: 1,
-        padding: '1rem 0',
-        overflowY: 'auto'
-      }}>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          {/* Account Section */}
-          <div style={{ marginBottom: '1rem' }}>
-            <h4 style={{
-              fontSize: '0.75rem',
-              fontWeight: 600,
-              color: COLORS.onyxMedium,
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              margin: '0 0 0.5rem 0',
-              padding: '0 2rem'
-            }}>
-              Account
-            </h4>
+                <p style={{ fontSize: '0.75rem', color: COLORS.onyxMedium, margin: 0 }}>
+                  {currentProfile?.title || 'Marketing Director'}
+                </p>
+              </div>
+            </button>
             
-            {[
-              { icon: User, label: 'Personal Information', action: handleSettings },
-              { icon: Bell, label: 'Notification Settings', action: handleSettings },
-              { icon: Shield, label: 'Privacy & Security', action: handleSettings }
-            ].map((item, index) => {
-              const IconComponent = item.icon;
-              return (
-                <button
+            {/* Close button */}
+            <button 
+              onClick={onClose}
+              style={{ 
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '2.5rem',
+                height: '2.5rem',
+                borderRadius: '50%',
+                color: COLORS.onyxMedium,
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              <X size={20} />
+            </button>
+          </div>
+          
+          {/* User stats */}
+          <div style={{ 
+            padding: '0 1.5rem 1.5rem 1.5rem',
+          }}>
+            <div style={{ display: 'flex' }}>
+              {profileStats.map((stat, index) => (
+                <div 
                   key={index}
-                  onClick={item.action}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    padding: '0.75rem 2rem',
-                    backgroundColor: 'transparent',
-                    border: 'none',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    textAlign: 'left'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.03)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = 'transparent';
+                  style={{ 
+                    flex: 1, 
+                    textAlign: 'center', 
+                    padding: '0.5rem',
+                    ...(index !== 0 && index !== profileStats.length - 1 ? {
+                      borderLeft: '1px solid rgba(0,0,0,0.08)',
+                      borderRight: '1px solid rgba(0,0,0,0.08)'
+                    } : index === 1 && profileStats.length === 3 ? {
+                      borderLeft: '1px solid rgba(0,0,0,0.08)',
+                      borderRight: '1px solid rgba(0,0,0,0.08)'
+                    } : {})
                   }}
                 >
-                  <IconComponent size={18} color={COLORS.onyxMedium} />
-                  <span style={{ fontSize: '0.875rem', color: COLORS.onyx, fontWeight: 500 }}>
-                    {item.label}
-                  </span>
-                  <ChevronRight size={16} color={COLORS.onyxLight} style={{ marginLeft: 'auto' }} />
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Support Section */}
-          <div style={{ marginBottom: '1rem' }}>
-            <h4 style={{
-              fontSize: '0.75rem',
-              fontWeight: 600,
-              color: COLORS.onyxMedium,
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              margin: '0 0 0.5rem 0',
-              padding: '0 2rem'
-            }}>
-              Support
-            </h4>
-            
-            {[
-              { icon: HelpCircle, label: 'Help Center', action: () => window.open('/help', '_blank') },
-              { icon: Settings, label: 'App Settings', action: handleSettings }
-            ].map((item, index) => {
-              const IconComponent = item.icon;
-              return (
-                <button
-                  key={index}
-                  onClick={item.action}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    padding: '0.75rem 2rem',
-                    backgroundColor: 'transparent',
-                    border: 'none',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    textAlign: 'left'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.03)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = 'transparent';
-                  }}
-                >
-                  <IconComponent size={18} color={COLORS.onyxMedium} />
-                  <span style={{ fontSize: '0.875rem', color: COLORS.onyx, fontWeight: 500 }}>
-                    {item.label}
-                  </span>
-                  <ChevronRight size={16} color={COLORS.onyxLight} style={{ marginLeft: 'auto' }} />
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Profile Information */}
-          <div style={{ marginTop: 'auto', padding: '0 2rem' }}>
-            <div style={{
-              padding: '1rem',
-              backgroundColor: '#f8f9fa',
-              borderRadius: '0.5rem',
-              border: '1px solid rgba(0, 0, 0, 0.05)'
-            }}>
-              <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.onyx, margin: '0 0 0.5rem 0' }}>
-                Current Dashboard
-              </h4>
-              <p style={{ fontSize: '0.75rem', color: COLORS.onyxMedium, margin: 0 }}>
-                {selectedProfile?.defaultDashboard === 'marketing' ? 'Marketing Dashboard' :
-                 selectedProfile?.defaultDashboard === 'rfm' ? 'RFM Analysis' :
-                 selectedProfile?.defaultDashboard === 'narrative' ? 'Narrative Dashboard' :
-                 'Standard Dashboard'}
-              </p>
+                  <p style={{ fontSize: '1.125rem', fontWeight: 600, color: COLORS.onyx }}>{stat.value}</p>
+                  <p style={{ fontSize: '0.75rem', color: COLORS.onyxMedium }}>{stat.label}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Footer */}
-      <div style={{
-        padding: '1.5rem 2rem',
-        borderTop: '1px solid rgba(0, 0, 0, 0.1)',
-        backgroundColor: 'white',
-        position: 'relative',
-        zIndex: 1201 // FIXED: Above panel content
-      }}>
-        <button
-          onClick={handleLogout}
-          style={{
-            width: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.5rem',
-            padding: '0.75rem',
-            backgroundColor: 'transparent',
-            color: '#ef4444',
-            border: '1px solid rgba(239, 68, 68, 0.2)',
-            borderRadius: '0.5rem',
-            fontSize: '0.875rem',
-            fontWeight: 500,
-            cursor: 'pointer',
-            transition: 'all 0.2s ease'
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.backgroundColor = 'rgba(239, 68, 68, 0.05)';
-            e.target.style.borderColor = 'rgba(239, 68, 68, 0.3)';
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.backgroundColor = 'transparent';
-            e.target.style.borderColor = 'rgba(239, 68, 68, 0.2)';
-          }}
-        >
-          <LogOut size={16} />
-          Sign Out
-        </button>
-        
+        {/* Account navigation section - PINNED */}
         <div style={{ 
-          marginTop: '1rem', 
-          textAlign: 'center', 
-          fontSize: '0.75rem', 
-          color: COLORS.onyxLight 
+          padding: '1rem 1.5rem',
+          borderBottom: '1px solid rgba(0,0,0,0.08)',
         }}>
-          Marigold Engage v2.4.1
+          {profilePanelConfig.menuItems.map((item, i) => {
+            const IconComponent = iconMap[item.icon];
+            return (
+              <React.Fragment key={i}>
+                <button 
+                  style={{ 
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '0.75rem 0',
+                    width: '100%',
+                    textAlign: 'left',
+                    color: COLORS.onyx,
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer'
+                  }}
+                  className="hover:bg-gray-50"
+                >
+                  {IconComponent && <IconComponent size={18} style={{ color: COLORS.onyxMedium, marginRight: '0.75rem' }} />}
+                  <span style={{ fontSize: '0.9375rem' }}>
+                    {item.label}
+                  </span>
+                </button>
+                {item.divider && (
+                  <div style={{ 
+                    margin: '0.5rem 0',
+                    borderTop: '1px solid rgba(0,0,0,0.08)'
+                  }}></div>
+                )}
+              </React.Fragment>
+            );
+          })}
+        </div>
+
+        {/* Scrollable recommendations section - ONLY THIS SCROLLS */}
+        <div style={{ 
+          flex: 1, 
+          overflowY: 'auto'
+        }}>
+          <div style={{ padding: '1.5rem' }}>
+            <h4 style={{ 
+              fontSize: '0.875rem', 
+              fontWeight: 600, 
+              color: COLORS.onyxMedium, 
+              textTransform: 'uppercase',
+              marginBottom: '1rem',
+              letterSpacing: '0.05em'
+            }}>
+              {profilePanelConfig.sectionLabels.forYou}
+            </h4>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {recommendations.map((item) => {
+                const IconComponent = iconMap[item.icon];
+                return (
+                  <div 
+                    key={item.id}
+                    style={{ 
+                      padding: '1rem',
+                      backgroundColor: 'rgba(0,0,0,0.02)',
+                      borderRadius: '0.75rem',
+                      position: 'relative',
+                      transition: 'background-color 0.2s'
+                    }}
+                    className="hover:bg-gray-50"
+                  >
+                    {/* Dismiss button */}
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        dismissRecommendation(item.id);
+                      }}
+                      style={{ 
+                        position: 'absolute',
+                        top: '0.5rem',
+                        right: '0.5rem',
+                        width: '1.5rem',
+                        height: '1.5rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '50%',
+                        color: 'rgba(0,0,0,0.3)',
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        opacity: 0.7,
+                        transition: 'opacity 0.2s, background-color 0.2s'
+                      }}
+                      className="hover:bg-gray-200"
+                      onMouseOver={(e) => e.currentTarget.style.opacity = 1}
+                      onMouseOut={(e) => e.currentTarget.style.opacity = 0.7}
+                      title="Dismiss"
+                    >
+                      <X size={14} />
+                    </button>
+                    
+                    <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+                      <div style={{ 
+                        width: '2.5rem',
+                        height: '2.5rem',
+                        borderRadius: '0.5rem',
+                        backgroundColor: `${item.color}15`,
+                        color: item.color,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginRight: '1rem',
+                        flexShrink: 0
+                      }}>
+                        {IconComponent && <IconComponent size={16} />}
+                      </div>
+                      
+                      <div style={{ flex: 1, paddingRight: '1rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <h5 style={{ fontSize: '0.875rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '0.25rem' }}>
+                            {item.title}
+                          </h5>
+                          <ArrowUpRight size={14} style={{ color: COLORS.onyxMedium, marginTop: '0.2rem' }} />
+                        </div>
+                        <p style={{ fontSize: '0.75rem', color: COLORS.onyxMedium, lineHeight: 1.5 }}>
+                          {item.description}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              
+              {recommendations.length === 0 && (
+                <div style={{ 
+                  padding: '2rem 1rem', 
+                  textAlign: 'center', 
+                  color: COLORS.onyxMedium,
+                  backgroundColor: 'rgba(0,0,0,0.02)',
+                  borderRadius: '0.75rem',
+                }}>
+                  <p>{profilePanelConfig.sectionLabels.noRecommendations}</p>
+                  <p style={{ fontSize: '0.75rem', marginTop: '0.5rem' }}>
+                    {profilePanelConfig.sectionLabels.checkBackLater}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{ 
+          padding: '1rem 1.5rem',
+          borderTop: '1px solid rgba(0,0,0,0.08)',
+          backgroundColor: 'rgba(0,0,0,0.02)'
+        }}>
+          <div 
+            style={{ 
+              fontSize: '0.75rem', 
+              color: COLORS.onyxMedium,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <span>{profilePanelConfig.footerInfo.product}</span>
+            <span style={{ margin: '0 0.5rem', color: COLORS.onyxMedium }}>•</span>
+            <span>{profilePanelConfig.footerInfo.version}</span>
+          </div>
         </div>
       </div>
-    </div>
+      
+      {/* Profile Switch Modal */}
+      <ProfileSwitchModal 
+        isOpen={showProfileSwitch}
+        onClose={() => setShowProfileSwitch(false)}
+        currentProfile={currentProfile}
+        onProfileSwitch={onProfileSwitch}
+      />
+    </>
   );
 };
 

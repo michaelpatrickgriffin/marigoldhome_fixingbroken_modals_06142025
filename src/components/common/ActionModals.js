@@ -1,688 +1,413 @@
-// src/components/common/ActionModals.js - Updated for Modal System
-import React, { useState, useEffect } from 'react';
-import { X, Check, Edit, Trash2, AlertTriangle, CheckCircle, Info, Clock, Zap } from 'lucide-react';
+// src/components/common/ActionModals.js
+import React from 'react';
+import { Check, Edit, X, CheckCircle, AlertTriangle, Target } from 'lucide-react';
 import { COLORS } from '../../styles/ColorStyles';
-import { useModal } from './ModalManager';
 
-// Action confirmation modal for recommendations
-export const ActionModal = ({ 
-  action, 
-  program, 
-  recommendation, 
-  onConfirm, 
-  onClose,
-  // Modal system props
-  isModal = false
-}) => {
-  const [isProcessing, setIsProcessing] = useState(false);
-  const { closeModal } = useModal();
-
-  const getActionDetails = () => {
-    switch (action) {
-      case 'implement':
-        return {
-          title: 'Implement Recommendation',
-          description: 'This will create a new program based on this recommendation.',
-          color: COLORS.evergreen,
-          icon: Check
-        };
-      case 'modify':
-        return {
-          title: 'Modify Recommendation',
-          description: 'You can customize this recommendation before implementing.',
-          color: COLORS.blue,
-          icon: Edit
-        };
-      case 'reject':
-        return {
-          title: 'Reject Recommendation',
-          description: 'This recommendation will be marked as rejected.',
-          color: COLORS.red,
-          icon: Trash2
-        };
-      default:
-        return {
-          title: 'Confirm Action',
-          description: 'Please confirm your action.',
-          color: COLORS.onyx,
-          icon: AlertTriangle
-        };
+// Action confirmation modal displayed before taking an action
+export const ActionModal = ({ action, program, recommendation, onConfirm, onCancel }) => {
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onCancel();
     }
   };
 
-  const actionDetails = getActionDetails();
-  const IconComponent = actionDetails.icon;
-
-  const handleConfirm = async () => {
-    setIsProcessing(true);
-    
-    // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    if (onConfirm) {
-      onConfirm();
-    }
-    
-    setIsProcessing(false);
-    
-    if (isModal) {
-      closeModal();
-    } else if (onClose) {
-      onClose();
+  const handleEscapeKey = (e) => {
+    if (e.key === 'Escape') {
+      onCancel();
     }
   };
 
-  const handleClose = () => {
-    if (isModal) {
-      closeModal();
-    } else if (onClose) {
-      onClose();
-    }
-  };
-
-  // Modal system automatically handles backdrop and positioning
-  if (isModal) {
-    return <ActionModalContent 
-      actionDetails={actionDetails}
-      IconComponent={IconComponent}
-      recommendation={recommendation}
-      program={program}
-      isProcessing={isProcessing}
-      onConfirm={handleConfirm}
-      onClose={handleClose}
-    />;
-  }
-
-  // Legacy mode for backward compatibility
-  return (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        zIndex: 15000,
-        backdropFilter: 'blur(4px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '2rem'
-      }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget && !isProcessing) {
-          handleClose();
-        }
-      }}
-    >
-      <div
-        style={{
-          backgroundColor: 'white',
-          borderRadius: '1rem',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-          maxWidth: '500px',
-          width: '100%',
-          position: 'relative',
-          zIndex: 15001
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <ActionModalContent 
-          actionDetails={actionDetails}
-          IconComponent={IconComponent}
-          recommendation={recommendation}
-          program={program}
-          isProcessing={isProcessing}
-          onConfirm={handleConfirm}
-          onClose={handleClose}
-        />
-      </div>
-    </div>
-  );
-};
-
-// Reusable modal content component
-const ActionModalContent = ({ 
-  actionDetails, 
-  IconComponent, 
-  recommendation, 
-  program, 
-  isProcessing, 
-  onConfirm, 
-  onClose 
-}) => (
-  <div style={{ padding: '2rem' }}>
-    {/* Header */}
-    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-      <div style={{
-        width: '3rem',
-        height: '3rem',
-        borderRadius: '50%',
-        backgroundColor: `${actionDetails.color}20`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <IconComponent size={20} color={actionDetails.color} />
-      </div>
-      <div>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.onyx, margin: 0 }}>
-          {actionDetails.title}
-        </h2>
-        <p style={{ fontSize: '0.875rem', color: COLORS.onyxMedium, margin: '0.25rem 0 0 0' }}>
-          {actionDetails.description}
-        </p>
-      </div>
-    </div>
-
-    {/* Recommendation Details */}
-    {recommendation && (
-      <div style={{
-        padding: '1rem',
-        backgroundColor: 'rgba(0, 0, 0, 0.02)',
-        borderRadius: '0.5rem',
-        marginBottom: '1.5rem'
-      }}>
-        <h3 style={{ fontSize: '1rem', fontWeight: 600, color: COLORS.onyx, marginBottom: '0.5rem' }}>
-          {recommendation.title}
-        </h3>
-        <p style={{ fontSize: '0.875rem', color: COLORS.onyxMedium, margin: 0, lineHeight: '1.4' }}>
-          {recommendation.description}
-        </p>
-      </div>
-    )}
-
-    {/* Program Context */}
-    {program && (
-      <div style={{
-        fontSize: '0.875rem',
-        color: COLORS.onyxMedium,
-        marginBottom: '1.5rem',
-        textAlign: 'center'
-      }}>
-        For program: <strong>{program.title || program.name}</strong>
-      </div>
-    )}
-
-    {/* Action Buttons */}
-    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-      <button
-        onClick={onClose}
-        disabled={isProcessing}
-        style={{
-          padding: '0.75rem 1.5rem',
-          borderRadius: '0.5rem',
-          border: '1px solid rgba(0, 0, 0, 0.2)',
-          backgroundColor: 'white',
-          color: COLORS.onyx,
-          cursor: isProcessing ? 'not-allowed' : 'pointer',
-          fontSize: '0.875rem',
-          fontWeight: 500,
-          opacity: isProcessing ? 0.6 : 1,
-          transition: 'all 0.2s ease'
-        }}
-      >
-        Cancel
-      </button>
-      <button
-        onClick={onConfirm}
-        disabled={isProcessing}
-        style={{
-          padding: '0.75rem 1.5rem',
-          borderRadius: '0.5rem',
-          border: 'none',
-          backgroundColor: actionDetails.color,
-          color: 'white',
-          cursor: isProcessing ? 'not-allowed' : 'pointer',
-          fontSize: '0.875rem',
-          fontWeight: 500,
-          opacity: isProcessing ? 0.6 : 1,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-          transition: 'all 0.2s ease'
-        }}
-      >
-        {isProcessing ? (
-          <>
-            <div style={{ 
-              width: '16px', 
-              height: '16px', 
-              border: '2px solid rgba(255,255,255,0.3)', 
-              borderTopColor: 'white', 
-              borderRadius: '50%', 
-              animation: 'spin 1s linear infinite' 
-            }} />
-            Processing...
-          </>
-        ) : (
-          <>
-            <IconComponent size={16} />
-            Confirm
-          </>
-        )}
-      </button>
-    </div>
-  </div>
-);
-
-// Feedback modal displayed after an action is taken
-export const FeedbackModal = ({ 
-  action, 
-  program, 
-  recommendation, 
-  onClose,
-  // Modal system props
-  isModal = false
-}) => {
-  const [isVisible, setIsVisible] = useState(true);
-  const { closeModal } = useModal();
-
-  useEffect(() => {
-    // Auto-close after 3 seconds
-    const timer = setTimeout(() => {
-      handleClose();
-    }, 3000);
-
-    return () => clearTimeout(timer);
+  // Add escape key listener
+  React.useEffect(() => {
+    document.addEventListener('keydown', handleEscapeKey);
+    document.body.style.overflow = 'hidden';
+    
+    return () => {
+      document.removeEventListener('keydown', handleEscapeKey);
+      document.body.style.overflow = 'unset';
+    };
   }, []);
 
-  const getActionResult = () => {
-    switch (action) {
-      case 'implement':
-        return {
-          title: 'Recommendation Implemented!',
-          description: 'The recommendation has been successfully implemented.',
-          color: COLORS.evergreen,
-          icon: CheckCircle
-        };
-      case 'modify':
-        return {
-          title: 'Changes Saved!',
-          description: 'Your modifications have been saved and implemented.',
-          color: COLORS.blue,
-          icon: Edit
-        };
-      case 'reject':
-        return {
-          title: 'Recommendation Rejected',
-          description: 'The recommendation has been marked as rejected.',
-          color: COLORS.red,
-          icon: Trash2
-        };
-      default:
-        return {
-          title: 'Action Completed',
-          description: 'Your action has been processed successfully.',
-          color: COLORS.evergreen,
-          icon: CheckCircle
-        };
-    }
-  };
-
-  const handleClose = () => {
-    setIsVisible(false);
-    if (isModal) {
-      closeModal();
-    } else if (onClose) {
-      onClose();
-    }
-  };
-
-  if (!isVisible) return null;
-
-  const actionResult = getActionResult();
-  const IconComponent = actionResult.icon;
-
-  // Modal system automatically handles backdrop and positioning
-  if (isModal) {
-    return <FeedbackModalContent 
-      actionResult={actionResult}
-      IconComponent={IconComponent}
-      recommendation={recommendation}
-      program={program}
-      onClose={handleClose}
-    />;
-  }
-
-  // Legacy mode for backward compatibility
   return (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        zIndex: 15000,
-        backdropFilter: 'blur(4px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '2rem'
-      }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          handleClose();
-        }
-      }}
-    >
+    <div>
+      {/* Modal Overlay */}
+      <div 
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          zIndex: 100008, // ✅ FIXED: Increased from 200 to 100008 (above DetailView)
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '2rem'
+        }}
+        onClick={handleBackdropClick}
+      />
+      
+      {/* Modal Content */}
       <div
         style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '500px',
+          maxWidth: '90vw',
           backgroundColor: 'white',
           borderRadius: '1rem',
           boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-          maxWidth: '500px',
-          width: '100%',
-          position: 'relative',
-          zIndex: 15001
+          zIndex: 100009, // ✅ FIXED: Container above overlay
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column'
         }}
-        onClick={(e) => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
       >
-        <FeedbackModalContent 
-          actionResult={actionResult}
-          IconComponent={IconComponent}
-          recommendation={recommendation}
-          program={program}
-          onClose={handleClose}
-        />
+        {/* Header */}
+        <div style={{
+          padding: '1.5rem',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1rem',
+          backgroundColor: 'white'
+        }}>
+          <div style={{
+            width: '2.5rem',
+            height: '2.5rem',
+            borderRadius: '50%',
+            backgroundColor: action === 'implement' ? 'rgba(76, 175, 80, 0.1)' : 
+                            action === 'modify' ? 'rgba(33, 150, 243, 0.1)' :
+                            'rgba(244, 67, 54, 0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: action === 'implement' ? COLORS.green : 
+                   action === 'modify' ? COLORS.blue : 
+                   COLORS.red
+          }}>
+            {action === 'implement' && <CheckCircle size={20} />}
+            {action === 'modify' && <Edit size={20} />}
+            {action === 'reject' && <AlertTriangle size={20} />}
+          </div>
+          
+          <div>
+            <h3 style={{ 
+              fontSize: '1.25rem', 
+              fontWeight: 600, 
+              color: COLORS.onyx, 
+              margin: 0 
+            }}>
+              {action === 'implement' && 'Implement Recommendation'}
+              {action === 'modify' && 'Modify Recommendation'}
+              {action === 'reject' && 'Reject Recommendation'}
+            </h3>
+            <p style={{ 
+              fontSize: '0.875rem', 
+              color: COLORS.onyxMedium, 
+              margin: '0.25rem 0 0 0' 
+            }}>
+              {program?.title || 'Program'}
+            </p>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div style={{ 
+          padding: '1.5rem',
+          flex: 1
+        }}>
+          <div style={{
+            padding: '1rem',
+            backgroundColor: 'rgba(0, 0, 0, 0.02)',
+            borderRadius: '0.5rem',
+            marginBottom: '1.5rem'
+          }}>
+            <h4 style={{ 
+              fontSize: '1rem', 
+              fontWeight: 600, 
+              color: COLORS.onyx, 
+              margin: '0 0 0.5rem 0' 
+            }}>
+              {recommendation?.title || 'Recommendation'}
+            </h4>
+            <p style={{ 
+              fontSize: '0.875rem', 
+              color: COLORS.onyxMedium, 
+              margin: 0,
+              lineHeight: 1.5
+            }}>
+              {recommendation?.description || 'No description available'}
+            </p>
+          </div>
+
+          <p style={{ 
+            fontSize: '0.875rem', 
+            color: COLORS.onyxMedium, 
+            margin: '0 0 1.5rem 0',
+            lineHeight: 1.5
+          }}>
+            {action === 'implement' && 'This will create a new program based on this recommendation. You can modify the details before finalizing.'}
+            {action === 'modify' && 'You can edit the recommendation details and implementation approach.'}
+            {action === 'reject' && 'This recommendation will be marked as rejected and removed from active suggestions.'}
+          </p>
+        </div>
+
+        {/* Footer */}
+        <div style={{
+          padding: '1.5rem',
+          borderTop: '1px solid rgba(0, 0, 0, 0.1)',
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: '1rem',
+          backgroundColor: 'white'
+        }}>
+          <button
+            onClick={onCancel}
+            style={{
+              padding: '0.75rem 1.5rem',
+              borderRadius: '0.5rem',
+              border: '1px solid rgba(0, 0, 0, 0.2)',
+              backgroundColor: 'white',
+              color: COLORS.onyxMedium,
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = 'white';
+            }}
+          >
+            Cancel
+          </button>
+          
+          <button
+            onClick={onConfirm}
+            style={{
+              padding: '0.75rem 1.5rem',
+              borderRadius: '0.5rem',
+              border: 'none',
+              backgroundColor: action === 'implement' ? COLORS.green : 
+                              action === 'modify' ? COLORS.blue : 
+                              COLORS.red,
+              color: 'white',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.opacity = '0.9';
+              e.target.style.transform = 'translateY(-1px)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.opacity = '1';
+              e.target.style.transform = 'translateY(0)';
+            }}
+          >
+            {action === 'implement' && (
+              <>
+                <Check size={16} />
+                Implement
+              </>
+            )}
+            {action === 'modify' && (
+              <>
+                <Edit size={16} />
+                Save Changes
+              </>
+            )}
+            {action === 'reject' && (
+              <>
+                <X size={16} />
+                Reject
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );
 };
 
-// Reusable feedback modal content component
-const FeedbackModalContent = ({ 
-  actionResult, 
-  IconComponent, 
-  recommendation, 
-  program, 
-  onClose 
-}) => (
-  <div style={{ padding: '2rem', textAlign: 'center' }}>
-    {/* Success Icon */}
-    <div style={{
-      width: '4rem',
-      height: '4rem',
-      borderRadius: '50%',
-      backgroundColor: `${actionResult.color}20`,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      margin: '0 auto 1.5rem auto'
-    }}>
-      <IconComponent size={32} color={actionResult.color} />
-    </div>
-
-    {/* Title and Description */}
-    <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: COLORS.onyx, margin: '0 0 1rem 0' }}>
-      {actionResult.title}
-    </h2>
-    <p style={{ color: COLORS.onyxMedium, fontSize: '1rem', lineHeight: '1.5', marginBottom: '1.5rem' }}>
-      {actionResult.description}
-    </p>
-
-    {/* Context Information */}
-    {recommendation && (
-      <div style={{
-        padding: '1rem',
-        backgroundColor: 'rgba(0, 0, 0, 0.02)',
-        borderRadius: '0.5rem',
-        marginBottom: '1.5rem',
-        textAlign: 'left'
-      }}>
-        <div style={{ fontSize: '0.875rem', fontWeight: 500, color: COLORS.onyx, marginBottom: '0.25rem' }}>
-          {recommendation.title}
-        </div>
-        {program && (
-          <div style={{ fontSize: '0.75rem', color: COLORS.onyxMedium }}>
-            Program: {program.title || program.name}
-          </div>
-        )}
-      </div>
-    )}
-
-    {/* Auto-close indicator */}
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '0.5rem',
-      fontSize: '0.875rem',
-      color: COLORS.onyxMedium,
-      marginBottom: '1rem'
-    }}>
-      <Clock size={14} />
-      This will close automatically
-    </div>
-
-    {/* Close Button */}
-    <button
-      onClick={onClose}
-      style={{
-        padding: '0.75rem 1.5rem',
-        borderRadius: '0.5rem',
-        border: 'none',
-        backgroundColor: actionResult.color,
-        color: 'white',
-        cursor: 'pointer',
-        fontSize: '0.875rem',
-        fontWeight: 500,
-        transition: 'all 0.2s ease'
-      }}
-    >
-      Close
-    </button>
-
-    {/* CSS for spin animation */}
-    <style>
-      {`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}
-    </style>
-  </div>
-);
-
-// Quick Action Modal for simple confirmations
-export const QuickActionModal = ({ 
-  title, 
-  message, 
-  onConfirm, 
-  onClose,
-  confirmText = 'Confirm',
-  cancelText = 'Cancel',
-  type = 'default', // 'default', 'danger', 'success'
-  isModal = false
-}) => {
-  const [isProcessing, setIsProcessing] = useState(false);
-  const { closeModal } = useModal();
-
-  const getTypeConfig = () => {
-    switch (type) {
-      case 'danger':
-        return {
-          color: COLORS.red,
-          icon: AlertTriangle
-        };
-      case 'success':
-        return {
-          color: COLORS.evergreen,
-          icon: CheckCircle
-        };
-      default:
-        return {
-          color: COLORS.blue,
-          icon: Info
-        };
-    }
-  };
-
-  const typeConfig = getTypeConfig();
-  const IconComponent = typeConfig.icon;
-
-  const handleConfirm = async () => {
-    setIsProcessing(true);
-    
-    if (onConfirm) {
-      await onConfirm();
-    }
-    
-    setIsProcessing(false);
-    
-    if (isModal) {
-      closeModal();
-    } else if (onClose) {
+// Feedback modal displayed after an action is taken
+export const FeedbackModal = ({ action, program, recommendation, onClose }) => {
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) {
       onClose();
     }
   };
 
-  const handleClose = () => {
-    if (isModal) {
-      closeModal();
-    } else if (onClose) {
+  const handleEscapeKey = (e) => {
+    if (e.key === 'Escape') {
       onClose();
     }
   };
 
-  const content = (
-    <div style={{ padding: '2rem' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-        <div style={{
-          width: '2.5rem',
-          height: '2.5rem',
-          borderRadius: '50%',
-          backgroundColor: `${typeConfig.color}20`,
+  // Add escape key listener and auto-close timer
+  React.useEffect(() => {
+    document.addEventListener('keydown', handleEscapeKey);
+    document.body.style.overflow = 'hidden';
+    
+    // Auto-close after 3 seconds
+    const timer = setTimeout(onClose, 3000);
+    
+    return () => {
+      document.removeEventListener('keydown', handleEscapeKey);
+      document.body.style.overflow = 'unset';
+      clearTimeout(timer);
+    };
+  }, [onClose]);
+
+  return (
+    <div>
+      {/* Modal Overlay */}
+      <div 
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          zIndex: 100010, // ✅ FIXED: Increased from 200 to 100010 (above ActionModal)
+          backdropFilter: 'blur(4px)',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <IconComponent size={16} color={typeConfig.color} />
-        </div>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: COLORS.onyx, margin: 0 }}>
-          {title}
-        </h2>
-      </div>
-
-      {/* Message */}
-      <p style={{ 
-        fontSize: '1rem', 
-        color: COLORS.onyxMedium, 
-        lineHeight: '1.5', 
-        marginBottom: '2rem' 
-      }}>
-        {message}
-      </p>
-
-      {/* Action Buttons */}
-      <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-        <button
-          onClick={handleClose}
-          disabled={isProcessing}
-          style={{
-            padding: '0.75rem 1.5rem',
-            borderRadius: '0.5rem',
-            border: '1px solid rgba(0, 0, 0, 0.2)',
-            backgroundColor: 'white',
-            color: COLORS.onyx,
-            cursor: isProcessing ? 'not-allowed' : 'pointer',
-            fontSize: '0.875rem',
-            fontWeight: 500,
-            opacity: isProcessing ? 0.6 : 1,
-            transition: 'all 0.2s ease'
-          }}
-        >
-          {cancelText}
-        </button>
-        <button
-          onClick={handleConfirm}
-          disabled={isProcessing}
-          style={{
-            padding: '0.75rem 1.5rem',
-            borderRadius: '0.5rem',
-            border: 'none',
-            backgroundColor: typeConfig.color,
-            color: 'white',
-            cursor: isProcessing ? 'not-allowed' : 'pointer',
-            fontSize: '0.875rem',
-            fontWeight: 500,
-            opacity: isProcessing ? 0.6 : 1,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            transition: 'all 0.2s ease'
-          }}
-        >
-          {isProcessing ? (
-            <>
-              <div style={{ 
-                width: '16px', 
-                height: '16px', 
-                border: '2px solid rgba(255,255,255,0.3)', 
-                borderTopColor: 'white', 
-                borderRadius: '50%', 
-                animation: 'spin 1s linear infinite' 
-              }} />
-              Processing...
-            </>
-          ) : (
-            <>
-              <IconComponent size={16} />
-              {confirmText}
-            </>
-          )}
-        </button>
-      </div>
-    </div>
-  );
-
-  // Modal system automatically handles backdrop and positioning
-  if (isModal) {
-    return content;
-  }
-
-  // Legacy mode for backward compatibility
-  return (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        zIndex: 15000,
-        backdropFilter: 'blur(4px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '2rem'
-      }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget && !isProcessing) {
-          handleClose();
-        }
-      }}
-    >
+          justifyContent: 'center',
+          padding: '2rem'
+        }}
+        onClick={handleBackdropClick}
+      />
+      
+      {/* Modal Content */}
       <div
         style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '500px',
+          maxWidth: '90vw',
           backgroundColor: 'white',
           borderRadius: '1rem',
           boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-          maxWidth: '500px',
-          width: '100%',
-          position: 'relative',
-          zIndex: 15001
+          zIndex: 100011, // ✅ FIXED: Container above overlay
+          overflow: 'hidden',
+          padding: '2rem'
         }}
-        onClick={(e) => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
       >
-        {content}
+        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+          <div style={{ 
+            width: '3rem',
+            height: '3rem',
+            borderRadius: '50%',
+            backgroundColor: action === 'implement' ? 'rgba(76, 175, 80, 0.2)' : 
+                            action === 'modify' ? 'rgba(33, 150, 243, 0.2)' :
+                            'rgba(244, 67, 54, 0.2)',
+            color: action === 'implement' ? COLORS.green : 
+                   action === 'modify' ? COLORS.blue : 
+                   COLORS.red,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 1rem',
+            animation: 'pulse 1s ease-in-out'
+          }}>
+            {action === 'implement' && <CheckCircle size={24} />}
+            {action === 'modify' && <Edit size={24} />}
+            {action === 'reject' && <X size={24} />}
+          </div>
+          
+          <h3 style={{ 
+            fontSize: '1.25rem', 
+            fontWeight: 600, 
+            color: COLORS.onyx, 
+            margin: '0 0 0.5rem 0' 
+          }}>
+            {action === 'implement' && 'Recommendation Implemented!'}
+            {action === 'modify' && 'Recommendation Modified!'}
+            {action === 'reject' && 'Recommendation Rejected'}
+          </h3>
+          
+          <p style={{ 
+            fontSize: '0.875rem', 
+            color: COLORS.onyxMedium, 
+            margin: 0,
+            lineHeight: 1.5
+          }}>
+            {action === 'implement' && `${recommendation?.title || 'The recommendation'} has been successfully implemented for ${program?.title || 'the program'}.`}
+            {action === 'modify' && `Your changes to ${recommendation?.title || 'the recommendation'} have been saved.`}
+            {action === 'reject' && `${recommendation?.title || 'The recommendation'} has been rejected and removed from suggestions.`}
+          </p>
+        </div>
+
+        <div style={{
+          padding: '1rem',
+          backgroundColor: 'rgba(0, 0, 0, 0.02)',
+          borderRadius: '0.5rem',
+          marginBottom: '1.5rem'
+        }}>
+          <p style={{ 
+            fontSize: '0.75rem', 
+            color: COLORS.onyxMedium, 
+            margin: 0,
+            textAlign: 'center'
+          }}>
+            {action === 'implement' && 'You can view and manage the new program in your dashboard.'}
+            {action === 'modify' && 'The updated recommendation is now available.'}
+            {action === 'reject' && 'This action has been logged and won\'t affect other recommendations.'}
+          </p>
+        </div>
+
+        <div style={{ textAlign: 'center' }}>
+          <button
+            onClick={onClose}
+            style={{
+              padding: '0.75rem 2rem',
+              borderRadius: '0.5rem',
+              border: 'none',
+              backgroundColor: COLORS.evergreen,
+              color: 'white',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = '#155a56';
+              e.target.style.transform = 'translateY(-1px)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = COLORS.evergreen;
+              e.target.style.transform = 'translateY(0)';
+            }}
+          >
+            Close
+          </button>
+        </div>
       </div>
+
+      {/* Add pulse animation */}
+      <style jsx>{`
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.1); }
+        }
+      `}</style>
     </div>
   );
 };

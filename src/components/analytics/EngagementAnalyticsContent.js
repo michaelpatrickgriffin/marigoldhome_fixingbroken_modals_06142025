@@ -101,7 +101,7 @@ const engagementRecommendations = [
   {
     id: 4,
     title: 'User-Generated Content Campaign',
-    description: 'Launch a campaign encouraging customers to share photos with Outdoors Sportswear products in outdoor settings. Content analysis shows user-generated content drives 3.2x more engagement than standard product content.',
+    description: 'Launch a campaign encouraging customers to share photos with Columbia products in outdoor settings. Content analysis shows user-generated content drives 3.2x more engagement than standard product content.',
     impact: 'medium',
     difficulty: 'low',
     tools: ['Marigold Messaging', 'Marigold Content']
@@ -342,7 +342,7 @@ const EngagementAnalyticsContent = ({ activeTab, onTabChange = null, comparisonP
             <div style={{ flex: '1' }}>
               <div style={{ fontSize: '0.875rem', color: COLORS.onyxMedium, lineHeight: 1.6 }}>
                 <p style={{ marginBottom: '0.75rem' }}>
-                  <strong>Outdoors Sportswear</strong> is experiencing a <strong style={{ color: COLORS.green }}>{clickRateChange.toFixed(1)}%</strong> increase in click-through rate, reaching <strong>{currentClickRate.toFixed(1)}%</strong> on average across all channels.
+                  <strong>Columbia Sportswear</strong> is experiencing a <strong style={{ color: COLORS.green }}>{clickRateChange.toFixed(1)}%</strong> increase in click-through rate, reaching <strong>{currentClickRate.toFixed(1)}%</strong> on average across all channels.
                 </p>
                 <p style={{ marginBottom: '0.75rem' }}>
                   <strong>Social engagement</strong> has grown by <strong style={{ color: COLORS.green }}>24.8%</strong>, driven by the increased sharing of user-generated content. <strong>Mobile users</strong> now account for <strong>58%</strong> of all traffic, but show <strong>32%</strong> lower conversion rates than desktop users.
