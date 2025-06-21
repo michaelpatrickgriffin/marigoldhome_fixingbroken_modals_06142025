@@ -506,3 +506,8 @@
     border: 1px solid;
   }
 }
+
+/* Add this CSS to your existing AIResponseModal styles */
+.ai-response-modal-overlay {
+  z-index: 99999 !important;
+}

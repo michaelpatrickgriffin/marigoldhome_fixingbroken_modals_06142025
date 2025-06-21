@@ -300,100 +300,334 @@ export const membershipData = [
   { name: 'Summit', value: 12468, color: '#FF9800' }
 ];
 
-// ===== AI RESPONSE GENERATORS =====
+// ===== ENHANCED AI RESPONSE GENERATORS =====
 export const getResponseGenerator = (query) => {
   const lowerQuery = query.toLowerCase();
   
-  if (lowerQuery.includes('revenue') || lowerQuery.includes('money') || lowerQuery.includes('sales')) {
+  // Revenue-focused queries
+  if (lowerQuery.includes('revenue') || lowerQuery.includes('money') || lowerQuery.includes('sales') || lowerQuery.includes('income')) {
     return () => ({
       type: 'analysis',
-      title: 'Revenue Performance Analysis',
-      summary: 'Your revenue is trending positively with strong month-over-month growth of 12.7%. Here\'s what\'s driving performance:',
-      keyInsights: [
-        'Winter campaigns driving 34% of Q1 revenue growth',
-        'Summit tier members contributing 40% of total revenue',
-        'Strong conversion rates in outdoor gear categories'
-      ],
+      directAnswer: 'Your revenue is performing strongly with 12.7% month-over-month growth, primarily driven by Winter Gear campaigns and Summit tier customer expansion.',
+      text: 'Revenue analysis shows exceptional performance across multiple channels. Winter Gear Sale campaign is driving 34% of quarterly growth with a remarkable 1001% ROI. Summit tier members are contributing 40% of total revenue despite being only 12% of your customer base. The $3.24M monthly revenue represents your strongest quarterly performance, with customer acquisition costs down 8% while retention has improved 15%. However, the Trail Essentials campaign is creating a $180K revenue drag that requires immediate attention.',
       recommendations: [
-        'Increase budget allocation to winter gear campaigns by 25%',
-        'Launch targeted upsell campaigns for Summit tier members',
-        'Optimize product recommendations in checkout flow'
+        {
+          id: 'rev-1',
+          title: 'Scale Winter Campaign Success Model',
+          description: 'Increase budget allocation to winter gear campaigns by 25% and expand successful messaging to related seasonal categories. The 1001% ROI indicates significant untapped potential.',
+          impact: 'high',
+          estimatedROI: '+$284K additional revenue',
+          difficulty: 'low'
+        },
+        {
+          id: 'rev-2', 
+          title: 'Summit Tier Revenue Expansion',
+          description: 'Launch targeted upsell campaigns for Adventurer members approaching Summit thresholds. Include early access previews and tier progression incentives.',
+          impact: 'high',
+          estimatedROI: '+$156K potential revenue',
+          difficulty: 'medium'
+        },
+        {
+          id: 'rev-3',
+          title: 'Address Trail Essentials Revenue Drag',
+          description: 'Immediately investigate and optimize Trail Essentials campaign to stop $180K monthly revenue loss and prevent customer churn.',
+          impact: 'high',
+          estimatedROI: '+$180K revenue recovery',
+          difficulty: 'medium'
+        }
       ],
-      metrics: {
-        current: '$3.24M',
-        growth: '+12.7%',
-        projection: '$3.8M next month'
-      }
+      suggestedQuestions: [
+        "Which specific campaigns should I increase budget for?",
+        "How can I convert more Adventurer members to Summit tier?",
+        "What's causing the Trail Essentials campaign to underperform?",
+        "What seasonal opportunities should I prepare for next quarter?"
+      ]
     });
   }
   
-  if (lowerQuery.includes('campaign') || lowerQuery.includes('email') || lowerQuery.includes('marketing')) {
+  // Campaign-focused queries
+  if (lowerQuery.includes('campaign') || lowerQuery.includes('email') || lowerQuery.includes('marketing') || lowerQuery.includes('pause') || lowerQuery.includes('optimize')) {
     return () => ({
       type: 'campaign_analysis',
-      title: 'Campaign Performance Insights',
-      summary: 'Your campaigns show mixed performance with clear optimization opportunities:',
-      keyInsights: [
-        'Summit Tier Welcome campaign achieving 1777% ROI',
-        'Trail Essentials campaign underperforming at 261% ROI',
-        'Overall campaign engagement up 15% month-over-month'
-      ],
+      directAnswer: 'Your campaigns show mixed performance: Summit Tier Welcome (1777% ROI) and Winter Gear Sale (1001% ROI) are exceptional, while Trail Essentials (261% ROI) needs immediate optimization.',
+      text: 'Campaign performance analysis reveals clear winners and areas for improvement. Summit Tier Welcome campaign is delivering outstanding 1777% ROI with high engagement across all metrics, indicating excellent message-market fit. Winter Gear Sale maintains strong 1001% ROI and is driving significant revenue growth. However, Trail Essentials campaign is significantly underperforming with only 261% ROI, affecting 18,900 customers and creating satisfaction issues. Email engagement is up 15% overall, but loyalty program engagement is declining due to campaign frustrations.',
       recommendations: [
-        'Pause Trail Essentials and investigate messaging issues',
-        'Scale successful Summit Tier strategy to other segments',
-        'Implement A/B testing for subject lines in underperforming campaigns'
+        {
+          id: 'camp-1',
+          title: 'Pause Trail Essentials Campaign Immediately',
+          description: 'Stop Trail Essentials campaign and investigate messaging, timing, and targeting issues. The low ROI is damaging customer relationships and brand perception.',
+          impact: 'high',
+          estimatedROI: 'Prevent $85K additional losses',
+          difficulty: 'low'
+        },
+        {
+          id: 'camp-2',
+          title: 'Scale Summit Tier Success Strategy',
+          description: 'Apply successful Summit Tier campaign elements to other customer segments. Test messaging frameworks and personalization approaches that drove 1777% ROI.',
+          impact: 'high',
+          estimatedROI: '+$245K potential revenue',
+          difficulty: 'medium'
+        },
+        {
+          id: 'camp-3',
+          title: 'Implement Advanced A/B Testing',
+          description: 'Deploy comprehensive A/B testing for subject lines, send times, and content personalization across underperforming campaigns.',
+          impact: 'medium',
+          estimatedROI: '+15-25% campaign improvement',
+          difficulty: 'low'
+        }
       ],
-      performanceHighlights: [
-        { campaign: 'Summit Tier Welcome', roi: '1777%', status: 'Excellent' },
-        { campaign: 'Winter Gear Sale', roi: '1001%', status: 'Good' },
-        { campaign: 'Trail Essentials', roi: '261%', status: 'Needs Attention' }
+      suggestedQuestions: [
+        "Which campaign elements from Summit Tier can I apply elsewhere?",
+        "What specific issues are causing Trail Essentials to fail?",
+        "How can I improve email open rates across all campaigns?",
+        "What A/B tests should I prioritize this month?"
       ]
     });
   }
   
-  if (lowerQuery.includes('loyalty') || lowerQuery.includes('program') || lowerQuery.includes('retention')) {
+  // Budget and spending queries
+  if (lowerQuery.includes('budget') || lowerQuery.includes('spend') || lowerQuery.includes('allocation') || lowerQuery.includes('utilization')) {
+    return () => ({
+      type: 'budget_analysis',
+      directAnswer: 'Your budget allocation shows 67% on email campaigns and 33% on loyalty programs. Consider shifting 15% more budget toward highest ROI campaigns and addressing program failures.',
+      text: 'Budget utilization analysis shows opportunities for optimization. Current allocation favors email campaigns (67%) over loyalty programs (33%), but ROI variance suggests rebalancing is needed. Winter Gear and Summit Tier campaigns are generating exceptional returns that warrant increased investment. However, Trail Essentials campaign is consuming budget while delivering poor results. The Premium Gear Access program decline is wasting loyalty budget and damaging customer relationships.',
+      recommendations: [
+        {
+          id: 'budget-1',
+          title: 'Reallocate Budget from Underperformers',
+          description: 'Shift 25% of Trail Essentials budget to Winter Gear and Summit Tier campaigns that show proven ROI and growth potential.',
+          impact: 'high',
+          estimatedROI: '+$125K revenue improvement',
+          difficulty: 'low'
+        },
+        {
+          id: 'budget-2',
+          title: 'Emergency Loyalty Program Investment',
+          description: 'Allocate emergency budget to fix Premium Gear Access program and prevent further customer churn and brand damage.',
+          impact: 'high',
+          estimatedROI: 'Prevent $156K losses',
+          difficulty: 'medium'
+        },
+        {
+          id: 'budget-3',
+          title: 'Performance-Based Budget Reallocation',
+          description: 'Implement monthly budget reallocation based on ROI performance, automatically shifting spend to highest-performing campaigns.',
+          impact: 'medium',
+          estimatedROI: '+20-30% budget efficiency',
+          difficulty: 'medium'
+        }
+      ],
+      suggestedQuestions: [
+        "What's my optimal budget split between email and loyalty?",
+        "Which campaigns deserve more budget investment?",
+        "How much should I invest in fixing failing programs?",
+        "What's my target ROI threshold for budget allocation?"
+      ]
+    });
+  }
+  
+  // Loyalty program queries
+  if (lowerQuery.includes('loyalty') || lowerQuery.includes('program') || lowerQuery.includes('retention') || lowerQuery.includes('redemption')) {
     return () => ({
       type: 'loyalty_analysis',
-      title: 'Loyalty Program Analysis',
-      summary: 'Your loyalty programs show strong engagement but have critical optimization opportunities:',
-      keyInsights: [
-        'Adventure Gear Punch Card achieving 900% ROI with 48% completion rate',
-        'Premium Gear Access Program experiencing 68% participation decline',
-        'Member satisfaction scores averaging 8.2/10 across all programs'
-      ],
+      directAnswer: 'Your loyalty programs show critical performance gaps: Adventure Gear Punch Card excels (900% ROI), but Premium Gear Access is failing (68% decline) and needs immediate intervention.',
+      text: 'Loyalty program analysis reveals urgent optimization needs. Adventure Gear Punch Card demonstrates excellent performance with 900% ROI and 48% completion rate, providing a successful model for expansion. However, Premium Gear Access Program is experiencing catastrophic 68% member decline with negative ROI, affecting premium tier perception and customer satisfaction. Trail Essentials Punch Card shows only 10% completion rate, frustrating customers and damaging brand relationships. Overall redemption rates are down 8.3%, indicating systemic engagement issues.',
       recommendations: [
-        'Investigate Premium Gear Access Program immediately',
-        'Expand successful punch card model to other categories',
-        'Implement member feedback surveys for declining programs'
+        {
+          id: 'loyal-1',
+          title: 'Emergency Premium Program Recovery',
+          description: 'Immediately redesign Premium Gear Access Program structure, survey affected members, and implement recovery campaign to restore confidence.',
+          impact: 'high',
+          estimatedROI: 'Prevent $285K annual losses',
+          difficulty: 'hard'
+        },
+        {
+          id: 'loyal-2',
+          title: 'Expand Adventure Gear Success Model',
+          description: 'Apply Adventure Gear Punch Card success elements to other programs. The 900% ROI model provides proven framework for optimization.',
+          impact: 'high',
+          estimatedROI: '+$185K additional revenue',
+          difficulty: 'medium'
+        },
+        {
+          id: 'loyal-3',
+          title: 'Simplify Trail Essentials Structure',
+          description: 'Reduce Trail Essentials punch target from 10 to 6 and add interim rewards to improve the 10% completion rate.',
+          impact: 'medium',
+          estimatedROI: '+$95K program recovery',
+          difficulty: 'low'
+        }
       ],
-      programHighlights: [
-        { program: 'Adventure Gear Punch Card', performance: 'Excellent', participants: '18.5K' },
-        { program: 'Premium Gear Access', performance: 'Needs Attention', participants: '2.1K' },
-        { program: 'Seasonal Rewards', performance: 'Good', participants: '12.3K' }
+      suggestedQuestions: [
+        "What makes Adventure Gear Punch Card so successful?",
+        "How do I fix the Premium Gear Access program decline?",
+        "Which loyalty programs should I pause or restructure?",
+        "What program changes would improve member satisfaction?"
       ]
     });
   }
   
-  // Default response
+  // Customer segment queries (including RFM)
+  if (lowerQuery.includes('customer') || lowerQuery.includes('segment') || lowerQuery.includes('rfm') || lowerQuery.includes('champion') || lowerQuery.includes('at risk') || lowerQuery.includes('churn')) {
+    return () => ({
+      type: 'customer_analysis',
+      directAnswer: 'Your customer segments show strong Champions performance driving 31% of revenue, but At Risk customers (6.3%) need immediate attention to prevent high-value churn.',
+      text: 'Customer segment analysis reveals both opportunities and risks. Champions segment (12.3% of customers) drives 31% of total revenue with $450 average spend, indicating excellent high-value customer performance. Potential Loyalists represent 22.8% of your base with significant growth opportunity. However, At Risk customers represent 6.3% of customers but account for high historical value ($380 average spend) and are showing declining engagement. Cannot Lose Them segment (2.7%) requires emergency intervention to prevent catastrophic churn of your highest-value customers.',
+      recommendations: [
+        {
+          id: 'seg-1',
+          title: 'Champions VIP Expansion Program',
+          description: 'Create exclusive Champions tier benefits including early access, premium support, and brand ambassador opportunities to maximize their advocacy.',
+          impact: 'high',
+          estimatedROI: '+$156K from increased Champions spending',
+          difficulty: 'medium'
+        },
+        {
+          id: 'seg-2',
+          title: 'At Risk Customer Recovery Campaign',
+          description: 'Deploy immediate win-back campaigns for At Risk customers with personalized offers and account manager outreach.',
+          impact: 'high',
+          estimatedROI: 'Prevent $285K potential churn',
+          difficulty: 'medium'
+        },
+        {
+          id: 'seg-3',
+          title: 'Potential Loyalists Conversion Strategy',
+          description: 'Create targeted campaigns to move Potential Loyalists to Champions through frequency-building and cross-category promotions.',
+          impact: 'medium',
+          estimatedROI: '+$125K from segment progression',
+          difficulty: 'low'
+        }
+      ],
+      suggestedQuestions: [
+        "What specific actions work best for Champions customers?",
+        "How can I prevent At Risk customers from churning?",
+        "Which segments have the highest growth potential?",
+        "What campaigns help move customers between segments?"
+      ]
+    });
+  }
+  
+  // Performance and KPI queries
+  if (lowerQuery.includes('kpi') || lowerQuery.includes('performance') || lowerQuery.includes('metrics') || lowerQuery.includes('attention') || lowerQuery.includes('focus')) {
+    return () => ({
+      type: 'performance_analysis',
+      directAnswer: 'Your KPIs show strong growth across revenue (+12.7%) and customers (+8.3%), but loyalty engagement declining requires immediate focus to prevent customer satisfaction issues.',
+      text: 'Performance metrics indicate mixed results requiring strategic attention. Revenue growth of 12.7% and customer acquisition growth of 8.3% demonstrate strong market performance and successful acquisition strategies. Email engagement is improving (+1.5% click-through rate) showing content optimization success. However, loyalty program engagement is declining significantly, with Premium Gear Access showing 68% member decline and overall redemption rates down 8.3%. This loyalty crisis is affecting customer satisfaction and could impact long-term retention.',
+      recommendations: [
+        {
+          id: 'perf-1',
+          title: 'Loyalty Engagement Emergency Response',
+          description: 'Immediately address loyalty program failures before they impact overall customer satisfaction and retention metrics.',
+          impact: 'high',
+          estimatedROI: 'Prevent $245K potential losses',
+          difficulty: 'hard'
+        },
+        {
+          id: 'perf-2',
+          title: 'Scale Email Success to Loyalty',
+          description: 'Apply successful email optimization strategies to loyalty program communications and member engagement.',
+          impact: 'medium',
+          estimatedROI: '+15-25% loyalty engagement',
+          difficulty: 'medium'
+        },
+        {
+          id: 'perf-3',
+          title: 'Integrated Performance Monitoring',
+          description: 'Implement cross-channel performance monitoring to catch declining metrics before they impact customer experience.',
+          impact: 'medium',
+          estimatedROI: 'Prevent future issues',
+          difficulty: 'low'
+        }
+      ],
+      suggestedQuestions: [
+        "Which metrics are leading indicators of customer satisfaction issues?",
+        "How can I improve loyalty engagement without hurting email performance?",
+        "What KPIs should I monitor daily vs weekly?",
+        "Which performance trends predict future problems?"
+      ]
+    });
+  }
+  
+  // Engagement queries
+  if (lowerQuery.includes('engagement') || lowerQuery.includes('open rate') || lowerQuery.includes('click') || lowerQuery.includes('email')) {
+    return () => ({
+      type: 'engagement_analysis',
+      directAnswer: 'Email engagement is improving (+1.5% click-through rate) but loyalty engagement declining significantly. Focus on bridging this performance gap.',
+      text: 'Engagement analysis shows diverging channel performance. Email campaigns are demonstrating strong improvement with click-through rates up 1.5% and overall engagement trending positive. Winter Gear and Summit Tier campaigns show exceptional engagement rates. However, loyalty program engagement is declining across multiple programs, with Premium Gear Access showing catastrophic 68% participation decline and overall redemption rates down 8.3%. This creates a dangerous disconnect between email and loyalty channel performance.',
+      recommendations: [
+        {
+          id: 'eng-1',
+          title: 'Cross-Channel Engagement Integration',
+          description: 'Integrate email and loyalty program messaging to create cohesive customer experience and prevent channel performance gaps.',
+          impact: 'high',
+          estimatedROI: '+25% loyalty engagement',
+          difficulty: 'medium'
+        },
+        {
+          id: 'eng-2',
+          title: 'Loyalty Communication Optimization',
+          description: 'Apply successful email engagement tactics to loyalty program communications, including personalization and timing optimization.',
+          impact: 'medium',
+          estimatedROI: '+15% program participation',
+          difficulty: 'low'
+        },
+        {
+          id: 'eng-3',
+          title: 'Engagement Recovery Campaign',
+          description: 'Launch targeted campaigns to re-engage declining loyalty program members before they become fully disengaged.',
+          impact: 'high',
+          estimatedROI: 'Prevent $125K engagement losses',
+          difficulty: 'medium'
+        }
+      ],
+      suggestedQuestions: [
+        "How can I apply email success to loyalty programs?",
+        "What's causing the loyalty engagement decline?",
+        "Which engagement tactics work best for outdoor customers?",
+        "How do I create consistent engagement across all channels?"
+      ]
+    });
+  }
+  
+  // Default/general response for questions that don't match specific categories
   return () => ({
     type: 'general',
-    title: 'Marketing Performance Overview',
-    summary: 'Here\'s a comprehensive view of your current marketing performance:',
-    keyInsights: [
-      'Overall performance trending positive with 12.7% revenue growth',
-      'Customer acquisition costs down 8% while retention up 15%',
-      'Strong engagement across email campaigns and loyalty programs'
-    ],
+    directAnswer: 'Your marketing performance shows strong revenue growth (+12.7%) and customer acquisition (+8.3%), but loyalty programs need immediate attention to prevent customer satisfaction issues.',
+    text: 'Overall marketing performance analysis reveals a mixed but promising picture. Revenue growth of 12.7% and customer acquisition improvement of 8.3% demonstrate effective marketing strategies and strong market response. Email campaigns are performing well with improving engagement rates and exceptional ROI from Winter Gear (1001%) and Summit Tier (1777%) campaigns. However, critical issues in loyalty programs require immediate attention: Premium Gear Access Program has declined 68% and Trail Essentials shows only 10% completion rate. These program failures are affecting customer satisfaction and could impact long-term retention.',
     recommendations: [
-      'Focus budget on highest ROI campaigns (Summit Tier)',
-      'Address underperforming Trail Essentials campaign',
-      'Expand successful loyalty program models'
+      {
+        id: 'gen-1',
+        title: 'Focus Budget on Highest ROI Campaigns',
+        description: 'Reallocate budget from underperforming Trail Essentials to proven winners like Winter Gear and Summit Tier campaigns.',
+        impact: 'high',
+        estimatedROI: '+$185K immediate revenue potential',
+        difficulty: 'low'
+      },
+      {
+        id: 'gen-2',
+        title: 'Emergency Loyalty Program Intervention',
+        description: 'Immediately address failing loyalty programs before they damage customer relationships and brand perception.',
+        impact: 'high',
+        estimatedROI: 'Prevent $285K potential losses',
+        difficulty: 'hard'
+      },
+      {
+        id: 'gen-3',
+        title: 'Scale Success Model Across Programs',
+        description: 'Apply Adventure Gear Punch Card success elements (900% ROI) to optimize other loyalty programs.',
+        impact: 'medium',
+        estimatedROI: '+$125K from program optimization',
+        difficulty: 'medium'
+      }
     ],
-    quickStats: {
-      revenue: '$3.24M (+12.7%)',
-      customers: '46.5K (+8.3%)',
-      engagement: '4.2% (+1.5%)',
-      conversion: '3.8% (+0.7%)'
-    }
+    suggestedQuestions: [
+      "What should be my top 3 priorities this month?",
+      "Which campaigns are driving the most revenue growth?",
+      "How can I prevent loyalty program issues from affecting customer satisfaction?",
+      "What's the fastest way to improve underperforming programs?"
+    ]
   });
 };
 
@@ -1233,7 +1467,7 @@ export const profilePanelConfig = {
   }
 };
 
-// Sidebar Menu Configuration with NEW STRUCTURE
+// Sidebar Menu Configuration
 export const sidebarMenuConfig = {
   menuItems: [
     { 
@@ -1602,5 +1836,146 @@ export const headerConfig = {
     avatarSize: '2.25rem', // 9 * 0.25rem
     padding: '1rem 1.5rem',
     hamburgerMargin: '1rem'
+  }
+};
+
+// ===== SUGGESTED QUESTIONS CONFIGURATION =====
+export const suggestedQuestionsConfig = {
+  header: {
+    title: 'Suggested Questions',
+    icon: 'Bot',
+    iconSize: 18
+  },
+  questionButton: {
+    backgroundColor: 'white',
+    border: '1px solid rgba(0, 0, 0, 0.1)',
+    borderRadius: '0.5rem',
+    padding: '0.875rem 1rem',
+    fontSize: '0.875rem',
+    fontWeight: 500,
+    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+    hoverStyles: {
+      transform: 'translateY(-1px)',
+      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)'
+    },
+    icon: 'ChevronRight',
+    iconSize: 16
+  },
+  clearButton: {
+    styling: {
+      padding: '0.5rem 0.75rem',
+      borderRadius: '0.375rem',
+      backgroundColor: 'rgba(0, 0, 0, 0.05)',
+      border: 'none',
+      fontSize: '0.8125rem',
+      fontWeight: 500,
+      cursor: 'pointer',
+      marginTop: '1rem',
+      display: 'flex',
+      alignItems: 'center'
+    },
+    text: 'Clear Response',
+    icon: 'X',
+    iconSize: 14
+  },
+  container: {
+    className: 'suggested-questions-container',
+    titleClassName: 'suggested-questions-title',
+    listClassName: 'suggested-questions-list',
+    buttonClassName: 'suggested-question-button',
+    clearButtonClassName: 'suggested-questions-clear'
+  },
+  animations: {
+    fadeInDelay: 0.3,
+    staggerDelay: 0.1,
+    baseDelay: 0.2
+  }
+};
+
+// ===== AI COPILOT RESPONSE CONFIGURATION =====
+export const aiCopilotResponseConfig = {
+  header: {
+    title: 'AI Assistant',
+    clearButtonText: 'Clear'
+  },
+  questionDisplay: {
+    prefix: '❓',
+    styling: {
+      backgroundColor: 'rgba(26, 76, 73, 0.05)',
+      borderRadius: '0.5rem',
+      padding: '0.75rem',
+      marginBottom: '1rem',
+      borderLeft: '3px solid #1A4C49',
+      display: 'flex',
+      gap: '0.75rem',
+      fontSize: '0.875rem',
+      color: '#1A4C49',
+      fontWeight: 500
+    }
+  },
+  responseContainer: {
+    botIconSize: 20,
+    padding: '1rem',
+    borderRadius: '0.75rem',
+    border: '1px solid rgba(0, 0, 0, 0.08)',
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+    containerSpacing: '2.5rem'
+  },
+  recommendations: {
+    title: 'Recommended Actions',
+    titleIcon: 'CheckCircle',
+    titleIconSize: 18,
+    cardSpacing: '1rem',
+    cardPadding: '1rem',
+    cardBorderRadius: '0.5rem',
+    impactColors: {
+      high: {
+        icon: 'ArrowUpRight',
+        color: '#4CAF50',
+        backgroundColor: 'rgba(76, 175, 80, 0.1)'
+      },
+      medium: {
+        icon: 'TrendingUp',
+        color: '#FFC107',
+        backgroundColor: 'rgba(255, 193, 7, 0.1)'
+      }
+    },
+    roiColors: {
+      icon: 'TrendingUp',
+      color: '#2196F3',
+      backgroundColor: 'rgba(33, 150, 243, 0.1)'
+    }
+  },
+  buttons: {
+    details: {
+      text: 'View Details',
+      styling: {
+        padding: '0.5rem 1rem',
+        borderRadius: '0.375rem',
+        border: '1px solid',
+        backgroundColor: 'white',
+        fontSize: '0.875rem',
+        fontWeight: 500,
+        cursor: 'pointer'
+      }
+    },
+    apply: {
+      text: 'Apply Recommendation',
+      icon: 'ArrowUpRight',
+      iconSize: 14,
+      styling: {
+        padding: '0.5rem 1rem',
+        borderRadius: '0.375rem',
+        border: 'none',
+        fontSize: '0.875rem',
+        fontWeight: 500,
+        cursor: 'pointer'
+      }
+    }
+  },
+  animations: {
+    fadeInDelay: 0.3,
+    staggerDelay: 0.1,
+    baseDelay: 0.2
   }
 };

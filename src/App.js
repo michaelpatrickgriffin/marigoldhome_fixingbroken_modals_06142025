@@ -11,6 +11,8 @@ import { CampaignList, CampaignModal } from './components/campaigns/CampaignList
 import CampaignDetailView from './components/campaigns/CampaignDetailView';
 import NotificationPanel from './components/layout/NotificationPanel';
 import ProfilePanel from './components/layout/ProfilePanel';
+import AIPromptBar from './components/common/AIPromptBar';
+import AIResponseModal from './components/common/AIResponseModal'; // ✅ ADDED: Import AIResponseModal
 import KpiAnalyticsModal from './components/analytics/KpiAnalyticsModal';
 import { COLORS, darkMeshGradient } from './styles/ColorStyles';
 import SplitCampaignCreationModal from './components/campaigns/SplitCampaignCreationModal';
@@ -289,15 +291,18 @@ const App = () => {
 
   // AI Assistant handlers
   const handleAIPromptSubmit = (query) => {
+    console.log('🔥 AI prompt submitted:', query); // ✅ ADDED: Debug log
     setLastQuestion(query);
     setIsAIMinimized(true);
     
     setTimeout(() => {
       const responseGenerator = getResponseGenerator(query);
       const response = responseGenerator();
+      console.log('🔥 Setting AI response:', response); // ✅ ADDED: Debug log
       setAiResponse(response);
       setShowAIResponse(true);
-    }, 1500);
+      console.log('🔥 showAIResponse set to:', true); // ✅ ADDED: Debug log
+    }, 300);
   };
 
   const handleAIPromptClick = (prompt) => {
@@ -903,6 +908,15 @@ const App = () => {
                             />
                           ) : dashboardView === 'standard' ? (
                             <>
+                            {/* ✅ ADD: AI Assistant Prompt Bar for Standard Dashboard */}
+                            <AIPromptBar
+                              onSubmit={handleAIPromptSubmit}
+                              isMinimized={isAIMinimized}
+                              onToggleMinimize={() => setIsAIMinimized(!isAIMinimized)}
+                              placeholderText={getPlaceholderText()}
+                              suggestedPrompts={getDashboardPrompts()}
+                            />
+
                               {/* KPI Cards */}
                               <div style={{ marginBottom: '1.5rem' }}>
                                 <DashboardKpiCards 
@@ -1057,6 +1071,21 @@ const App = () => {
                             </>
                           ) : (
                             <RFMDashboard 
+                              // ✅ FIXED: Added AI props to RFM Dashboard
+                              aiState={{
+                                isAIMinimized,
+                                aiResponse,
+                                lastQuestion,
+                                showAIResponse
+                              }}
+                              aiHandlers={{
+                                handleAIPromptSubmit,
+                                handleAIPromptClick,
+                                handleClearAIResponse,
+                                setIsAIMinimized
+                              }}
+                              contextualPrompts={getDashboardPrompts()}
+                              placeholderText={getPlaceholderText()}
                               onSegmentClick={(segment) => {
                                 console.log('RFM Segment clicked:', segment);
                                 // Ensure smooth modal transitions for RFM segments
@@ -1250,6 +1279,18 @@ const App = () => {
         <CampaignSuccessToast
           message={successToast.message}
           onClose={() => setSuccessToast(null)}
+        />
+      )}
+
+      {/* ✅ ADDED: AI Response Modal - This was completely missing! */}
+      {(dashboardView === 'marketing' || dashboardView === 'narrative' || dashboardView === 'standard' || dashboardView === 'rfm') && (
+        <AIResponseModal 
+          isOpen={showAIResponse}
+          onClose={() => setShowAIResponse(false)}
+          response={aiResponse}
+          question={lastQuestion}
+          onClearResponse={handleClearAIResponse}
+          onPromptClick={handleAIPromptClick}
         />
       )}
     </div>
