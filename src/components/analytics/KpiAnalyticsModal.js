@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Download, Filter } from 'lucide-react';
 import { COLORS } from '../../styles/ColorStyles';
+import { useMVPUI } from '../../contexts/MVPUIContext';
 import RevenueAnalyticsContent from './RevenueAnalyticsContent';
 import CustomerAnalyticsContent from './CustomerAnalyticsContent';
 import EngagementAnalyticsContent from './EngagementAnalyticsContent';
@@ -26,6 +27,9 @@ const KpiAnalyticsModal = ({
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
+  // ✅ NEW: Add MVP UI context
+  const { isMVPMode } = useMVPUI();
+
   // Animation effect
   useEffect(() => {
     if (isOpen) {
@@ -38,6 +42,13 @@ const KpiAnalyticsModal = ({
       setIsVisible(false);
     }
   }, [isOpen]);
+
+  // ✅ NEW: Handle MVP mode - switch to overview if currently on hidden tabs
+  useEffect(() => {
+    if (isMVPMode && (activeTab === 'trends' || activeTab === 'breakdown')) {
+      setActiveTab('overview');
+    }
+  }, [isMVPMode, activeTab]);
 
   // Handle close with animation
   const handleClose = () => {
@@ -66,6 +77,18 @@ const KpiAnalyticsModal = ({
       default:
         return 'KPI Analysis';
     }
+  };
+
+  // ✅ NEW: Get available tabs based on MVP mode
+  const getAvailableTabs = () => {
+    const allTabs = ['Overview', 'Trends', 'Breakdown', 'Recommendations'];
+    
+    if (isMVPMode) {
+      // In MVP mode, only show Overview and Recommendations
+      return allTabs.filter(tab => tab === 'Overview' || tab === 'Recommendations');
+    }
+    
+    return allTabs;
   };
 
   // Get the appropriate content component based on KPI type
@@ -376,7 +399,7 @@ const KpiAnalyticsModal = ({
           </div>
         )}
         
-        {/* Tabs */}
+        {/* ✅ UPDATED: Tabs - Only show available tabs based on MVP mode */}
         <div style={{
           borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
           display: 'flex',
@@ -392,7 +415,7 @@ const KpiAnalyticsModal = ({
             display: 'flex',
             gap: '2rem'
           }}>
-            {['Overview', 'Trends', 'Breakdown', 'Recommendations'].map((tab) => (
+            {getAvailableTabs().map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab.toLowerCase())}

@@ -1,0 +1,498 @@
+/* Add these styles to your main CSS file or create a new OfferWizard.css file */
+
+/* ===== FORM INPUT STYLES ===== */
+.input-with-addon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-with-addon .form-input {
+  flex: 1;
+  padding-right: 3rem;
+}
+
+.input-addon {
+  position: absolute;
+  right: 1rem;
+  color: #666;
+  font-weight: 500;
+  pointer-events: none;
+}
+
+.checkbox-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  transition: background-color 0.2s ease;
+}
+
+.checkbox-label:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.checkbox-label input[type="checkbox"] {
+  margin: 0;
+  accent-color: #1A4C49;
+}
+
+/* ===== PREDICTIONS GRID ===== */
+.predictions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.prediction-card {
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.prediction-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.prediction-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1A4C49;
+  margin-bottom: 0.5rem;
+}
+
+.prediction-label {
+  font-size: 0.875rem;
+  color: #666;
+  font-weight: 500;
+}
+
+/* ===== OPTIMIZATION SECTION ===== */
+.optimization-section {
+  background: linear-gradient(135deg, rgba(26, 76, 73, 0.02) 0%, rgba(26, 76, 73, 0.05) 100%);
+  border: 1px solid rgba(26, 76, 73, 0.1);
+  border-radius: 0.75rem;
+  padding: 2rem;
+  margin-top: 2rem;
+}
+
+.optimization-section h4 {
+  margin: 0 0 1.5rem 0;
+  color: #1A4C49;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.optimization-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.optimization-card {
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  transition: all 0.2s ease;
+}
+
+.optimization-card.highlighted {
+  border-color: #1A4C49;
+  box-shadow: 0 0 0 2px rgba(26, 76, 73, 0.1);
+  background: linear-gradient(135deg, rgba(26, 76, 73, 0.02) 0%, rgba(26, 76, 73, 0.05) 100%);
+}
+
+.optimization-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+.optimization-title {
+  font-weight: 600;
+  color: #1A4C49;
+  margin-bottom: 0.25rem;
+}
+
+.optimization-subtitle {
+  font-size: 0.875rem;
+  color: #666;
+  margin-bottom: 0.75rem;
+}
+
+.optimization-metrics {
+  font-size: 0.8125rem;
+  color: #888;
+  font-weight: 500;
+}
+
+.optimization-note {
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.2);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  font-size: 0.875rem;
+  color: #856404;
+  margin-top: 1rem;
+}
+
+/* ===== REVIEW SECTIONS ===== */
+.review-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.review-section {
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+}
+
+.review-section h4 {
+  margin: 0 0 1rem 0;
+  color: #1A4C49;
+  font-size: 1rem;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding-bottom: 0.75rem;
+}
+
+.review-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.review-item:last-child {
+  border-bottom: none;
+}
+
+.review-label {
+  font-weight: 500;
+  color: #333;
+  min-width: 150px;
+}
+
+.review-value {
+  color: #666;
+  text-align: right;
+  flex: 1;
+  margin-left: 1rem;
+}
+
+/* ===== FORM GRID ===== */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* ===== AUDIENCE OVERVIEW STYLES ===== */
+.audience-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.audience-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+}
+
+.audience-card h4 {
+  color: #1f2937;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.audience-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+}
+
+.stat {
+  text-align: center;
+}
+
+.stat-value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1A4C49;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.refinement-option {
+  background: #f0f9ff;
+  border: 1px solid #0ea5e9;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+}
+
+.refinement-option h4 {
+  color: #0369a1;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.refinement-option p {
+  color: #0369a1;
+  margin-bottom: 1rem;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .predictions-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .optimization-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .audience-stats {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+}
+
+/* ===== STEP INDICATOR UPDATES ===== */
+.step-indicator .step.offer-step {
+  background: linear-gradient(135deg, rgba(26, 76, 73, 0.1) 0%, rgba(26, 76, 73, 0.15) 100%);
+}
+
+.step-indicator .step.offer-step.active {
+  background: #1A4C49;
+  color: white;
+}
+
+/* ===== ANIMATION ENHANCEMENTS ===== */
+.prediction-card,
+.optimization-card {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+.prediction-card:nth-child(2) { animation-delay: 0.1s; }
+.prediction-card:nth-child(3) { animation-delay: 0.2s; }
+.prediction-card:nth-child(4) { animation-delay: 0.3s; }
+.prediction-card:nth-child(5) { animation-delay: 0.4s; }
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== SUCCESS STATES ===== */
+.prediction-value.positive {
+  color: #4CAF50;
+}
+
+.prediction-value.negative {
+  color: #F44336;
+}
+
+.prediction-value.neutral {
+  color: #FFC107;
+}
+
+/* ===== ACCESSIBILITY IMPROVEMENTS ===== */
+.checkbox-label:focus-within {
+  outline: 2px solid #1A4C49;
+  outline-offset: 2px;
+}
+
+.prediction-card:focus {
+  outline: 2px solid #1A4C49;
+  outline-offset: 2px;
+}
+
+.optimization-card:focus {
+  outline: 2px solid #1A4C49;
+  outline-offset: 2px;
+}
+
+/* ===== MODAL OVERLAY STYLES ===== */
+.offer-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.offer-modal-content {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 2rem;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* ===== CAMPAIGN CREATION SUCCESS STATES ===== */
+.offer-success-indicator {
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  color: white;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.offer-success-indicator .icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== FORM VALIDATION STYLES ===== */
+.form-input.error {
+  border-color: #F44336;
+  box-shadow: 0 0 0 2px rgba(244, 67, 54, 0.1);
+}
+
+.form-input.success {
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+}
+
+.validation-message {
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.validation-message.error {
+  color: #F44336;
+}
+
+.validation-message.success {
+  color: #4CAF50;
+}
+
+/* ===== LOADING STATES ===== */
+.offer-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+}
+
+.offer-loading .spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #1A4C49;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ===== TOOLTIP STYLES ===== */
+.offer-tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.offer-tooltip .tooltip-content {
+  visibility: hidden;
+  width: 200px;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 8px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -100px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 0.875rem;
+}
+
+.offer-tooltip:hover .tooltip-content {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* ===== PROGRESSIVE ENHANCEMENT ===== */
+@supports (backdrop-filter: blur(10px)) {
+  .offer-modal-overlay {
+    backdrop-filter: blur(10px);
+  }
+}
+
+/* ===== HIGH CONTRAST MODE SUPPORT ===== */
+@media (prefers-contrast: high) {
+  .prediction-card,
+  .optimization-card,
+  .audience-card {
+    border-width: 2px;
+  }
+  
+  .optimization-card.highlighted {
+    border-width: 3px;
+  }
+}

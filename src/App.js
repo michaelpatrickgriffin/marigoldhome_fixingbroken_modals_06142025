@@ -1,4 +1,4 @@
-// App.js - Complete clean file with FIXED layout order and error handling
+// App.js - Complete clean file with company switching functionality and offer handling
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
@@ -11,9 +11,11 @@ import { CampaignList, CampaignModal } from './components/campaigns/CampaignList
 import CampaignDetailView from './components/campaigns/CampaignDetailView';
 import NotificationPanel from './components/layout/NotificationPanel';
 import ProfilePanel from './components/layout/ProfilePanel';
+import ProfileSwitchModal from './components/layout/ProfileSwitchModal';
 import AIPromptBar from './components/common/AIPromptBar';
-import AIResponseModal from './components/common/AIResponseModal'; // ✅ ADDED: Import AIResponseModal
+import AIResponseModal from './components/common/AIResponseModal';
 import KpiAnalyticsModal from './components/analytics/KpiAnalyticsModal';
+import RecommendationImplementationModal from './components/loyalty/RecommendationImplementationModal';
 import { COLORS, darkMeshGradient } from './styles/ColorStyles';
 import SplitCampaignCreationModal from './components/campaigns/SplitCampaignCreationModal';
 import CampaignSuccessToast from './components/feedback/CampaignSuccessToast';
@@ -26,6 +28,7 @@ import NarrativeMarketingDashboard from './components/dashboard/NarrativeMarketi
 import UnifiedInsightsAndRecommendations from './components/dashboard/UnifiedInsightsAndRecommendations';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { ChevronDown, Calendar, Download } from 'lucide-react';
+import { MVPUIProvider } from './contexts/MVPUIContext';
 
 // ✅ RESTORED: Import campaign and program card components
 import CampaignCard from './components/campaigns/CampaignCard';
@@ -41,19 +44,24 @@ import './styles/ProfileSwitch.css';
 import './styles/NarrativeMarketing.css';
 import './styles/FlyoutSidebarStyles.css';
 
+// ✅ UPDATED: Import from CompanyDataManager instead of SampleData
 import { 
-  campaignData as initialCampaignData, 
-  loyaltyProgramData as initialLoyaltyProgramData, 
+  getCampaignData,
+  getLoyaltyProgramData,
+  getKpiCardsData,
+  getInsightsData,
+  getRfmSegments,
+  getResponseGenerator,
+  companyProfiles,
+  getCurrentCompany,
+  setCurrentCompany,
   monthlyStats, 
   membershipData, 
-  columbiaKpiCardsData, 
-  insightsData, 
-  getResponseGenerator,
   userProfiles,
   brandData,
   dashboardConfigurations, 
   profileDashboardOrder 
-} from './data/SampleData';
+} from './data/CompanyDataManager';
 
 const App = () => {
   // State management
@@ -61,8 +69,15 @@ const App = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMenuPinned, setIsMenuPinned] = useState(true);
-  const [campaigns, setCampaigns] = useState(initialCampaignData);
-  const [loyaltyPrograms, setLoyaltyPrograms] = useState(initialLoyaltyProgramData);
+  
+  // ✅ UPDATED: Use getter functions instead of static imports + add company state
+  const [currentCompany, setCurrentCompanyState] = useState(getCurrentCompany());
+  const [dataRefreshKey, setDataRefreshKey] = useState(0);
+  const [campaigns, setCampaigns] = useState(getCampaignData());
+  const [loyaltyPrograms, setLoyaltyPrograms] = useState(getLoyaltyProgramData());
+  
+  // ✅ NEW: Add offers state for Walgreens offer management
+  const [offers, setOffers] = useState([]);
   
   // Modal state
   const [selectedCampaign, setSelectedCampaign] = useState(null);
@@ -82,6 +97,9 @@ const App = () => {
   // Profile and notification state
   const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
   const [isProfilePanelOpen, setIsProfilePanelOpen] = useState(false);
+  // ✅ NEW: Show profile switch modal on initial load for easier prototype context setting
+  const [showInitialProfileModal, setShowInitialProfileModal] = useState(true);
+  const [hasShownInitialProfile, setHasShownInitialProfile] = useState(false);
   const [notificationCount, setNotificationCount] = useState(8);
   
   // Dashboard state
@@ -91,8 +109,8 @@ const App = () => {
   const [currentProfile, setCurrentProfile] = useState(userProfiles[3]);
   const [selectedBrand, setSelectedBrand] = useState(brandData[0]);
   
-  // ✅ NEW: Filter state for enhanced dashboard filters
-  const [selectedBrands, setSelectedBrands] = useState(['all']); // Array for multi-select
+  // Enhanced filter state
+  const [selectedBrands, setSelectedBrands] = useState(['all']);
   const [selectedDateRange, setSelectedDateRange] = useState('last_30_days');
   const [showBrandDropdown, setShowBrandDropdown] = useState(false);
   const [showDateRangeDropdown, setShowDateRangeDropdown] = useState(false);
@@ -105,7 +123,16 @@ const App = () => {
   const [showAIResponse, setShowAIResponse] = useState(false);
   const [hasCriticalNotifications, setHasCriticalNotifications] = useState(true);
 
-  // ✅ NEW: Date range options
+  // ✅ NEW: Recommendation Implementation state for AI recommendations
+  const [showRecommendationModal, setShowRecommendationModal] = useState(false);
+  const [selectedAIRecommendation, setSelectedAIRecommendation] = useState(null);
+
+  // ✅ NEW: Get current data for rendering (these update when company changes)
+  const currentKpiData = getKpiCardsData();
+  const currentInsightsData = getInsightsData();
+  const currentRfmSegments = getRfmSegments();
+
+  // Date range options
   const dateRangeOptions = [
     { id: 'last_7_days', label: 'Last 7 days' },
     { id: 'last_30_days', label: 'Last 30 days' },
@@ -116,7 +143,7 @@ const App = () => {
     { id: 'custom', label: 'Custom range...' }
   ];
 
-  // ✅ NEW: Export options
+  // Export options
   const exportOptions = [
     { id: 'pdf_report', label: 'PDF Report', icon: 'FileText' },
     { id: 'excel_data', label: 'Excel Data', icon: 'FileSpreadsheet' },
@@ -125,7 +152,7 @@ const App = () => {
     { id: 'image_charts', label: 'Chart Images', icon: 'Image' }
   ];
 
-  // ✅ NEW: Get selected brands display text
+  // Get selected brands display text
   const getSelectedBrandsText = () => {
     if (selectedBrands.includes('all') || selectedBrands.length === 0) {
       return 'All Brands';
@@ -137,13 +164,13 @@ const App = () => {
     return `${selectedBrands.length} Brands Selected`;
   };
 
-  // ✅ NEW: Get selected date range display text
+  // Get selected date range display text
   const getSelectedDateRangeText = () => {
     const option = dateRangeOptions.find(opt => opt.id === selectedDateRange);
     return option ? option.label : 'Last 30 days';
   };
 
-  // ✅ NEW: Handle brand selection (multi-select)
+  // Handle brand selection (multi-select)
   const handleBrandSelection = (brandId) => {
     if (brandId === 'all') {
       setSelectedBrands(['all']);
@@ -160,11 +187,42 @@ const App = () => {
     }
   };
   
+  // ✅ NEW: Company switching handler
+  const handleCompanySwitch = (companyId) => {
+    console.log('Switching to company:', companyId);
+    
+    // Update the company in the data manager
+    setCurrentCompany(companyId);
+    
+    // Refresh all data for the new company
+    setCampaigns(getCampaignData());
+    setLoyaltyPrograms(getLoyaltyProgramData());
+    setOffers([]); // Reset offers when switching companies
+    
+    // Force re-render of components that use factory functions
+    setDataRefreshKey(prev => prev + 1);
+    
+    // Update current company state
+    setCurrentCompanyState(getCurrentCompany());
+  };
+  
   // Profile switching handler
   const handleProfileSwitch = (newProfile) => {
     console.log('Switching to profile:', newProfile);
     setCurrentProfile(newProfile);
     setDashboardView(newProfile.defaultDashboard);
+  };
+
+  // ✅ NEW: Handle initial modal profile and company switching
+  const handleInitialContextSwitch = ({ profile, company }) => {
+    if (company) {
+      handleCompanySwitch(company);
+    }
+    if (profile) {
+      handleProfileSwitch(profile);
+    }
+    setShowInitialProfileModal(false);
+    setHasShownInitialProfile(true);
   };
 
   // Brand switching handler
@@ -177,6 +235,17 @@ const App = () => {
   useEffect(() => {
     setDashboardView(currentProfile.defaultDashboard);
   }, [currentProfile]);
+
+  // ✅ NEW: Handle initial profile modal display - auto-close after a delay unless user interacts
+  useEffect(() => {
+
+  }, []);
+
+  // ✅ NEW: Handle manual profile modal interactions
+  const handleInitialProfileModalClose = () => {
+    setShowInitialProfileModal(false);
+    setHasShownInitialProfile(true);
+  };
   
   // Show RFM info card when switching to RFM view for the first time
   useEffect(() => {
@@ -289,19 +358,20 @@ const App = () => {
     }
   };
 
-  // AI Assistant handlers
+  // AI Assistant handlers - FIXED: Much faster response timing
   const handleAIPromptSubmit = (query) => {
-    console.log('🔥 AI prompt submitted:', query); // ✅ ADDED: Debug log
+    console.log('🔥 AI prompt submitted:', query);
     setLastQuestion(query);
     setIsAIMinimized(true);
     
+    // ✅ FIXED: Reduced delay from 1500ms to 300ms for much faster response
     setTimeout(() => {
       const responseGenerator = getResponseGenerator(query);
       const response = responseGenerator();
-      console.log('🔥 Setting AI response:', response); // ✅ ADDED: Debug log
+      console.log('🔥 Setting AI response:', response);
       setAiResponse(response);
       setShowAIResponse(true);
-      console.log('🔥 showAIResponse set to:', true); // ✅ ADDED: Debug log
+      console.log('🔥 showAIResponse set to:', true);
     }, 300);
   };
 
@@ -315,6 +385,13 @@ const App = () => {
     setShowAIResponse(false);
     setIsAIMinimized(false);
   };
+
+  // ✅ NEW: Handle AI recommendation implementation
+  const handleAIRecommendationImplement = (recommendation) => {
+    console.log('Implementing AI recommendation:', recommendation);
+    setSelectedAIRecommendation(recommendation);
+    setShowRecommendationModal(true);
+  };
   
   // Campaign handlers
   const handleCampaignClick = useCallback((campaign) => {
@@ -322,15 +399,59 @@ const App = () => {
     setSelectedCampaign(campaign);
   }, []);
 
-  const handleCampaignCreated = (newCampaign) => {
-    setCampaigns([newCampaign, ...campaigns]);
-    setActiveTab('campaigns');
-    setSuccessToast({
-      message: `${newCampaign.title || 'New campaign'} has been created successfully.`,
-    });
-    console.log('%c NEW CAMPAIGN CREATED', 'background: green; color: white; font-size: 14px;');
-    console.log(newCampaign);
+  // ✅ ENHANCED: Campaign creation handler to support both campaigns and offers
+  const handleCampaignCreated = (newItem) => {
+    console.log('%c NEW ITEM CREATED', 'background: green; color: white; font-size: 14px;');
+    console.log('Item type:', newItem.offerType ? 'offer' : 'campaign');
+    console.log('Item data:', newItem);
+    
+    // Determine if this is an offer or a traditional campaign
+    const isOffer = newItem.offerType || newItem.modifiedFrom || newItem.type === 'Promotional Campaign' || newItem.type === 'Cashback Campaign' || newItem.type === 'Bundle Promotion';
+    
+    if (isOffer) {
+      // Handle as an offer
+      const newOffer = {
+        ...newItem,
+        id: newItem.id || Date.now(), // Ensure unique ID
+        status: 'Active',
+        type: newItem.type || 'Customer Re-engagement',
+        createdAt: new Date().toISOString(),
+        // Add display properties for UI consistency
+        audience: newItem.audience || newItem.segmentDescription || 'Target Customers',
+        participants: newItem.segmentSize || 0,
+        needsAttention: false,
+        // Map offer properties to campaign detail view expectations for UI consistency
+        sent: newItem.segmentSize || 0,
+        opened: Math.round((newItem.segmentSize || 0) * 0.4), // Estimated
+        clicks: Math.round((newItem.segmentSize || 0) * 0.1), // Estimated
+        conversion: Math.round((newItem.segmentSize || 0) * 0.05), // Estimated
+        revenue: parseInt(newItem.projectedMetrics?.projectedRevenue?.replace(/[$,]/g, '') || '0'),
+        cost: Math.round(parseInt(newItem.projectedMetrics?.projectedRevenue?.replace(/[$,]/g, '') || '0') * 0.2),
+        roi: parseInt(newItem.projectedMetrics?.projectedROI?.replace('%', '') || '0')
+      };
+      
+      setOffers([newOffer, ...offers]);
+      setActiveTab('campaigns'); // Navigate to campaigns view to see the new offer
+      setSuccessToast({
+        message: `${newOffer.title || 'New offer campaign'} has been created successfully.`,
+      });
+    } else {
+      // Handle as traditional campaign
+      setCampaigns([newItem, ...campaigns]);
+      setActiveTab('campaigns');
+      setSuccessToast({
+        message: `${newItem.title || 'New campaign'} has been created successfully.`,
+      });
+    }
   };
+
+  // ✅ NEW: Offer click handler
+  const handleOfferClick = useCallback((offer) => {
+    console.log('Offer clicked:', offer.title);
+    // For now, treat offers similar to campaigns in the detail view
+    // You could create a separate OfferDetailView component if needed
+    setSelectedCampaign(offer);
+  }, []);
 
   // Loyalty program handlers
   const handleProgramClick = useCallback((program, initialTab = 'overview') => {
@@ -347,10 +468,21 @@ const App = () => {
     }
   };
 
+  // ✅ ENHANCED: Loyalty program creation handler to also handle offers
   const handleLoyaltyProgramCreated = (newProgram) => {
-    console.log('%c LOYALTY PROGRAM CREATION HANDLER CALLED', 'background: blue; color: white; font-size: 14px;');
-    console.log('New program data:', newProgram);
+    console.log('%c LOYALTY PROGRAM/OFFER CREATION HANDLER CALLED', 'background: blue; color: white; font-size: 14px;');
+    console.log('New program/offer data:', newProgram);
     
+    // Check if this is actually an offer campaign
+    const isOffer = newProgram.offerType || newProgram.discountType || newProgram.cashbackValue || newProgram.modifiedFrom;
+    
+    if (isOffer) {
+      // Handle as offer using the campaign creation handler
+      handleCampaignCreated(newProgram);
+      return;
+    }
+    
+    // Original loyalty program handling logic
     const updatedPrograms = [
       {
         ...newProgram,
@@ -406,6 +538,10 @@ const App = () => {
       'engagement': 'engagement',
       'conversion': 'conversion',
       'audience': 'audience',
+      'patients': 'customers', // Map Walgreens "Patients" to customers analytics
+      'adherence rate': 'engagement', // Map adherence to engagement analytics
+      'health program enrollment': 'conversion',
+      'care interactions': 'audience',
       // Handle variations in titles
       'total revenue': 'revenue',
       'customer count': 'customers',
@@ -456,6 +592,22 @@ const App = () => {
     }
   }, [successToast]);
 
+  // ✅ NEW: Offer success tracking
+  useEffect(() => {
+    if (offers.length > 0) {
+      console.log('Offers state updated:', offers);
+    }
+  }, [offers]);
+
+  // ✅ NEW: Debugging logging
+  useEffect(() => {
+    console.log('Current state summary:');
+    console.log('- Campaigns:', campaigns.length);
+    console.log('- Offers:', offers.length);
+    console.log('- Loyalty Programs:', loyaltyPrograms.length);
+    console.log('- Current Company:', currentCompany);
+  }, [campaigns, offers, loyaltyPrograms, currentCompany]);
+
   // Loading effect
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -479,7 +631,8 @@ const App = () => {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+    <MVPUIProvider>
+      <div className="flex h-screen bg-gray-50" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
       {/* Sidebar */}
       <Sidebar 
         activeTab={activeTab} 
@@ -492,7 +645,7 @@ const App = () => {
       
       {/* Main content area */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
+        {/* ✅ UPDATED: Header with company switching */}
         <Header 
           isMenuOpen={isMenuOpen}
           isMenuPinned={isMenuPinned}
@@ -502,6 +655,7 @@ const App = () => {
           setIsProfilePanelOpen={setIsProfilePanelOpen}
           currentProfile={currentProfile}
           hasCriticalNotifications={hasCriticalNotifications}
+          onCompanySwitch={handleCompanySwitch}
         />
         
         {/* Main dashboard content */}
@@ -513,7 +667,7 @@ const App = () => {
                 transition: 'margin-left 0.3s ease-in-out'
               }}>
                 <div className="max-w-7xl w-full px-6 py-6">
-                  {/* ✅ ENHANCED: Dashboard Header with Flexible Filters */}
+                  {/* Dashboard Header with Flexible Filters */}
                   <div style={{ 
                     display: 'flex', 
                     justifyContent: 'space-between', 
@@ -526,7 +680,7 @@ const App = () => {
                         Marketing Performance
                       </h1>
                       
-                      {/* ✅ NEW: Enhanced Brand Selector - integrated with title */}
+                      {/* Enhanced Brand Selector - integrated with title */}
                       <div style={{ position: 'relative' }}>
                         <button
                           onClick={() => setShowBrandDropdown(!showBrandDropdown)}
@@ -669,7 +823,7 @@ const App = () => {
                         </div>
                       )}
                       
-                      {/* ✅ NEW: Enhanced Date Range Selector */}
+                      {/* Enhanced Date Range Selector */}
                       <div style={{ position: 'relative' }}>
                         <button
                           onClick={() => setShowDateRangeDropdown(!showDateRangeDropdown)}
@@ -755,7 +909,7 @@ const App = () => {
                         )}
                       </div>
                       
-                      {/* ✅ NEW: Enhanced Export Selector */}
+                      {/* Enhanced Export Selector */}
                       <div style={{ position: 'relative' }}>
                         <button
                           onClick={() => setShowExportDropdown(!showExportDropdown)}
@@ -861,12 +1015,13 @@ const App = () => {
                         <div className="dashboard-view">
                           {dashboardView === 'overview' ? (
                             <OverviewDashboard 
-                              kpiData={columbiaKpiCardsData} 
-                              insightsData={insightsData}
+                              key={`overview-${dataRefreshKey}`}
+                              kpiData={currentKpiData} 
+                              insightsData={currentInsightsData}
                             />
                           ) : dashboardView === 'marketing' ? (
                             <MarketingDashboard 
-                              key={`marketing-${dashboardView}`}
+                              key={`marketing-${dataRefreshKey}`}
                               aiState={{
                                 isAIMinimized,
                                 aiResponse,
@@ -886,7 +1041,7 @@ const App = () => {
                             />
                           ) : dashboardView === 'narrative' ? (
                             <NarrativeMarketingDashboard 
-                              key={`narrative-${dashboardView}`}
+                              key={`narrative-${dataRefreshKey}`}
                               aiState={{
                                 isAIMinimized,
                                 aiResponse,
@@ -908,19 +1063,20 @@ const App = () => {
                             />
                           ) : dashboardView === 'standard' ? (
                             <>
-                            {/* ✅ ADD: AI Assistant Prompt Bar for Standard Dashboard */}
-                            <AIPromptBar
-                              onSubmit={handleAIPromptSubmit}
-                              isMinimized={isAIMinimized}
-                              onToggleMinimize={() => setIsAIMinimized(!isAIMinimized)}
-                              placeholderText={getPlaceholderText()}
-                              suggestedPrompts={getDashboardPrompts()}
-                            />
+                              {/* AI Assistant Prompt Bar for Standard Dashboard */}
+                              <AIPromptBar
+                                onSubmit={handleAIPromptSubmit}
+                                isMinimized={isAIMinimized}
+                                onToggleMinimize={() => setIsAIMinimized(!isAIMinimized)}
+                                placeholderText={getPlaceholderText()}
+                                suggestedPrompts={getDashboardPrompts()}
+                              />
 
-                              {/* KPI Cards */}
+                              {/* KPI Cards - Use current data */}
                               <div style={{ marginBottom: '1.5rem' }}>
                                 <DashboardKpiCards 
-                                  data={columbiaKpiCardsData} 
+                                  key={`kpi-${dataRefreshKey}`}
+                                  data={currentKpiData} 
                                   onClick={(kpiData) => {
                                     // Handle both object and string inputs
                                     if (typeof kpiData === 'object' && kpiData.title) {
@@ -934,14 +1090,15 @@ const App = () => {
                                 />
                               </div>
                               
-                              {/* Unified Insights and Recommendations */}
+                              {/* Unified Insights and Recommendations - Use current data */}
                               <UnifiedInsightsAndRecommendations
-                                insightsData={insightsData}
+                                key={`insights-${dataRefreshKey}`}
+                                insightsData={currentInsightsData}
                                 recommendationsData={(() => {
-                                  console.log('DEBUG: insightsData:', insightsData);
-                                  console.log('DEBUG: insightsData.recommendedActions:', insightsData?.recommendedActions);
+                                  console.log('DEBUG: currentInsightsData:', currentInsightsData);
+                                  console.log('DEBUG: currentInsightsData.recommendedActions:', currentInsightsData?.recommendedActions);
                                   
-                                  const transformedData = insightsData?.recommendedActions?.map((action, index) => {
+                                  const transformedData = currentInsightsData?.recommendedActions?.map((action, index) => {
                                     console.log(`DEBUG: Processing action ${index}:`, action);
                                     return {
                                       id: `rec-action-${index}`,
@@ -979,7 +1136,7 @@ const App = () => {
                                 <CampaignPerformanceChart />
                               </div>
 
-                              {/* ✅ FIXED: Campaign Cards Section - MOVED TO BOTTOM */}
+                              {/* ✅ UPDATED: Campaign Cards Section to include offers */}
                               <div style={{ marginBottom: '1.5rem' }}>
                                 <div style={{ 
                                   display: 'flex', 
@@ -993,7 +1150,7 @@ const App = () => {
                                     color: COLORS.onyx, 
                                     margin: 0 
                                   }}>
-                                    Active Campaigns
+                                    Active Campaigns & Offers
                                   </h3>
                                   <button 
                                     onClick={() => setShowCampaignModal(true)}
@@ -1014,17 +1171,23 @@ const App = () => {
                                   gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
                                   gap: '1rem' 
                                 }}>
-                                  {campaigns.slice(0, 3).map(campaign => (
+                                  {[...campaigns, ...offers].slice(0, 3).map(item => (
                                     <CampaignCard 
-                                      key={campaign.id} 
-                                      campaign={campaign} 
-                                      onClick={handleCampaignClick} 
+                                      key={`${item.offerType ? 'offer' : 'campaign'}-${item.id}`}
+                                      campaign={item} 
+                                      onClick={(campaign) => {
+                                        if (campaign.offerType || campaign.discountType || campaign.cashbackValue) {
+                                          handleOfferClick(campaign);
+                                        } else {
+                                          handleCampaignClick(campaign);
+                                        }
+                                      }}
                                     />
                                   ))}
                                 </div>
                               </div>
 
-                              {/* ✅ FIXED: Program Cards Section - MOVED TO BOTTOM */}
+                              {/* Program Cards Section */}
                               <div style={{ marginBottom: '1.5rem' }}>
                                 <div style={{ 
                                   display: 'flex', 
@@ -1071,7 +1234,8 @@ const App = () => {
                             </>
                           ) : (
                             <RFMDashboard 
-                              // ✅ FIXED: Added AI props to RFM Dashboard
+                              key={`rfm-${dataRefreshKey}`}
+                              rfmSegments={currentRfmSegments}
                               aiState={{
                                 isAIMinimized,
                                 aiResponse,
@@ -1103,8 +1267,15 @@ const App = () => {
               </div>
             ) : activeTab === 'campaigns' ? (
               <CampaignList 
-                campaigns={campaigns}
-                onCampaignClick={handleCampaignClick}
+                campaigns={[...campaigns, ...offers]} // ✅ UPDATED: Include offers
+                onCampaignClick={(item) => {
+                  // ✅ NEW: Determine if this is an offer or campaign and handle accordingly
+                  if (item.offerType || item.discountType || item.cashbackValue) {
+                    handleOfferClick(item);
+                  } else {
+                    handleCampaignClick(item);
+                  }
+                }}
                 onCampaignCreated={handleCampaignCreated}
                 onViewAllClick={() => setShowCampaignModal(true)}
               />
@@ -1147,7 +1318,7 @@ const App = () => {
 
       {/* Modal Overlays */}
       
-      {/* ✅ FIXED: Campaign Detail View - Pass selectedCampaign properly */}
+      {/* Campaign Detail View */}
       {selectedCampaign && (
         <CampaignDetailView
           campaign={selectedCampaign}
@@ -1163,7 +1334,8 @@ const App = () => {
           }}
         />
       )}
-      {/* ✅ FIXED: Program Detail View - Pass selectedProgram properly */}
+      
+      {/* Program Detail View */}
       {selectedProgram && (
         <DetailView
           item={selectedProgram}
@@ -1174,15 +1346,21 @@ const App = () => {
         />
       )}
 
-      {/* Campaign Modal */}
+      {/* ✅ UPDATED: Campaign Modal to include offers */}
       {showCampaignModal && (
         <CampaignModal
           isOpen={showCampaignModal}
           onClose={() => setShowCampaignModal(false)}
-          campaigns={campaigns}
-          filter={campaignFilter}           // ✅ ADD THIS
-          setFilter={setCampaignFilter}     // ✅ ADD THIS
-          onCampaignClick={handleCampaignClick}
+          campaigns={[...campaigns, ...offers]} // Include offers in the modal
+          filter={campaignFilter}
+          setFilter={setCampaignFilter}
+          onCampaignClick={(item) => {
+            if (item.offerType || item.discountType || item.cashbackValue) {
+              handleOfferClick(item);
+            } else {
+              handleCampaignClick(item);
+            }
+          }}
           onCampaignCreated={handleCampaignCreated}
         />
       )}
@@ -1193,8 +1371,8 @@ const App = () => {
           isOpen={showLoyaltyModal}
           onClose={() => setShowLoyaltyModal(false)}
           programs={loyaltyPrograms}
-          filter={programFilter}            // ✅ ADD THIS
-          setFilter={setProgramFilter}      // ✅ ADD THIS
+          filter={programFilter}
+          setFilter={setProgramFilter}
           onProgramClick={handleProgramClick}
           onProgramCreated={handleLoyaltyProgramCreated}
         />
@@ -1234,7 +1412,7 @@ const App = () => {
           isOpen={!!selectedKpi}
           onClose={closeKpiAnalytics}
           kpiType={selectedKpi}
-          data={columbiaKpiCardsData.find(kpi => {
+          data={currentKpiData.find(kpi => {
             // Handle different possible title formats
             const kpiTitle = kpi.title.toLowerCase();
             const searchKey = selectedKpi.toLowerCase();
@@ -1244,10 +1422,10 @@ const App = () => {
             
             // Handle partial matches for common cases
             if (searchKey === 'revenue' && kpiTitle.includes('revenue')) return true;
-            if (searchKey === 'customers' && (kpiTitle.includes('customer') || kpiTitle.includes('users'))) return true;
-            if (searchKey === 'engagement' && kpiTitle.includes('engagement')) return true;
-            if (searchKey === 'conversion' && kpiTitle.includes('conversion')) return true;
-            if (searchKey === 'audience' && kpiTitle.includes('audience')) return true;
+            if (searchKey === 'customers' && (kpiTitle.includes('customer') || kpiTitle.includes('users') || kpiTitle.includes('patients'))) return true;
+            if (searchKey === 'engagement' && (kpiTitle.includes('engagement') || kpiTitle.includes('adherence'))) return true;
+            if (searchKey === 'conversion' && (kpiTitle.includes('conversion') || kpiTitle.includes('enrollment'))) return true;
+            if (searchKey === 'audience' && (kpiTitle.includes('audience') || kpiTitle.includes('interactions'))) return true;
             
             return false;
           })}
@@ -1271,7 +1449,9 @@ const App = () => {
         isOpen={isProfilePanelOpen}
         onClose={() => setIsProfilePanelOpen(false)}
         currentProfile={currentProfile}
+        currentCompany={currentCompany}
         onProfileSwitch={handleProfileSwitch}
+        onCompanySwitch={handleCompanySwitch}
       />
 
       {/* Success Toast */}
@@ -1282,7 +1462,7 @@ const App = () => {
         />
       )}
 
-      {/* ✅ ADDED: AI Response Modal - This was completely missing! */}
+      {/* AI Response Modal */}
       {(dashboardView === 'marketing' || dashboardView === 'narrative' || dashboardView === 'standard' || dashboardView === 'rfm') && (
         <AIResponseModal 
           isOpen={showAIResponse}
@@ -1291,9 +1471,45 @@ const App = () => {
           question={lastQuestion}
           onClearResponse={handleClearAIResponse}
           onPromptClick={handleAIPromptClick}
+          onRecommendationImplement={handleAIRecommendationImplement}
+        />
+      )}
+
+      {/* ✅ NEW: AI Recommendation Implementation Modal */}
+      {showRecommendationModal && selectedAIRecommendation && (
+        <RecommendationImplementationModal
+          isOpen={showRecommendationModal}
+          onClose={() => {
+            setShowRecommendationModal(false);
+            setSelectedAIRecommendation(null);
+          }}
+          recommendation={selectedAIRecommendation}
+          programData={{
+            id: 'ai-recommendation',
+            title: 'AI-Generated Recommendation',
+            audience: selectedAIRecommendation.audience || 'Target Customers'
+          }}
+          onProgramCreated={handleCampaignCreated}
+          onNotificationCreated={(notification) => {
+            // Handle notification creation if needed
+            console.log('Notification created:', notification);
+          }}
+        />
+      )}
+
+      {/* ✅ NEW: Initial Context Selection Modal */}
+      {showInitialProfileModal && (
+        <ProfileSwitchModal 
+          isOpen={showInitialProfileModal}
+          onClose={handleInitialProfileModalClose}
+          currentProfile={currentProfile}
+          currentCompany={currentCompany}
+          onApply={handleInitialContextSwitch}
+          isInitialSetup={true}
         />
       )}
     </div>
+    </MVPUIProvider>
   );
 };
 

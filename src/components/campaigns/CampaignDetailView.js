@@ -9,6 +9,7 @@ import {
   Sparkles, TrendingDown, Activity, RefreshCw, Gift, Percent, UserCheck, CreditCard, Mail, Calendar
 } from 'lucide-react';
 import { COLORS, getImpactColor, getDifficultyColor } from '../../styles/ColorStyles';
+import { useMVPUI } from '../../contexts/MVPUIContext';
 import { 
   modalOverlayStyle, 
   modalHeaderStyle, 
@@ -66,10 +67,20 @@ const CampaignDetailView = ({
   const [implementedRecommendations, setImplementedRecommendations] = useState(new Set());
   const [rejectedRecommendations, setRejectedRecommendations] = useState(new Set());
   
+  // ✅ NEW: Add MVP UI context
+  const { isMVPMode } = useMVPUI();
+  
   // Sync internal activeTab with prop
   useEffect(() => {
     setActiveTab(initialActiveTab);
   }, [initialActiveTab]);
+  
+  // ✅ NEW: Handle MVP mode - switch to overview if currently on performance tab
+  useEffect(() => {
+    if (isMVPMode && activeTab === 'performance') {
+      handleTabChange('overview');
+    }
+  }, [isMVPMode, activeTab]);
   
   // Function to update active tab that also calls external setter if provided
   const handleTabChange = (tab) => {
@@ -222,9 +233,12 @@ const CampaignDetailView = ({
               Overview
             </button>
             
-            <button onClick={() => handleTabChange('performance')} style={tabButtonStyle(activeTab === 'performance')}>
-              Performance
-            </button>
+            {/* ✅ NEW: Only show performance tab if NOT in MVP mode */}
+            {!isMVPMode && (
+              <button onClick={() => handleTabChange('performance')} style={tabButtonStyle(activeTab === 'performance')}>
+                Performance
+              </button>
+            )}
             
             <button onClick={() => handleTabChange('recommendations')} style={tabButtonStyle(activeTab === 'recommendations')}>
               <Brain size={16} style={{ marginRight: '0.5rem' }} />
@@ -278,7 +292,8 @@ const CampaignDetailView = ({
               </div>
             )}
             
-            {activeTab === 'performance' && (
+            {/* ✅ NEW: Only show performance tab content if NOT in MVP mode */}
+            {!isMVPMode && activeTab === 'performance' && (
               <div className="slide-in-up" key="performance">
                 <PerformanceTab 
                   campaign={campaign}

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { COLORS } from '../../styles/ColorStyles';
 import FullScreenLoyaltyProgramModal from './FullScreenLoyaltyProgramModal';
+import OfferCreationModal from './OfferCreationModal';
 
 const RecommendationImplementationModal = ({ 
   isOpen, 
@@ -22,6 +23,18 @@ const RecommendationImplementationModal = ({
   const [implementationData, setImplementationData] = useState(null);
   const [setupStep, setSetupStep] = useState(0);
   const [showModifyModal, setShowModifyModal] = useState(false);
+  const [showOfferModal, setShowOfferModal] = useState(false);
+
+  // ✅ BETTER: Format large numbers appropriately  
+  const formatCurrency = (value) => {
+    if (value >= 1000000) {
+      return `$${(value / 1000000).toFixed(1)}M`;  // $1.8M
+    } else if (value >= 1000) {
+      return `$${Math.round(value / 1000)}K`;      // $847K  
+    } else {
+      return `$${value}`;                          // $500
+    }
+  };
 
   const setupSteps = [
     'Analyzing recommendation requirements',
@@ -46,6 +59,7 @@ const RecommendationImplementationModal = ({
       setSetupStep(0);
       setImplementationData(null);
       setShowModifyModal(false);
+      setShowOfferModal(false);
       
       // Start the setup simulation with more detailed steps
       const stepInterval = setInterval(() => {
@@ -89,6 +103,8 @@ const RecommendationImplementationModal = ({
       data = generateAtRiskPunchCardImplementation();
     } else if (isTrailEssentialsRecommendation()) {
       data = generateTrailEssentialsImplementation();
+    } else if (isOfferRecommendation()) {
+      data = generateOfferImplementation();
     } else if (recommendation.type === 'enhancement') {
       data = generateEnhancementImplementation();
     } else if (recommendation.type === 'targeting') {
@@ -150,6 +166,45 @@ const RecommendationImplementationModal = ({
       (programData?.id === 2) ||
       // Check if program needs attention and has negative ROI (Trail Essentials characteristics)
       (programData?.needsAttention && programData?.roi < 0 && !isAtRiskPunchCardRecommendation())
+    );
+  };
+
+  // ✅ UPDATED: Enhanced helper function to detect promotional offer recommendations
+  const isOfferRecommendation = () => {
+    return (
+      // Check for offer-specific metadata
+      (recommendation?.offerType) ||
+      (recommendation?.discountType) ||
+      (recommendation?.targetCategory) ||
+      // Check recommendation type
+      (recommendation?.type === 'Promotional Campaign') ||
+      // Check for discount/offer fields in details
+      (recommendation?.details?.discountPercent) ||
+      (recommendation?.details?.cashbackPercent) ||
+      (recommendation?.details?.minimumSpend) ||
+      // Check title/description for offer keywords
+      (recommendation?.title && (
+        recommendation.title.toLowerCase().includes('discount') ||
+        recommendation.title.toLowerCase().includes('cashback') ||
+        recommendation.title.toLowerCase().includes('offer') ||
+        recommendation.title.toLowerCase().includes('buy 2 get 1')
+      )) ||
+      // Check audience for lapsed customer patterns
+      (recommendation?.audience && (
+        recommendation.audience.toLowerCase().includes('lapsed') ||
+        recommendation.audience.toLowerCase().includes('high-value lapsed') ||
+        recommendation.audience.toLowerCase().includes('high_value_lapsed')
+      )) ||
+      // Check for minimum spend or discount values
+      (recommendation?.minimumSpend) ||
+      (recommendation?.discountValue) ||
+      // ✅ NEW: Check for Walgreens-specific offer IDs
+      (recommendation?.id && (
+        recommendation.id.includes('walgreens-hw-') ||
+        recommendation.id.includes('health-wellness') ||
+        recommendation.id.includes('category-discount') ||
+        recommendation.id.includes('cashback-')
+      ))
     );
   };
 
@@ -324,6 +379,132 @@ const RecommendationImplementationModal = ({
             'Implement member re-engagement campaigns',
             'Scale successful program elements',
             'Document optimization results and best practices'
+          ]
+        }
+      ]
+    };
+  };
+
+  // ✅ COMPLETELY UPDATED: Offer implementation using actual recommendation data
+  const generateOfferImplementation = () => {
+    console.log('Generating offer implementation with recommendation:', recommendation);
+    
+    const offerType = recommendation?.offerType || recommendation?.discountType || 'category_discount';
+    const offerDetails = recommendation?.details || {};
+    
+    // ✅ NEW: Check if we have actual AI response data vs. fallback
+    const hasActualData = offerDetails.participatingCustomers && offerDetails.influencedRevenue;
+    
+    console.log('Offer details available:', offerDetails);
+    console.log('Has actual data:', hasActualData);
+    
+    // ✅ NEW: Use actual data when available, intelligent fallbacks otherwise
+    const metrics = {
+      participantsRecovered: hasActualData ? 
+        offerDetails.participatingCustomers?.toLocaleString() : '2,549',
+    revenueRecovery: hasActualData ? 
+    formatCurrency(offerDetails.influencedRevenue) : '$1.85M',
+      redemptionRate: hasActualData ? 
+        `${offerDetails.redemptionRate}%` : '28.5%',
+      averageOrderValue: hasActualData ? 
+        `$${offerDetails.avgOrderValue}` : '$45',
+      programROI: hasActualData ? 
+        `${offerDetails.roi}%` : '567%',
+      timeToPositiveROI: '2-4 weeks',
+      categoryEngagementIncrease: '+45%',
+      customerSatisfactionIncrease: '+32%',
+      totalDiscountCost: hasActualData ? 
+        `$${Math.round((offerDetails.totalDiscountValue || offerDetails.totalCashbackValue || 0) / 1000)}K` : '$277K'
+    };
+    
+    console.log('Final projected metrics:', metrics);
+    
+    return {
+      title: recommendation?.title || 'Category Re-engagement Offer',
+      type: 'Promotional Campaign',
+      audience: recommendation?.audience || 'High-Value Lapsed Customers',
+      description: recommendation?.description || 'Strategic offer targeting high-value customers who have lapsed from category purchases to drive re-engagement and revenue recovery.',
+      startDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      pointsValue: '',
+      offerType: offerType,
+      discountType: offerType === 'category_discount' ? 'percentage' : 
+                   offerType === 'cashback_reward' ? 'cashback' : 'bundle',
+      discountValue: offerDetails.discountPercent || offerDetails.cashbackPercent || recommendation?.discountValue || 15,
+      minimumSpend: offerDetails.minimumSpend || recommendation?.minimumSpend || 40,
+      maxDiscount: offerDetails.maxCashback || offerDetails.maxDiscount || recommendation?.maxDiscount || 25,
+      targetCategory: recommendation?.targetCategory || 'general',
+      rules: [
+        `Valid on ${recommendation?.targetCategory?.replace('_', ' ') || 'category'} purchases`,
+        `Minimum purchase of $${offerDetails.minimumSpend || recommendation?.minimumSpend || 40} required`,
+        offerType === 'cashback_reward' ? 
+          `${offerDetails.cashbackPercent || 20}% cashback earned on eligible purchases` :
+          offerType === 'bundle_discount' ?
+          `Buy 2 Get 1 Free on select items $${offerDetails.minimumItemPrice || 25}+` :
+          `${offerDetails.discountPercent || recommendation?.discountValue || 15}% off category purchases`,
+        'Limited to one redemption per customer during offer period',
+        'Cannot be combined with other promotional offers',
+        'Offer valid for 90 days from launch'
+      ],
+      rewards: [
+        offerType === 'cashback_reward' ? 
+          `Up to $${offerDetails.maxCashback || 25} cashback on eligible purchases` :
+          offerType === 'bundle_discount' ?
+          'Free item value up to the lowest-priced item in bundle' :
+          `Up to $${offerDetails.maxDiscount || 25} discount per transaction`,
+        'Email confirmation of offer redemption',
+        'Follow-up recommendations for related products',
+        'Invitation to exclusive category events'
+      ],
+      tiers: [],
+      earningMechanics: [
+        offerType === 'cashback_reward' ? 
+          'Cashback credited to account within 24-48 hours' :
+          'Discount applied automatically at checkout',
+        'Offer tracking via customer email and phone number',
+        'Real-time offer status updates in mobile app',
+        'Post-purchase satisfaction survey for program improvement'
+      ],
+      programTouchpoints: [
+        'Personalized email campaign launch',
+        'Mobile app push notification',
+        'Website banner and category page highlights',
+        'SMS reminder 1 week before expiration',
+        'Follow-up email with related product recommendations'
+      ],
+      projectedMetrics: metrics,
+      problemSolved: {
+        issue: 'Category Re-engagement Opportunity',
+        impact: 'High-value customers have stopped purchasing from target category, representing significant revenue potential',
+        solution: `Strategic ${offerType === 'cashback_reward' ? 'cashback reward' : offerType === 'bundle_discount' ? 'bundle promotion' : 'category discount'} to incentivize category re-engagement`,
+        outcome: 'Expected category revenue recovery and improved customer lifetime value through targeted re-engagement'
+      },
+      implementationPlan: [
+        {
+          phase: 'Campaign Setup (Days 1-7)',
+          actions: [
+            'Finalize offer terms and discount mechanics',
+            'Set up tracking and attribution systems',
+            'Create personalized email and SMS templates',
+            'Configure automatic discount application in POS systems'
+          ]
+        },
+        {
+          phase: 'Launch & Monitoring (Days 8-30)',
+          actions: [
+            'Deploy targeted email campaign to identified segment',
+            'Monitor redemption rates and customer response',
+            'Track category engagement and purchase behavior',
+            'Optimize messaging based on early performance data'
+          ]
+        },
+        {
+          phase: 'Analysis & Follow-up (Days 31-90)',
+          actions: [
+            'Analyze campaign performance vs. projections',
+            'Deploy follow-up campaigns to non-redeemers',
+            'Measure long-term category engagement impact',
+            'Document insights for future category campaigns'
           ]
         }
       ]
@@ -817,14 +998,20 @@ const RecommendationImplementationModal = ({
     onClose();
   };
 
-  // Handle modify action with proper backdrop management
+  // Handle modify action with routing to appropriate modal
   const handleModifyRecommendation = () => {
     console.log('Opening modify modal with implementation data:', implementationData);
     
     if (implementationData) {
       // Manage body scroll and backdrop interactions
       document.body.style.overflow = 'hidden';
-      setShowModifyModal(true);
+      
+      // Route to appropriate modal based on recommendation type
+      if (isOfferRecommendation()) {
+        setShowOfferModal(true);
+      } else {
+        setShowModifyModal(true);
+      }
     }
   };
 
@@ -832,6 +1019,13 @@ const RecommendationImplementationModal = ({
   const handleModifyModalClose = () => {
     console.log('Modify modal closed');
     setShowModifyModal(false);
+    // Don't restore body scroll here since the recommendation modal is still open
+  };
+
+  // Handle offer modal close
+  const handleOfferModalClose = () => {
+    console.log('Offer modal closed');
+    setShowOfferModal(false);
     // Don't restore body scroll here since the recommendation modal is still open
   };
 
@@ -871,11 +1065,82 @@ const RecommendationImplementationModal = ({
     onClose();
   };
 
+  // ✅ FIXED: Handle offer created from offer modal with proper program structure
+  const handleOfferCreatedFromModal = (createdOffer) => {
+    console.log('Offer created:', createdOffer);
+    
+    // ✅ NEW: Transform offer into program-compatible structure
+    const finalProgram = {
+      ...createdOffer,
+      // ✅ FIXED: Use loyalty program type instead of campaign type
+      type: 'Promotional Program', // ← Changed from 'Promotional Campaign' to ensure loyalty routing
+      programType: 'offer', // ← Mark as offer type for filtering/display
+      participants: 0,
+      pointsIssued: 0,
+      redemptions: 0,
+      revenue: 0,
+      cost: 0,
+      roi: 0,
+      needsAttention: false,
+      recommendations: [],
+      
+      // ✅ NEW: Add explicit loyalty program marker
+      isLoyaltyProgram: true, // ← Explicit flag for parent routing logic
+      
+      // Keep offer-specific fields for offer functionality
+      offerType: createdOffer.offerType,
+      discountType: createdOffer.discountType,
+      discountValue: createdOffer.discountValue,
+      discountVariants: createdOffer.discountVariants,
+      minimumSpend: createdOffer.minimumSpend,
+      maxDiscount: createdOffer.maxDiscount,
+      targetCategory: createdOffer.targetCategory,
+      redemptionLimit: createdOffer.redemptionLimit,
+      validDays: createdOffer.validDays,
+      
+      // Track implementation origin
+      isRecommendationImplementation: true,
+      isModified: true,
+      originalRecommendation: recommendation
+    };
+    
+    console.log('Transformed offer into program structure:', finalProgram);
+    console.log('Program type:', finalProgram.type, 'isLoyaltyProgram:', finalProgram.isLoyaltyProgram);
+    
+    if (onProgramCreated) {
+      onProgramCreated(finalProgram); // ← Now sends program-structured data
+    }
+
+    if (onNotificationCreated) {
+      const notification = {
+        id: Date.now(),
+        type: 'success',
+        title: `Customized Offer Implemented: ${finalProgram.title}`,
+        message: `Customized offer has been created and ${finalProgram.status === 'Scheduled' ? 'scheduled for launch' : 'saved as draft'}.`,
+        time: 'Just now',
+        icon: 'CheckCircle',
+        color: COLORS.green,
+        priority: 'high'
+      };
+      onNotificationCreated(notification);
+    }
+    
+    // Close both modals and restore scroll
+    setShowOfferModal(false);
+    document.body.style.overflow = 'unset';
+    onClose();
+  };
+
   // Handle main modal close with proper cleanup
   const handleMainModalClose = () => {
     console.log('Closing recommendation modal');
     
-    // If modify modal is open, close it first
+    // If offer modal is open, close it first
+    if (showOfferModal) {
+      setShowOfferModal(false);
+    }
+    
+    // If modify modal is open, close it first  
     if (showModifyModal) {
       setShowModifyModal(false);
     }
@@ -903,13 +1168,13 @@ const RecommendationImplementationModal = ({
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: showModifyModal ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.8)',
-            zIndex: showModifyModal ? 50000 : 50000,
+            backgroundColor: (showModifyModal || showOfferModal) ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.8)',
+            zIndex: showModifyModal || showOfferModal ? 50000 : 50000,
             backdropFilter: 'blur(4px)',
-            opacity: showModifyModal ? 0.5 : 1,
-            pointerEvents: showModifyModal ? 'none' : 'auto'
+            opacity: (showModifyModal || showOfferModal) ? 0.5 : 1,
+            pointerEvents: (showModifyModal || showOfferModal) ? 'none' : 'auto'
           }}
-          onClick={showModifyModal ? undefined : handleMainModalClose}
+          onClick={(showModifyModal || showOfferModal) ? undefined : handleMainModalClose}
         />
         
         {/* Modal content with dynamic styling */}
@@ -921,11 +1186,11 @@ const RecommendationImplementationModal = ({
             width: '100%',
             height: '100%',
             backgroundColor: '#f5f7f8',
-            zIndex: showModifyModal ? 50001 : 50001,
+            zIndex: (showModifyModal || showOfferModal) ? 50001 : 50001,
             display: 'flex',
             flexDirection: 'column',
-            filter: showModifyModal ? 'blur(2px)' : 'none',
-            pointerEvents: showModifyModal ? 'none' : 'auto'
+            filter: (showModifyModal || showOfferModal) ? 'blur(2px)' : 'none',
+            pointerEvents: (showModifyModal || showOfferModal) ? 'none' : 'auto'
           }}
         >
           {/* Header */}
@@ -1234,7 +1499,9 @@ const RecommendationImplementationModal = ({
                             color: COLORS.onyx,
                             marginBottom: '1.5rem'
                           }}>
-                            {isAtRiskPunchCardRecommendation() ? 'Segment Optimization Strategy' : 'Program Optimization Strategy'}
+                            {isAtRiskPunchCardRecommendation() ? 'Segment Optimization Strategy' : 
+                             isOfferRecommendation() ? 'Category Re-engagement Strategy' : 
+                             'Program Optimization Strategy'}
                           </h3>
                           
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
@@ -1327,14 +1594,18 @@ const RecommendationImplementationModal = ({
                             margin: 0,
                             marginBottom: '0.25rem'
                           }}>
-                            {isAtRiskPunchCardRecommendation() ? 'Projected Impact' : 'Projected Enhancement Impact'}
+                            {isAtRiskPunchCardRecommendation() ? 'Projected Impact' : 
+                             isOfferRecommendation() ? 'Projected Offer Performance' :
+                             'Projected Enhancement Impact'}
                           </h3>
                           <p style={{
                             fontSize: '0.875rem',
                             color: COLORS.onyxMedium,
                             margin: 0
                           }}>
-                            {isAtRiskPunchCardRecommendation() ? 'Based on AI analysis of similar recommendations' : 'Based on AI analysis of similar optimization programs'}
+                            {isAtRiskPunchCardRecommendation() ? 'Based on AI analysis of similar recommendations' : 
+                             isOfferRecommendation() ? 'Based on customer segment analysis and historical offer performance' :
+                             'Based on AI analysis of similar optimization programs'}
                           </p>
                         </div>
                       </div>
@@ -1376,6 +1647,39 @@ const RecommendationImplementationModal = ({
                             value: `Estimate ${implementationData.projectedMetrics.averageOrderValue} AOV`,
                             subtext: 'Per Transaction',
                             icon: DollarSign,
+                            color: COLORS.yellow,
+                            highlight: false
+                          }
+                        ] : isOfferRecommendation() ? [
+                          { 
+                            label: 'Target Customers', 
+                            value: implementationData.projectedMetrics.participantsRecovered,
+                            subtext: 'High-value lapsed customers',
+                            icon: Users,
+                            color: COLORS.blue,
+                            highlight: false
+                          },
+                          { 
+                            label: 'Revenue Impact', 
+                            value: implementationData.projectedMetrics.revenueRecovery,
+                            subtext: 'Category recovery',
+                            icon: DollarSign,
+                            color: COLORS.green,
+                            highlight: false
+                          },
+                          { 
+                            label: 'Redemption Rate', 
+                            value: implementationData.projectedMetrics.redemptionRate,
+                            subtext: 'Estimated response',
+                            icon: Target,
+                            color: COLORS.evergreen,
+                            highlight: true
+                          },
+                          { 
+                            label: 'Program ROI', 
+                            value: implementationData.projectedMetrics.programROI,
+                            subtext: 'Return on investment',
+                            icon: TrendingUp,
                             color: COLORS.yellow,
                             highlight: false
                           }
@@ -1478,6 +1782,22 @@ const RecommendationImplementationModal = ({
                             value: implementationData.projectedMetrics.monetaryImprovement,
                             change: 'improvement'
                           }
+                        ] : isOfferRecommendation() ? [
+                          {
+                            label: 'Average Order Value',
+                            value: implementationData.projectedMetrics.averageOrderValue,
+                            change: 'average'
+                          },
+                          {
+                            label: 'Category Engagement',
+                            value: implementationData.projectedMetrics.categoryEngagementIncrease,
+                            change: 'increase'
+                          },
+                          {
+                            label: 'Total Discount Cost',
+                            value: implementationData.projectedMetrics.totalDiscountCost,
+                            change: 'investment'
+                          }
                         ] : [
                           {
                             label: 'Member Satisfaction',
@@ -1516,7 +1836,9 @@ const RecommendationImplementationModal = ({
                               alignItems: 'center',
                               gap: '0.25rem'
                             }}>
-                              <ArrowUpRight size={16} style={{ color: COLORS.green }} />
+                              {metric.change !== 'investment' && metric.change !== 'average' && (
+                                <ArrowUpRight size={16} style={{ color: COLORS.green }} />
+                              )}
                               <span style={{
                                 fontSize: '0.875rem',
                                 fontWeight: 600,
@@ -1551,7 +1873,7 @@ const RecommendationImplementationModal = ({
                             color: COLORS.onyx,
                             margin: 0
                           }}>
-                            Enhancement Configuration
+                            {isOfferRecommendation() ? 'Offer Configuration' : 'Enhancement Configuration'}
                           </h3>
                         </div>
                       </div>
@@ -1572,7 +1894,7 @@ const RecommendationImplementationModal = ({
                               letterSpacing: '0.5px',
                               marginBottom: '1rem'
                             }}>
-                              Program Details
+                              {isOfferRecommendation() ? 'Offer Details' : 'Program Details'}
                             </h4>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -1605,7 +1927,7 @@ const RecommendationImplementationModal = ({
                               letterSpacing: '0.5px',
                               marginBottom: '1rem'
                             }}>
-                              Enhancement Description
+                              {isOfferRecommendation() ? 'Offer Description' : 'Enhancement Description'}
                             </h4>
                             <div style={{
                               padding: '1rem',
@@ -1686,7 +2008,9 @@ const RecommendationImplementationModal = ({
                       color: COLORS.onyxMedium,
                       marginBottom: '0.25rem'
                     }}>
-                      {isAtRiskPunchCardRecommendation() ? 'Projected Revenue Impact' : 'Projected Program ROI'}
+                      {isAtRiskPunchCardRecommendation() ? 'Projected Revenue Impact' : 
+                       isOfferRecommendation() ? 'Projected Revenue Impact' :
+                       'Projected Program ROI'}
                     </div>
                     <div style={{
                       fontSize: '1.5rem',
@@ -1695,6 +2019,8 @@ const RecommendationImplementationModal = ({
                     }}>
                       {isAtRiskPunchCardRecommendation() ? 
                         implementationData?.projectedMetrics?.revenueRecovery : 
+                        isOfferRecommendation() ?
+                        implementationData?.projectedMetrics?.revenueRecovery :
                         implementationData?.projectedMetrics?.programROI}
                     </div>
                   </div>
@@ -1763,7 +2089,7 @@ const RecommendationImplementationModal = ({
                     }}
                   >
                     <CheckCircle size={16} />
-                    Implement Enhancement
+                    {isOfferRecommendation() ? 'Create Offer' : 'Implement Enhancement'}
                   </button>
                 </div>
               </div>
@@ -1796,6 +2122,15 @@ const RecommendationImplementationModal = ({
           [data-modal-type="modify"] * {
             z-index: inherit !important;
           }
+
+          /* Force offer modal to appear on top */
+          [data-modal-type="offer"] {
+            z-index: 60000 !important;
+          }
+          
+          [data-modal-type="offer"] * {
+            z-index: inherit !important;
+          }
         `}</style>
       </div>
 
@@ -1817,6 +2152,32 @@ const RecommendationImplementationModal = ({
             isOpen={showModifyModal}
             onClose={handleModifyModalClose}
             onProgramCreated={handleProgramCreatedFromModify}
+            onNotificationCreated={onNotificationCreated}
+            prepopulatedData={implementationData}
+            isModifyMode={true}
+            style={{ zIndex: 60001 }}
+          />
+        </div>
+      )}
+
+      {/* Offer Creation Modal with proper z-index stacking */}
+      {showOfferModal && implementationData && (
+        <div 
+          data-modal-type="offer"
+          style={{ 
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 60000,
+            pointerEvents: 'auto'
+          }}
+        >
+          <OfferCreationModal
+            isOpen={showOfferModal}
+            onClose={handleOfferModalClose}
+            onOfferCreated={handleOfferCreatedFromModal}
             onNotificationCreated={onNotificationCreated}
             prepopulatedData={implementationData}
             isModifyMode={true}

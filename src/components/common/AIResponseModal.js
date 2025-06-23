@@ -9,7 +9,8 @@ const AIResponseModal = ({
   response, 
   question, 
   onClearResponse, 
-  onPromptClick 
+  onPromptClick,
+  onRecommendationImplement 
 }) => {
   // Handle escape key
   useEffect(() => {
@@ -172,7 +173,22 @@ const AIResponseModal = ({
                         <button className="ai-response-recommendation-btn-secondary">
                           View Details
                         </button>
-                        <button className="ai-response-recommendation-btn-primary">
+                        <button 
+                          className="ai-response-recommendation-btn-primary"
+                          onClick={() => onRecommendationImplement && onRecommendationImplement(rec)}
+                          style={{
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.transform = 'translateY(-1px)';
+                            e.target.style.boxShadow = '0 4px 12px rgba(26, 76, 73, 0.3)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.transform = 'translateY(0)';
+                            e.target.style.boxShadow = 'none';
+                          }}
+                        >
                           Apply Recommendation
                           <ChevronRight size={14} />
                         </button>

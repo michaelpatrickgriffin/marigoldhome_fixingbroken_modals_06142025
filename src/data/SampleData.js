@@ -1240,7 +1240,7 @@ export const userProfiles = [
     name: 'Alex Morgan',
     title: 'Marketing Director',
     avatar: 'AM',
-    dashboards: ['rfm', 'standard', 'overview'],
+    dashboards: ['rfm', 'standard'],
     defaultDashboard: 'rfm',
     description: 'Full dashboard access with RFM analytics focus'
   },

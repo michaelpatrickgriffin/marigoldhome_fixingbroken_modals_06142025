@@ -1,6 +1,6 @@
 // src/components/layout/ProfilePanel.js
 import React, { useEffect, useState } from 'react';
-import { X, User, Settings, HelpCircle, LogOut, Bell, ArrowUpRight, Zap, TrendingUp, Layers, Award, Users, BookOpen, Calendar, ChevronDown } from 'lucide-react';
+import { X, User, Settings, HelpCircle, LogOut, Bell, ArrowUpRight, Zap, TrendingUp, Layers, Award, Users, BookOpen, Calendar, ChevronDown, Building2 } from 'lucide-react';
 import { COLORS } from '../../styles/ColorStyles';
 import { profilePanelConfig, profileRecommendationsData } from '../../data/SampleData';
 import ProfileSwitchModal from './ProfileSwitchModal';
@@ -22,7 +22,7 @@ const iconMap = {
   'Bell': Bell
 };
 
-const ProfilePanel = ({ isOpen, onClose, currentProfile, onProfileSwitch }) => {
+const ProfilePanel = ({ isOpen, onClose, currentProfile, currentCompany, onProfileSwitch, onCompanySwitch }) => {
   const [showProfileSwitch, setShowProfileSwitch] = useState(false);
   const [recommendations, setRecommendations] = useState(profileRecommendationsData);
 
@@ -164,6 +164,47 @@ const ProfilePanel = ({ isOpen, onClose, currentProfile, onProfileSwitch }) => {
             >
               <X size={20} />
             </button>
+          </div>
+
+          {/* ✅ NEW: Current Company Display (non-interactive) */}
+          <div style={{ 
+            padding: '0 1.5rem 1rem 1.5rem'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: '0.75rem',
+              backgroundColor: 'rgba(0, 0, 0, 0.02)',
+              border: '1px solid rgba(0, 0, 0, 0.08)',
+              borderRadius: '0.5rem'
+            }}>
+              <div 
+                style={{ 
+                  width: '2rem',
+                  height: '2rem',
+                  borderRadius: '0.375rem',
+                  backgroundColor: currentCompany?.color || COLORS.evergreen,
+                  color: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: '0.75rem',
+                  fontSize: '0.75rem',
+                  fontWeight: 'bold',
+                  flexShrink: 0
+                }}
+              >
+                {currentCompany?.logo || 'OS'}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '0.875rem', fontWeight: '600', color: COLORS.onyx, marginBottom: '0.125rem' }}>
+                  {currentCompany?.name || 'Outdoor Sportswear Co.'}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: COLORS.onyxMedium, lineHeight: '1.25' }}>
+                  {currentCompany?.industry || 'Retail - Outdoor Equipment'}
+                </div>
+              </div>
+            </div>
           </div>
           
           {/* User stats */}
@@ -374,7 +415,10 @@ const ProfilePanel = ({ isOpen, onClose, currentProfile, onProfileSwitch }) => {
         isOpen={showProfileSwitch}
         onClose={() => setShowProfileSwitch(false)}
         currentProfile={currentProfile}
+        currentCompany={currentCompany}
         onProfileSwitch={onProfileSwitch}
+        onCompanySwitch={onCompanySwitch}
+        isInitialSetup={false}
       />
     </>
   );

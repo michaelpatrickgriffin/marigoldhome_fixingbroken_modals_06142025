@@ -9,6 +9,7 @@ import {
   Sparkles, TrendingDown, Activity, RefreshCw, Gift, Percent, UserCheck, CreditCard, Mail
 } from 'lucide-react';
 import { COLORS, getImpactColor, getDifficultyColor } from '../../styles/ColorStyles';
+import { useMVPUI } from '../../contexts/MVPUIContext';
 import { 
   modalOverlayStyle, 
   modalHeaderStyle, 
@@ -79,6 +80,9 @@ const DetailView = ({
   const [implementedRecommendations, setImplementedRecommendations] = useState(new Set());
   const [rejectedRecommendations, setRejectedRecommendations] = useState(new Set());
   
+  // ✅ NEW: Add MVP UI context
+  const { isMVPMode } = useMVPUI();
+  
   // ✅ UPDATED: State for recommendation implementation modal with better debugging
   const [showImplementationModal, setShowImplementationModal] = useState(false);
   const [selectedRecommendation, setSelectedRecommendation] = useState(null);
@@ -95,6 +99,13 @@ const DetailView = ({
   useEffect(() => {
     setActiveTab(propInitialTab);
   }, [propInitialTab]);
+  
+  // ✅ NEW: Handle MVP mode - switch to overview if currently on performance tab
+  useEffect(() => {
+    if (isMVPMode && activeTab === 'performance') {
+      handleTabChange('overview');
+    }
+  }, [isMVPMode, activeTab]);
   
   // ✅ FIXED: Handle deep linking to recommendations tab
   useEffect(() => {
@@ -393,30 +404,6 @@ const DetailView = ({
     
     setBulkActionLoading(false);
   };
-
-  // ✅ FIXED: Enhanced modal header style function
-  const getModalHeaderStyle = () => {
-    const currentProgramData = program || item;
-    const baseStyle = {
-      padding: '1.5rem',
-      borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      backgroundColor: 'white'
-    };
-    
-    // If program needs attention, apply pink/red background
-    if (currentProgramData.needsAttention) {
-      return {
-        ...baseStyle,
-        backgroundColor: 'rgba(244, 67, 54, 0.08)',
-        borderBottom: '1px solid rgba(244, 67, 54, 0.2)'
-      };
-    }
-    
-    return baseStyle;
-  };
   
   return (
     <div style={{
@@ -440,8 +427,8 @@ const DetailView = ({
         flexDirection: 'column',
         overflow: 'hidden'
       }}>
-        {/* ✅ FIXED: Modal Header with proper attention styling */}
-        <div style={getModalHeaderStyle()}>
+        {/* ✅ FIXED: Modal Header using modalHeaderStyle instead of custom function */}
+        <div style={modalHeaderStyle((program || item).needsAttention)}>
           <div style={modalHeaderContentStyle}>
             <div className="flex items-center">
               {(program || item).needsAttention && (
@@ -469,9 +456,12 @@ const DetailView = ({
               Overview
             </button>
             
-            <button onClick={() => handleTabChange('performance')} style={tabButtonStyle(activeTab === 'performance')}>
-              Performance
-            </button>
+            {/* ✅ NEW: Only show performance tab if NOT in MVP mode */}
+            {!isMVPMode && (
+              <button onClick={() => handleTabChange('performance')} style={tabButtonStyle(activeTab === 'performance')}>
+                Performance
+              </button>
+            )}
             
             <button onClick={() => handleTabChange('recommendations')} style={tabButtonStyle(activeTab === 'recommendations')}>
               <Brain size={16} style={{ marginRight: '0.5rem' }} />
@@ -528,7 +518,8 @@ const DetailView = ({
               </div>
             )}
             
-            {activeTab === 'performance' && (
+            {/* ✅ NEW: Only show performance tab content if NOT in MVP mode */}
+            {!isMVPMode && activeTab === 'performance' && (
               <div className="slide-in-up" key="performance">
                 <PerformanceTab 
                   program={program || item}
@@ -602,6 +593,7 @@ const DetailView = ({
           <div>Active Tab: {activeTab}</div>
           <div>Enhanced Recs: {enhancedRecommendations.length}</div>
           <div>Needs Attention: {(program || item)?.needsAttention ? 'YES' : 'NO'}</div>
+          <div>MVP Mode: {isMVPMode ? 'ON' : 'OFF'}</div>
         </div>
       )}
     </div>
