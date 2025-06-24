@@ -431,14 +431,14 @@ const App = () => {
       };
       
       setOffers([newOffer, ...offers]);
-      setActiveTab('campaigns'); // Navigate to campaigns view to see the new offer
+      //setActiveTab('campaigns'); // Navigate to campaigns view to see the new offer
       setSuccessToast({
         message: `${newOffer.title || 'New offer campaign'} has been created successfully.`,
       });
     } else {
       // Handle as traditional campaign
       setCampaigns([newItem, ...campaigns]);
-      setActiveTab('campaigns');
+      //setActiveTab('campaigns');
       setSuccessToast({
         message: `${newItem.title || 'New campaign'} has been created successfully.`,
       });
@@ -500,7 +500,7 @@ const App = () => {
     console.log(updatedPrograms);
     
     setLoyaltyPrograms(updatedPrograms);
-    setActiveTab('loyalty');
+    //setActiveTab('loyalty');
     setSuccessToast({
       message: `${newProgram.title || 'New loyalty program'} has been created successfully.`,
     });

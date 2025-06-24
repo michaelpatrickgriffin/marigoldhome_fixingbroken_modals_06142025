@@ -4,6 +4,17 @@
 import { COLORS } from '../styles/ColorStyles';
 // Import all your existing data
 import * as OriginalData from './SampleData';
+// ✅ NEW: Import RFM data for outdoor sportswear as fallback
+import { 
+  rfmKpiData as outdoorRfmKpiData,
+  rfmInsightsData as outdoorRfmInsightsData, 
+  rfmRecommendations as outdoorRfmRecommendations,
+  segmentDistributionData,
+  customerValueData,
+  retentionRateData,
+  getChangeColor,
+  rfmKpiData // ✅ Keep original KPI data for both companies
+} from './RFMAnalyticsData';
 
 // ===== COMPANY PROFILES =====
 export const companyProfiles = [
@@ -427,6 +438,182 @@ const walgreensData = {
     }
   ],
 
+  // ✅ NEW: Walgreens RFM Insights Data (keeping original KPI cards)
+  rfmInsightsData: {
+    performanceInsights: [
+      {
+        type: 'attention',
+        text: 'Wellness Enrollment campaign showing only 234% ROI while pharmacy standard is 400%+',
+        impact: 'Healthcare-focused messaging redesign could improve enrollment by 67% and boost ROI to 390%',
+        severity: 'medium',
+        action: 'View Campaign Details',
+        segmentType: 'underperforming'
+      },
+      {
+        type: 'opportunity',
+        text: 'At Risk Patients segment growing +3.2% with declining medication adherence patterns',
+        impact: 'Targeted adherence programs could recover $850K in pharmacy revenue and improve patient outcomes',
+        severity: 'high',
+        action: 'View Segment Details',
+        segmentType: 'underperforming'
+      },
+      {
+        type: 'positive',
+        text: 'Health Champions driving 38% of total pharmacy revenue with strong prescription adherence',
+        impact: 'Wellness program expansion could increase this segment value by additional $420K annually',
+        severity: 'low',
+        action: 'View Segment Details'
+      },
+      {
+        type: 'neutral',
+        text: 'Wellness Seekers show high program engagement but moderate spending patterns',
+        impact: 'Cross-selling health products could increase segment value by 25% with targeted campaigns',
+        severity: 'medium',
+        action: 'View Segment Details'
+      }
+    ]
+  },
+
+  // ✅ NEW: Walgreens RFM Recommendations
+  rfmRecommendations: [
+    {
+      id: "rec-walgreens-wellness-enrollment",
+      title: "Wellness Enrollment Campaign Optimization",
+      segment: "All Patients",
+      description: "Transform Wellness Enrollment messaging from generic 'rewards' to healthcare-specific benefits. Replace 'earn points' with 'save on medications' and highlight prescription discounts, health screenings, and pharmacist consultations. Currently achieving 234% ROI vs 400%+ pharmacy standard.",
+      priority: "high",
+      expectedROI: "+390%",
+      type: "optimization",
+      difficulty: "medium",
+      impact: "high",
+      audience: "Non-Member Patients",
+      
+      estimatedRevenue: 180000,
+      memberImpact: 156000,
+      confidenceScore: 92,
+      timeToImplement: "2-3 weeks",
+      
+      aiExplanation: "OPTIMIZATION OPPORTUNITY: Wellness Enrollment campaign shows significant improvement potential with 234% ROI compared to 400%+ pharmacy industry standard. Healthcare messaging analysis reveals generic 'rewards' language fails to communicate genuine health value. Patient research shows 67% higher enrollment when benefits focus on medication savings, health outcomes, and professional healthcare services rather than generic point-earning activities.",
+      
+      prerequisites: [
+        "Redesign enrollment materials with healthcare-focused value propositions",
+        "Replace generic rewards messaging with specific health benefits",
+        "Add pharmacist endorsements and professional testimonials",
+        "Implement medication savings calculator and health outcome tracking"
+      ],
+      
+      successMetrics: [
+        "Increase enrollment ROI from 234% to target 390%",
+        "Improve enrollment conversion by 67% through healthcare messaging",
+        "Boost program perceived value by 85% among eligible patients",
+        "Achieve $180K additional revenue through optimized enrollment"
+      ],
+      
+      implementationDetails: {
+        title: "Wellness Enrollment Campaign Optimization",
+        type: "Campaign Enhancement",
+        audience: "Non-Member Patients",
+        description: "Transform enrollment messaging to focus on healthcare value with medication savings, health screenings, and pharmacist consultations rather than generic rewards points.",
+        startDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        pointsValue: "15",
+        projectedMetrics: {
+          currentROI: "234%",
+          targetROI: "390%",
+          enrollmentIncrease: "67%",
+          estimatedRevenue: "$180,000",
+          predictedROI: "390%"
+        }
+      }
+    },
+    {
+      id: "rec-walgreens-atrisk-adherence",
+      title: "At Risk Patient Medication Adherence Program",
+      segment: "At Risk Patients",
+      description: "Deploy targeted medication adherence support for 18,900 At Risk Patients showing declining visit patterns. Implement personalized refill reminders, pharmacist consultations, and adherence tracking with medication synchronization options to recover pharmacy revenue and improve patient outcomes.",
+      priority: "high",
+      expectedROI: "+425%",
+      type: "enhancement",
+      difficulty: "medium",
+      impact: "high",
+      audience: "At Risk Patients",
+      
+      estimatedRevenue: 850000,
+      memberImpact: 18900,
+      confidenceScore: 88,
+      timeToImplement: "3-4 weeks",
+      
+      aiExplanation: "CRITICAL SEGMENT RECOVERY: At Risk Patients segment growing +3.2% indicates medication adherence decline affecting both patient outcomes and pharmacy revenue. Advanced analytics show these patients previously demonstrated strong spending patterns (M:4) but are experiencing visit frequency reduction (R:2). Targeted adherence programs show 73% success rate in recovering lapsed prescription patients and improving health outcomes through consistent medication management.",
+      
+      prerequisites: [
+        "Implement predictive analytics for adherence pattern detection",
+        "Configure personalized refill reminder system with behavioral triggers",
+        "Set up pharmacist consultation scheduling for at-risk patients",
+        "Create medication synchronization program for multiple prescriptions"
+      ],
+      
+      successMetrics: [
+        "Recover $850K in pharmacy revenue from improved adherence",
+        "Achieve 425% ROI through targeted patient re-engagement",
+        "Improve medication adherence rates by 40% for At Risk segment",
+        "Reduce At Risk segment churn by 25% through intervention programs"
+      ],
+      
+      implementationDetails: {
+        title: "At Risk Patient Adherence Recovery Program",
+        type: "Patient Intervention",
+        audience: "At Risk Patients",
+        description: "Comprehensive medication adherence support with personalized reminders, pharmacist consultations, and synchronization services to recover declining patients and improve health outcomes.",
+        startDate: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        endDate: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        pointsValue: "20",
+        projectedMetrics: {
+          targetPatients: "18,900",
+          adherenceImprovement: "40%",
+          estimatedRevenue: "$850,000",
+          churnReduction: "25%",
+          predictedROI: "425%"
+        }
+      }
+    },
+    {
+      id: "rec-walgreens-health-champions-expansion",
+      title: "Health Champions Wellness Program Expansion",
+      segment: "Health Champions",
+      description: "Expand wellness program benefits for 15,200 Health Champions who drive 38% of pharmacy revenue. Add exclusive health screenings, nutrition consultations, and premium health product access to increase segment value and strengthen pharmacy relationship.",
+      priority: "medium",
+      expectedROI: "+280%",
+      type: "expansion",
+      difficulty: "medium",
+      impact: "high",
+      audience: "Health Champions",
+      
+      estimatedRevenue: 420000,
+      memberImpact: 15200,
+      confidenceScore: 85,
+      timeToImplement: "4-6 weeks",
+      
+      aiExplanation: "VALUE MAXIMIZATION OPPORTUNITY: Health Champions segment demonstrates peak engagement (R:5 F:5 M:5) and generates 38% of total pharmacy revenue despite representing only 12.3% of patient base. Behavioral analysis shows this segment responds strongly to exclusive health services and premium wellness benefits. Expansion programs targeting health-conscious, high-value patients typically increase segment lifetime value by 35% through enhanced service offerings and deeper healthcare partnerships.",
+      
+      implementationDetails: {
+        title: "Health Champions Wellness Expansion",
+        type: "Premium Program Enhancement",
+        audience: "Health Champions",
+        description: "Exclusive wellness program expansion with premium health services, nutrition consultations, and advanced health screenings for highest-value pharmacy patients.",
+        startDate: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        endDate: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        pointsValue: "25",
+        projectedMetrics: {
+          segmentSize: "15,200",
+          valueIncrease: "35%",
+          estimatedRevenue: "$420,000",
+          revenueShare: "38%",
+          predictedROI: "280%"
+        }
+      }
+    }
+  ],
+
   insights: {
     performanceInsights: [
       {
@@ -444,7 +631,7 @@ const walgreensData = {
       {
         type: 'opportunity',
         text: 'Health & Wellness category shows 24% of high-value customers have lapsed in past 6 months',
-        impact: 'Targeted re-engagement could recover $1.2M in annual category revenue',
+        impact: 'Targeted re-engagement could recover $120K in annual category revenue',
         severity: 'high'
       }
     ],
@@ -457,7 +644,7 @@ const walgreensData = {
       },
       {
         text: 'Create targeted offers for lapsed Health & Wellness customers',
-        impact: 'Could recover $1.2M in annual category revenue from high-value segment',
+        impact: 'Could recover $120K in annual category revenue from high-value segment',
         difficulty: 'Medium',
         priority: 'high'
       }
@@ -466,18 +653,18 @@ const walgreensData = {
 
   // ===== ENHANCED: CUSTOMER SEGMENTATION DATA =====
   customerSegments: {
-    // High-value customers (top 20% by spend) who lapsed from Health & Wellness
+    // ✅ FIXED: Increased customer count to make revenue math realistic
     highValueLapsedWellness: {
       segmentId: 'hv_lapsed_wellness',
       name: 'High-Value Lapsed Health & Wellness',
       description: 'Top 20% customers by annual spend who haven\'t purchased Health & Wellness products in 6+ months',
-      totalCustomers: 8945,
-      percentOfBase: 7.2,
+      totalCustomers: 25490, // ✅ INCREASED: from 8945 to 25490 for realistic revenue math
+      percentOfBase: 20.6, // ✅ UPDATED: percentage to match new count
       
-      // Spending insights
-      avgAnnualSpend: 1847,
-      medianAnnualSpend: 1520,
-      totalAnnualRevenue: 16520000,
+      // ✅ UPDATED: Spending insights with realistic numbers
+      avgAnnualSpend: 185,
+      medianAnnualSpend: 152,
+      totalAnnualRevenue: 4715000, // ✅ INCREASED: 25490 * $185 average
       
       // Health & Wellness category specifics
       avgHistoricalWellnessSpend: 312,
@@ -488,14 +675,14 @@ const walgreensData = {
       // Engagement patterns
       medianPurchasesPerCustomer: 18,
       avgOrderValue: 103,
-      totalLifetimeValue: 2340,
+      totalLifetimeValue: 234,
       
       // Refinement opportunities
       surveyRespondents: {
-        inSegment: 1789,
-        additionalFromSurvey: 895,
+        inSegment: 5098, // ✅ INCREASED: proportionally
+        additionalFromSurvey: 2549, // ✅ INCREASED: proportionally
         potentialIncrease: 10.0, // 10% increase
-        newTotalSize: 9840,
+        newTotalSize: 28039, // ✅ UPDATED: new total with survey respondents
         description: 'Adding Health & Wellness survey respondents regardless of spend tier'
       },
       
@@ -543,10 +730,10 @@ const walgreensData = {
       loyal: { count: 13822, percent: 20.4, avgSpend: 89 }
     },
     
-    // Lapse patterns
+    // Lapse patterns - ✅ UPDATED: to match new customer count
     lapseAnalysis: {
-      totalLapsed: 21567, // Haven't purchased in 6+ months
-      highValueLapsed: 8945, // Our target segment
+      totalLapsed: 61467, // ✅ INCREASED: proportionally from 21567
+      highValueLapsed: 25490, // ✅ UPDATED: our target segment 
       medianTimeSinceLastPurchase: 8.3, // months
       topLapseReasons: [
         'Price sensitivity during economic uncertainty',
@@ -565,17 +752,17 @@ const walgreensData = {
     if (lowerQuery.includes('offer') && lowerQuery.includes('high value') && lowerQuery.includes('lapsed') && lowerQuery.includes('health')) {
       return () => ({
         type: 'offer_creation_analysis',
-        directAnswer: 'I found 8,945 high-value customers (top 20% by spend) who haven\'t purchased Health & Wellness products in 6+ months. This represents $16.5M in annual revenue potential.',
+        directAnswer: 'I found 25,490 high-value customers (top 20% by spend) who haven\'t purchased Health & Wellness products in 6+ months. This represents $4.7M in annual revenue potential.',
         
         segmentConfirmation: {
-          segmentSize: 8945,
-          percentOfBase: 7.2,
+          segmentSize: 25490, // ✅ UPDATED: realistic customer count
+          percentOfBase: 20.6, // ✅ UPDATED: percentage
           description: 'Top 20% customers by annual spend who haven\'t purchased Health & Wellness products in the past 6 months',
           
           keyInsights: {
             medianPurchasesPerCustomer: 18,
             avgOrderValue: 103,
-            totalAnnualRevenue: 16520000,
+            totalAnnualRevenue: 4715000, // ✅ UPDATED: realistic total
             avgHistoricalWellnessSpend: 312,
             medianWellnessOrderValue: 47,
             lastPurchaseAvg: '7.2 months ago'
@@ -583,7 +770,7 @@ const walgreensData = {
         },
         
         segmentRefinement: {
-          suggestion: 'Including Health & Wellness survey respondents regardless of spend tier would increase your audience by 10% (adding 895 customers) for a total of 9,840 customers.',
+          suggestion: 'Including Health & Wellness survey respondents regardless of spend tier would increase your audience by 10% (adding 2,549 customers) for a total of 28,039 customers.',
           additionalInsight: 'Survey respondents show 23% higher engagement rates with wellness-focused offers, though average order values are 15% lower.',
           question: 'Would you like to include survey respondents to broaden reach while maintaining strong engagement?'
         },
@@ -608,11 +795,11 @@ const walgreensData = {
               minimumSpend: 40,
               predictions: {
                 redemptionRate: 28.5,
-                influencedRevenue: 1847000,
-                avgOrderValue: 45,
-                totalDiscount: 277050,
+                influencedRevenue: 1850000, // ✅ UPDATED: realistic revenue calculation
+                avgOrderValue: 72, // ✅ UPDATED: realistic AOV (~$47 median + some uplift)
+                totalDiscount: 277500, // ✅ UPDATED: 15% of $1.85M
                 roi: 567,
-                participatingCustomers: 2549,
+                participatingCustomers: 25490, // ✅ UPDATED: full segment size
                 timeframe: '90 days'
               }
             }
@@ -622,7 +809,7 @@ const walgreensData = {
             title: 'Targeted Health & Wellness Cashback (20%)',
             description: '20% cashback on eligible Health & Wellness products (redeemable on future purchases). Reduces immediate margin impact while driving category-specific spend and future visits.',
             impact: 'high',
-            estimatedROI: '+$2.16M revenue + $892K follow-on, 623% total ROI',
+            estimatedROI: '+$2.16M revenue + $890K follow-on, 623% total ROI',
             difficulty: 'medium',
             offerType: 'cashback_reward',
             targetCategory: 'health_wellness',
@@ -635,14 +822,14 @@ const walgreensData = {
               redemptionDelay: '30 days minimum',
               predictions: {
                 redemptionRate: 34.2,
-                influencedRevenue: 2156000,
-                avgOrderValue: 56,
-                totalCashbackValue: 431200,
+                influencedRevenue: 2160000, // ✅ UPDATED: realistic revenue calculation
+                avgOrderValue: 78, // ✅ UPDATED: higher AOV for cashback offers
+                totalCashbackValue: 432000, // ✅ UPDATED: 20% of $2.16M
                 futureRedemptionRate: 78,
-                followOnRevenue: 892000,
-                followOnAOV: 39,
+                followOnRevenue: 890000, // ✅ UPDATED: proportional follow-on revenue
+                followOnAOV: 52, // ✅ UPDATED: realistic follow-on AOV
                 totalROI: 623,
-                participatingCustomers: 3059,
+                participatingCustomers: 25490, // ✅ UPDATED: full segment size
                 timeframe: '120 days (including follow-on)'
               }
             }
@@ -664,13 +851,13 @@ const walgreensData = {
               applicableProducts: 'Vitamins, supplements, and fitness products $25+',
               predictions: {
                 redemptionRate: 22.8,
-                influencedRevenue: 1678000,
-                avgOrderValue: 78,
+                influencedRevenue: 1680000, // ✅ UPDATED: realistic revenue calculation  
+                avgOrderValue: 95, // ✅ UPDATED: higher AOV for bundle offers
                 effectiveDiscountPercent: 33.3,
-                totalDiscountValue: 559300,
+                totalDiscountValue: 560000, // ✅ UPDATED: ~33% effective discount
                 basketSizeIncrease: 85,
                 roi: 445,
-                participatingCustomers: 2040,
+                participatingCustomers: 25490, // ✅ UPDATED: full segment size
                 timeframe: '60 days'
               }
             }
@@ -694,7 +881,7 @@ const walgreensData = {
       });
     }
     
-    // Detailed offer analysis responses
+    // Detailed offer analysis responses - ✅ UPDATED: with realistic numbers
     if (lowerQuery.includes('detailed predictions') || lowerQuery.includes('cashback offer')) {
       return () => ({
         type: 'detailed_offer_analysis',
@@ -705,26 +892,26 @@ const walgreensData = {
           
           primaryMetrics: {
             redemptionRate: '34.2%',
-            influencedRevenue: '$2,156,000',
-            avgOrderValue: '$56',
-            participatingCustomers: '3,059 customers',
-            totalCashbackValue: '$431,200'
+            influencedRevenue: '$2,160,000', // ✅ UPDATED
+            avgOrderValue: '$78', // ✅ UPDATED
+            participatingCustomers: '25,490 customers', // ✅ UPDATED
+            totalCashbackValue: '$432,000' // ✅ UPDATED
           },
           
           followOnImpact: {
             futureRedemptionRate: '78%',
-            followOnRevenue: '$892,000',
-            followOnAOV: '$39',
+            followOnRevenue: '$890,000', // ✅ UPDATED
+            followOnAOV: '$52', // ✅ UPDATED
             customerRetentionBoost: '45%',
             categoryLoyaltyIncrease: '67%'
           },
           
           financialBreakdown: {
             totalROI: '623%',
-            netProfit: '$2,686,800',
-            marginalCost: '$431,200',
-            customerAcquisitionCost: '$141',
-            lifetimeValueIncrease: '$487'
+            netProfit: '$2,618,000', // ✅ UPDATED: total revenue minus cashback cost
+            marginalCost: '$432,000', // ✅ UPDATED: cashback payout
+            customerAcquisitionCost: '$17', // ✅ UPDATED: realistic CAC
+            lifetimeValueIncrease: '$103' // ✅ UPDATED: realistic LTV increase
           },
           
           competitiveAdvantages: [
@@ -744,7 +931,7 @@ const walgreensData = {
       });
     }
     
-    // ROI comparison responses
+    // ROI comparison responses - ✅ UPDATED: with realistic numbers
     if (lowerQuery.includes('compare') && lowerQuery.includes('roi')) {
       return () => ({
         type: 'offer_comparison_analysis',
@@ -752,15 +939,15 @@ const walgreensData = {
         
         comparison: {
           byROI: [
-            { offer: 'Category Discount (15% off)', roi: 567, revenue: 1847000, reason: 'Lower discount cost, strong adoption' },
-            { offer: 'Wellness Cashback (20%)', roi: 623, revenue: 2156000, reason: 'Includes follow-on revenue boost' },
-            { offer: 'Buy 2 Get 1 Free', roi: 445, revenue: 1678000, reason: 'Higher discount but larger baskets' }
+            { offer: 'Category Discount (15% off)', roi: 567, revenue: 1850000, reason: 'Lower discount cost, strong adoption' }, // ✅ UPDATED
+            { offer: 'Wellness Cashback (20%)', roi: 623, revenue: 2160000, reason: 'Includes follow-on revenue boost' }, // ✅ UPDATED
+            { offer: 'Buy 2 Get 1 Free', roi: 445, revenue: 1680000, reason: 'Higher discount but larger baskets' } // ✅ UPDATED
           ],
           
           byRevenue: [
-            { offer: 'Wellness Cashback', revenue: 2156000, customers: 3059, reason: 'Highest engagement and future value' },
-            { offer: 'Category Discount', revenue: 1847000, customers: 2549, reason: 'Broad appeal, easy adoption' },
-            { offer: 'Buy 2 Get 1 Free', revenue: 1678000, customers: 2040, reason: 'Premium customer focus' }
+            { offer: 'Wellness Cashback', revenue: 2160000, customers: 25490, reason: 'Highest engagement and future value' }, // ✅ UPDATED
+            { offer: 'Category Discount', revenue: 1850000, customers: 25490, reason: 'Broad appeal, easy adoption' }, // ✅ UPDATED
+            { offer: 'Buy 2 Get 1 Free', revenue: 1680000, customers: 25490, reason: 'Premium customer focus' } // ✅ UPDATED
           ],
           
           strategicConsiderations: {
@@ -783,9 +970,9 @@ const walgreensData = {
           {
             id: 'health-1',
             title: 'Target Lapsed Health & Wellness Customers',
-            description: 'Create re-engagement offers for 8,945 high-value customers who haven\'t purchased wellness products in 6+ months.',
+            description: 'Create re-engagement offers for 25,490 high-value customers who haven\'t purchased wellness products in 6+ months.', // ✅ UPDATED
             impact: 'high',
-            estimatedROI: '+$1.2M potential category recovery'
+            estimatedROI: '+$1.85M potential category recovery' // ✅ UPDATED
           }
         ],
         suggestedQuestions: [
@@ -799,14 +986,14 @@ const walgreensData = {
     return () => ({
       type: 'healthcare_general',
       directAnswer: 'Your pharmacy operations show strong patient engagement with significant opportunity in Health & Wellness category re-engagement.',
-      text: 'Healthcare performance shows strong fundamentals with 78.5% medication adherence and growing care interactions. Key opportunity exists in Health & Wellness category where 8,945 high-value customers have lapsed.',
+      text: 'Healthcare performance shows strong fundamentals with 78.5% medication adherence and growing care interactions. Key opportunity exists in Health & Wellness category where 25,490 high-value customers have lapsed.', // ✅ UPDATED
       recommendations: [
         {
           id: 'health-gen-1',
           title: 'Health & Wellness Re-engagement Campaign',
           description: 'Target high-value lapsed customers with personalized wellness offers.',
           impact: 'high',
-          estimatedROI: '+$1.2M from category recovery'
+          estimatedROI: '+$1.85M from category recovery' // ✅ UPDATED
         }
       ],
       suggestedQuestions: [
@@ -869,6 +1056,27 @@ export const getRfmSegments = () => {
   }
 };
 
+// ✅ NEW: RFM-specific data getters (insights and recommendations only)
+export const getRfmInsightsData = () => {
+  switch (currentCompany) {
+    case 'walgreens':
+      return walgreensData.rfmInsightsData;
+    case 'outdoor_sportswear':
+    default:
+      return outdoorRfmInsightsData;
+  }
+};
+
+export const getRfmRecommendations = () => {
+  switch (currentCompany) {
+    case 'walgreens':
+      return walgreensData.rfmRecommendations;
+    case 'outdoor_sportswear':
+    default:
+      return outdoorRfmRecommendations;
+  }
+};
+
 export const getResponseGenerator = (query) => {
   switch (currentCompany) {
     case 'walgreens':
@@ -923,3 +1131,6 @@ export const columbiaKpiCardsData = getKpiCardsData();
 export const kpiCardsData = getKpiCardsData();
 export const insightsData = getInsightsData();
 export const rfmSegments = getRfmSegments();
+
+// ✅ NEW: Export RFM chart data and utilities
+export { segmentDistributionData, customerValueData, retentionRateData, getChangeColor, rfmKpiData };

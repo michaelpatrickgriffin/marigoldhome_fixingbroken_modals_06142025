@@ -16,20 +16,16 @@ import RecommendationImplementationModal from '../loyalty/RecommendationImplemen
 import UnifiedInsightsAndRecommendations from './UnifiedInsightsAndRecommendations';
 import { getResponseGenerator } from './ResponseGenerators';
 
-// ===== IMPORT CENTRALIZED RFM DATA =====
+// ✅ UPDATED: Import from CompanyDataManager instead of RFMAnalyticsData
 import {
-  rfmKpiData,
   segmentDistributionData,
   customerValueData,
   retentionRateData,
-  rfmInsightsData,
-  rfmRecommendations,
-  isRecommendationImplemented,
-  markRecommendationAsImplemented,
-  isRecommendationRejected,
-  markRecommendationAsRejected,
-  getChangeColor
-} from '../../data/RFMAnalyticsData';
+  getChangeColor,
+  rfmKpiData, // ✅ Use original KPI data for both companies
+  getRfmInsightsData,
+  getRfmRecommendations
+} from '../../data/CompanyDataManager';
 
 // Dashboard card style that will be applied to all cards
 const dashboardCardStyle = {
@@ -402,7 +398,7 @@ export const RetentionRateChart = ({ data, onSegmentClick }) => {
   );
 };
 
-// Main RFM Dashboard Component - Updated layout with unified insights
+// Main RFM Dashboard Component - ✅ UPDATED: Now uses company-aware data
 const RFMDashboard = ({ 
   aiState, 
   aiHandlers, 
@@ -410,7 +406,8 @@ const RFMDashboard = ({
   placeholderText = "Ask me about your RFM segments, customer behavior, or retention strategies...",
   onProgramCreated,
   onNotificationCreated,
-  onProgramClick
+  onProgramClick,
+  dataRefreshKey = 0 // ✅ NEW: Accept dataRefreshKey prop
 }) => {
   // State for selected segment detail modal
   const [selectedSegment, setSelectedSegment] = useState(null);
@@ -427,6 +424,10 @@ const RFMDashboard = ({
   const [rejectedRecommendations, setRejectedRecommendations] = useState(
     new Set(JSON.parse(localStorage.getItem('rejectedRecommendations') || '[]'))
   );
+  
+  // ✅ UPDATED: Get data - KPIs stay the same, insights/recommendations are company-aware
+  const rfmInsightsData = getRfmInsightsData();
+  const rfmRecommendationsData = getRfmRecommendations();
   
   // Use SHARED AI state from App.js instead of local state
   const {
@@ -506,7 +507,6 @@ const RFMDashboard = ({
 
   const handleRejectRecommendation = (recommendation) => {
     console.log('Reject recommendation:', recommendation);
-    markRecommendationAsRejected(recommendation.id);
     
     // Update state to trigger re-render
     const newRejected = new Set([...rejectedRecommendations, recommendation.id]);
@@ -526,16 +526,16 @@ const RFMDashboard = ({
         />
       )}
 
-      {/* RFM KPI Cards with qualitative measures */}
+      {/* ✅ UPDATED: RFM KPI Cards now use company-aware data */}
       <RFMKpiCards 
         data={rfmKpiData} 
         onSegmentClick={handleSegmentClick}
       />
       
-      {/* Full-width Unified Insights and Recommendations */}
+      {/* ✅ UPDATED: Full-width Unified Insights and Recommendations now use company-aware data */}
       <UnifiedInsightsAndRecommendations
         insightsData={rfmInsightsData}
-        recommendationsData={rfmRecommendations}
+        recommendationsData={rfmRecommendationsData}
         onProgramClick={onProgramClick}
         onSegmentClick={handleSegmentClick}
         onImplementRecommendation={handleImplementRecommendation}

@@ -361,21 +361,28 @@ const AISidebarPanel = ({
                         justifyContent: 'space-between',
                         alignItems: 'flex-start',
                         marginBottom: '0.75rem',
-                        gap: '1rem'
+                        gap: '0.75rem',
+                        flexWrap: 'wrap'
                       }}>
                         <h4 style={{
                           fontSize: '1rem',
                           fontWeight: 600,
                           color: COLORS.onyx,
                           margin: 0,
-                          flex: 1
+                          flex: 1,
+                          minWidth: '200px'
                         }}>
                           {rec.title}
                         </h4>
+                        {/* ✅ FIXED: Improved badge container with proper wrapping */}
                         <div style={{
                           display: 'flex',
+                          flexDirection: 'column',
                           gap: '0.5rem',
-                          flexWrap: 'wrap'
+                          alignItems: 'flex-end',
+                          flexShrink: 0,
+                          minWidth: '140px',
+                          maxWidth: '140px'
                         }}>
                           <span style={{
                             display: 'inline-flex',
@@ -386,25 +393,31 @@ const AISidebarPanel = ({
                             fontSize: '0.75rem',
                             fontWeight: 500,
                             backgroundColor: rec.impact === 'high' ? 'rgba(76, 175, 80, 0.1)' : 'rgba(255, 193, 7, 0.1)',
-                            color: rec.impact === 'high' ? COLORS.green : '#FFC107'
+                            color: rec.impact === 'high' ? COLORS.green : '#FFC107',
+                            whiteSpace: 'nowrap'
                           }}>
                             {rec.impact === 'high' ? <ArrowUpRight size={12} /> : <TrendingUp size={12} />}
                             {rec.impact === 'high' ? 'High Impact' : 'Medium Impact'}
                           </span>
                           {rec.estimatedROI && (
                             <span style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '0.25rem',
+                              display: 'inline-block',
                               padding: '0.25rem 0.5rem',
-                              borderRadius: '9999px',
-                              fontSize: '0.75rem',
+                              borderRadius: '0.375rem',
+                              fontSize: '0.7rem',
                               fontWeight: 500,
                               backgroundColor: 'rgba(33, 150, 243, 0.1)',
-                              color: COLORS.blue
+                              color: COLORS.blue,
+                              textAlign: 'center',
+                              wordBreak: 'break-word',
+                              lineHeight: 1.3,
+                              maxWidth: '140px',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'normal'
                             }}>
-                              <TrendingUp size={12} />
-                              ROI: {rec.estimatedROI}
+                              <TrendingUp size={10} style={{ marginRight: '2px', verticalAlign: 'top' }} />
+                              {rec.estimatedROI.replace('ROI: ', '').replace('+', '')}
                             </span>
                           )}
                         </div>

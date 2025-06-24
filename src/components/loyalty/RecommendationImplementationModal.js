@@ -28,100 +28,16 @@ const RecommendationImplementationModal = ({
   // ✅ BETTER: Format large numbers appropriately  
   const formatCurrency = (value) => {
     if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(1)}M`;  // $1.8M
+      return `${(value / 1000000).toFixed(1)}M`;  // $1.8M
     } else if (value >= 1000) {
-      return `$${Math.round(value / 1000)}K`;      // $847K  
+      return `${Math.round(value / 1000)}K`;      // $847K  
     } else {
-      return `$${value}`;                          // $500
+      return `${value}`;                          // $500
     }
   };
 
-  const setupSteps = [
-    'Analyzing recommendation requirements',
-    'Identifying target member segments', 
-    'Calculating implementation parameters',
-    'Designing member communication strategy',
-    'Projecting implementation timeline',
-    'Finalizing program configuration'
-  ];
-
-  // Debug logging for modal state
-  useEffect(() => {
-    console.log('Recommendation Modal State Change - Modal isOpen:', isOpen, 'Recommendation:', recommendation, 'Program Data:', programData);
-  }, [isOpen, recommendation, programData]);
-
-  // Reset modal state when opened
-  useEffect(() => {
-    if (isOpen && recommendation) {
-      console.log('Opening implementation modal for recommendation:', recommendation);
-      setCurrentPhase('setup');
-      setSetupProgress(0);
-      setSetupStep(0);
-      setImplementationData(null);
-      setShowModifyModal(false);
-      setShowOfferModal(false);
-      
-      // Start the setup simulation with more detailed steps
-      const stepInterval = setInterval(() => {
-        setSetupStep(prevStep => {
-          const nextStep = prevStep + 1;
-          const progress = (nextStep / setupSteps.length) * 100;
-          
-          setSetupProgress(progress);
-          
-          if (nextStep >= setupSteps.length) {
-            clearInterval(stepInterval);
-            // Small delay before transitioning to review
-            setTimeout(() => {
-              console.log('Transitioning to review phase');
-              setCurrentPhase('review');
-              generateImplementationData();
-            }, 800);
-            return setupSteps.length;
-          }
-          return nextStep;
-        });
-      }, 700);
-
-      return () => clearInterval(stepInterval);
-    }
-  }, [isOpen, recommendation]);
-
-  // Generate the implementation data based on recommendation
-  const generateImplementationData = () => {
-    if (!recommendation) {
-      console.warn('No recommendation provided for implementation data generation');
-      return;
-    }
-    
-    console.log('Generating implementation data for:', recommendation.id, recommendation.title, recommendation.type);
-    
-    let data = {};
-    
-    // Generate implementation data based on recommendation type
-    if (isAtRiskPunchCardRecommendation()) {
-      data = generateAtRiskPunchCardImplementation();
-    } else if (isTrailEssentialsRecommendation()) {
-      data = generateTrailEssentialsImplementation();
-    } else if (isOfferRecommendation()) {
-      data = generateOfferImplementation();
-    } else if (recommendation.type === 'enhancement') {
-      data = generateEnhancementImplementation();
-    } else if (recommendation.type === 'targeting') {
-      data = generateTargetingImplementation();
-    } else if (recommendation.type === 'optimization') {
-      data = generateOptimizationImplementation();
-    } else if (recommendation.type === 'communication') {
-      data = generateCommunicationImplementation();
-    } else {
-      // Default implementation for other types
-      data = generateDefaultImplementation();
-    }
-    
-    console.log('Generated implementation data:', data);
-    setImplementationData(data);
-  };
-
+  // ✅ HELPER FUNCTIONS: Moved to top to fix hoisting issues
+  
   // Helper function to detect At Risk Recovery Punch Card recommendations
   const isAtRiskPunchCardRecommendation = () => {
     return (
@@ -206,6 +122,108 @@ const RecommendationImplementationModal = ({
         recommendation.id.includes('cashback-')
       ))
     );
+  };
+
+  // ✅ UPDATED: Offer-specific setup steps
+  const getSetupSteps = () => {
+    if (isOfferRecommendation()) {
+      return [
+        'Analyzing offer requirements and target audience',
+        'Calculating optimal discount levels and thresholds', 
+        'Configuring offer mechanics and redemption rules',
+        'Designing customer communication strategy',
+        'Projecting offer performance and ROI',
+        'Finalizing offer configuration'
+      ];
+    } else {
+      return [
+        'Analyzing recommendation requirements',
+        'Identifying target member segments', 
+        'Calculating implementation parameters',
+        'Designing member communication strategy',
+        'Projecting implementation timeline',
+        'Finalizing program configuration'
+      ];
+    }
+  };
+
+  const setupSteps = getSetupSteps();
+
+  // Debug logging for modal state
+  useEffect(() => {
+    console.log('Recommendation Modal State Change - Modal isOpen:', isOpen, 'Recommendation:', recommendation, 'Program Data:', programData);
+  }, [isOpen, recommendation, programData]);
+
+  // Reset modal state when opened
+  useEffect(() => {
+    if (isOpen && recommendation) {
+      console.log('Opening implementation modal for recommendation:', recommendation);
+      setCurrentPhase('setup');
+      setSetupProgress(0);
+      setSetupStep(0);
+      setImplementationData(null);
+      setShowModifyModal(false);
+      setShowOfferModal(false);
+      
+      // Start the setup simulation with more detailed steps
+      const stepInterval = setInterval(() => {
+        setSetupStep(prevStep => {
+          const nextStep = prevStep + 1;
+          const progress = (nextStep / setupSteps.length) * 100;
+          
+          setSetupProgress(progress);
+          
+          if (nextStep >= setupSteps.length) {
+            clearInterval(stepInterval);
+            // Small delay before transitioning to review
+            setTimeout(() => {
+              console.log('Transitioning to review phase');
+              setCurrentPhase('review');
+              generateImplementationData();
+            }, 800);
+            return setupSteps.length;
+          }
+          return nextStep;
+        });
+      }, 700);
+
+      return () => clearInterval(stepInterval);
+    }
+  }, [isOpen, recommendation]);
+
+  // Generate the implementation data based on recommendation
+  const generateImplementationData = () => {
+    if (!recommendation) {
+      console.warn('No recommendation provided for implementation data generation');
+      return;
+    }
+    
+    console.log('Generating implementation data for:', recommendation.id, recommendation.title, recommendation.type);
+    
+    let data = {};
+    
+    // Generate implementation data based on recommendation type
+    if (isAtRiskPunchCardRecommendation()) {
+      data = generateAtRiskPunchCardImplementation();
+    } else if (isTrailEssentialsRecommendation()) {
+      data = generateTrailEssentialsImplementation();
+    } else if (isOfferRecommendation()) {
+      data = generateOfferImplementation();
+    } else if (recommendation.type === 'enhancement') {
+      data = generateEnhancementImplementation();
+    } else if (recommendation.type === 'targeting') {
+      data = generateTargetingImplementation();
+    } else if (recommendation.type === 'optimization') {
+      data = generateOptimizationImplementation();
+    } else if (recommendation.type === 'communication') {
+      data = generateCommunicationImplementation();
+    } else {
+      // Default implementation for other types
+      data = generateDefaultImplementation();
+    }
+    
+    console.log('Generated implementation data:', data);
+    setImplementationData(data);
   };
 
   // At Risk Recovery Punch Card specific implementation
@@ -398,12 +416,12 @@ const RecommendationImplementationModal = ({
     console.log('Offer details available:', offerDetails);
     console.log('Has actual data:', hasActualData);
     
-    // ✅ NEW: Use actual data when available, intelligent fallbacks otherwise
+    // ✅ FIXED: Updated metrics with realistic customer counts and revenue
     const metrics = {
       participantsRecovered: hasActualData ? 
-        offerDetails.participatingCustomers?.toLocaleString() : '2,549',
-    revenueRecovery: hasActualData ? 
-    formatCurrency(offerDetails.influencedRevenue) : '$1.85M',
+        offerDetails.participatingCustomers?.toLocaleString() : '25,490',
+      revenueRecovery: hasActualData ? 
+        formatCurrency(offerDetails.influencedRevenue) : '$1.85M',
       redemptionRate: hasActualData ? 
         `${offerDetails.redemptionRate}%` : '28.5%',
       averageOrderValue: hasActualData ? 
@@ -477,7 +495,7 @@ const RecommendationImplementationModal = ({
         issue: 'Category Re-engagement Opportunity',
         impact: 'High-value customers have stopped purchasing from target category, representing significant revenue potential',
         solution: `Strategic ${offerType === 'cashback_reward' ? 'cashback reward' : offerType === 'bundle_discount' ? 'bundle promotion' : 'category discount'} to incentivize category re-engagement`,
-        outcome: 'Expected category revenue recovery and improved customer lifetime value through targeted re-engagement'
+        outcome: 'Top Spenders purchase Health & Wellness category driving category re-engagement, revenue, and customer lifetime value'
       },
       implementationPlan: [
         {
@@ -1224,7 +1242,11 @@ const RecommendationImplementationModal = ({
                   margin: 0,
                   marginBottom: '0.25rem'
                 }}>
-                  {currentPhase === 'setup' ? 'Setting Up Enhancement Plan' : 'Review Implementation Strategy'}
+                  {/* ✅ UPDATED: Conditional header text for offers */}
+                  {currentPhase === 'setup' ? 
+                    (isOfferRecommendation() ? 'Setting Up Offer' : 'Setting Up Enhancement Plan') : 
+                    (isOfferRecommendation() ? 'Review Offer Strategy' : 'Review Implementation Strategy')
+                  }
                 </h2>
                 <p style={{
                   fontSize: '0.875rem',
@@ -1355,7 +1377,8 @@ const RecommendationImplementationModal = ({
                     marginBottom: '1rem',
                     maxWidth: '600px'
                   }}>
-                    AI is Optimizing Your Program
+                    {/* ✅ UPDATED: Conditional heading for offers */}
+                    {isOfferRecommendation() ? 'AI is Optimizing Your Offer Settings' : 'AI is Optimizing Your Program'}
                   </h3>
                   
                   <p style={{
@@ -1365,7 +1388,11 @@ const RecommendationImplementationModal = ({
                     maxWidth: '700px',
                     lineHeight: 1.6
                   }}>
-                    Our AI is analyzing your program and designing an optimization strategy based on member behavior patterns and performance data to enhance the member experience.
+                    {/* ✅ UPDATED: Conditional description for offers */}
+                    {isOfferRecommendation() ? 
+                      'Marigold AI is analyzing your program and configuring the optimal offer based on member behavior patterns and prior program and offer performance.' :
+                      'Our AI is analyzing your program and designing an optimization strategy based on member behavior patterns and performance data to enhance the member experience.'
+                    }
                   </p>
 
                   {/* Current Step Indicator */}
@@ -1499,8 +1526,9 @@ const RecommendationImplementationModal = ({
                             color: COLORS.onyx,
                             marginBottom: '1.5rem'
                           }}>
-                            {isAtRiskPunchCardRecommendation() ? 'Segment Optimization Strategy' : 
-                             isOfferRecommendation() ? 'Category Re-engagement Strategy' : 
+                            {/* ✅ UPDATED: Conditional heading for offers */}
+                            {isOfferRecommendation() ? 'Objective: Health & Wellness Category Re-engagement' :
+                             isAtRiskPunchCardRecommendation() ? 'Segment Optimization Strategy' : 
                              'Program Optimization Strategy'}
                           </h3>
                           
@@ -1514,7 +1542,8 @@ const RecommendationImplementationModal = ({
                                 letterSpacing: '0.5px',
                                 marginBottom: '0.5rem'
                               }}>
-                                🎯 Opportunity Identified
+                                {/* ✅ UPDATED: Conditional section headers for offers */}
+                                {isOfferRecommendation() ? '🎯 Tactic: Offer Discount to Incentivize Category Spend' : '🎯 Opportunity Identified'}
                               </h4>
                               <p style={{
                                 fontSize: '1.125rem',
@@ -1542,7 +1571,8 @@ const RecommendationImplementationModal = ({
                                 letterSpacing: '0.5px',
                                 marginBottom: '0.5rem'
                               }}>
-                                ✓ Enhancement Solution
+                                {/* ✅ UPDATED: Conditional section headers for offers */}
+                                {isOfferRecommendation() ? '✓ Expected Outcomes' : '✓ Enhancement Solution'}
                               </h4>
                               <p style={{
                                 fontSize: '1.125rem',

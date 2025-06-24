@@ -147,7 +147,16 @@ const AIResponseModal = ({
                     <div key={index} className="ai-response-recommendation-card">
                       <div className="ai-response-recommendation-header">
                         <h4 className="ai-response-recommendation-title">{rec.title}</h4>
-                        <div className="ai-response-recommendation-badges">
+                        {/* ✅ FIXED: Improved badges with proper wrapping and sizing */}
+                        <div style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '0.5rem',
+                          alignItems: 'flex-end',
+                          flexShrink: 0,
+                          minWidth: '160px',
+                          maxWidth: '160px'
+                        }}>
                           <span className={`ai-response-impact-badge ${rec.impact}`}>
                             {rec.impact === 'high' ? (
                               <ArrowUpRight size={12} />
@@ -157,9 +166,25 @@ const AIResponseModal = ({
                             {rec.impact === 'high' ? 'High Impact' : 'Medium Impact'}
                           </span>
                           {rec.estimatedROI && (
-                            <span className="ai-response-roi-badge">
-                              <TrendingUp size={12} />
-                              ROI: {rec.estimatedROI}
+                            <span style={{
+                              display: 'inline-block',
+                              padding: '0.25rem 0.5rem',
+                              borderRadius: '0.375rem',
+                              fontSize: '0.7rem',
+                              fontWeight: 500,
+                              backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                              color: COLORS.blue,
+                              textAlign: 'center',
+                              wordBreak: 'break-word',
+                              lineHeight: 1.3,
+                              maxWidth: '160px',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'normal',
+                              border: '1px solid rgba(33, 150, 243, 0.2)'
+                            }}>
+                              <TrendingUp size={10} style={{ marginRight: '2px', verticalAlign: 'top' }} />
+                              {rec.estimatedROI.replace('ROI: ', '').replace('+', '')}
                             </span>
                           )}
                         </div>
@@ -173,6 +198,7 @@ const AIResponseModal = ({
                         <button className="ai-response-recommendation-btn-secondary">
                           View Details
                         </button>
+                        {/* ✅ UPDATED: Changed button text to "Implement" */}
                         <button 
                           className="ai-response-recommendation-btn-primary"
                           onClick={() => onRecommendationImplement && onRecommendationImplement(rec)}
@@ -189,7 +215,7 @@ const AIResponseModal = ({
                             e.target.style.boxShadow = 'none';
                           }}
                         >
-                          Apply Recommendation
+                          Implement
                           <ChevronRight size={14} />
                         </button>
                       </div>
